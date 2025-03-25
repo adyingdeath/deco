@@ -1,0 +1,11 @@
+// 这是一个Deco语言的示例文件
+
+// 一个带有修饰符的函数
+@deprecated
+@async
+func processData {
+}
+
+// 一个不带修饰符的普通函数
+func calculateResult {
+} 
