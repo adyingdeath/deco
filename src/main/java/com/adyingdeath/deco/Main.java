@@ -1,8 +1,7 @@
 package com.adyingdeath.parser;
 
-import com.adyingdeath.parser.DecoLexer;
-import com.adyingdeath.parser.DecoParser;
-
+import com.adyingdeath.deco.parser.DecoParser;
+import com.adyingdeath.deco.parser.DecoLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
