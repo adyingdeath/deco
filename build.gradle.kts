@@ -3,7 +3,7 @@ plugins {
     id("antlr") // Add ANTLR plugin
 }
 
-group = "com.adyingdeath"
+group = "com.adyingdeath.deco"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -23,7 +23,7 @@ tasks.generateGrammarSource {
     arguments = arguments + listOf(
             "-visitor", // Generate Visitor interface
             "-no-listener", // Don't generate Listener interface (remove this line if needed)
-            "-package", "com.adyingdeath.parser" // Set package name for generated code
+            "-package", "com.adyingdeath.deco.parser" // Set package name for generated code
     )
     outputDirectory = File("$buildDir/generated-src/antlr/main")
 }

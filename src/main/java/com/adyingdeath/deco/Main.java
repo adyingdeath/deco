@@ -1,4 +1,4 @@
-package com.adyingdeath.parser;
+package com.adyingdeath.deco;
 
 import com.adyingdeath.deco.parser.DecoParser;
 import com.adyingdeath.deco.parser.DecoLexer;
