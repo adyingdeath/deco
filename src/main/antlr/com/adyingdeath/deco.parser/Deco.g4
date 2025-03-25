@@ -2,50 +2,32 @@ grammar Deco;
 
 // Parser rules
 program
-    : (functionDeclaration | mcfuncStatement)* EOF
+    : statement* EOF
     ;
 
-functionDeclaration
-    : decorator* 'Func' IDENTIFIER block
+statement
+    : MC_COMMAND
+    | COMMENT
+    | BLOCK_COMMENT
+    | function
     ;
 
-decorator
-    : '@' IDENTIFIER
+function
+    : function_decorator? FUNC name=IDENTIFIER function_body
     ;
 
-block
-    : '{' mcfuncStatement* '}'
+function_decorator
+    : '@' name=IDENTIFIER
     ;
 
-// ================================
-// Minecraft commands
-// ================================
-// Parser rules
-mcfuncStatement
-    : (BEDROCK_COMMAND | JAVA_COMMAND) .*? NEWLINE
+function_body
+    : '{' statement* '}'
     ;
 
-// Lexer rules
-BEDROCK_COMMAND
-    : ('replaceitem' | 'testfor' | 'testforblock' | 'testforblocks'
-    | 'toggledownfall' | 'clear' | 'clone' | 'damage' | 'deop' | 'difficulty'
-    | 'effect' | 'enchant' | 'execute' | 'fill' | 'function' | 'gamemode'
-    | 'gamerule' | 'give' | 'help' | 'kick' | 'kill' | 'list' | 'locate'
-    | 'loot' | 'me' | 'msg' | 'op' | 'particle' | 'place' | 'playsound' | 'recipe'
-    | 'reload' | 'ride' | 'say' | 'schedule' | 'scoreboard' | 'setblock'
-    | 'setworldspawn' | 'spawnpoint' | 'spreadplayers' | 'stop' | 'stopsound'
-    | 'summon' | 'tag' | 'teleport' | 'tell' | 'tellraw' | 'time' | 'title'
-    | 'tp' | 'transfer' | 'w' | 'weather' | 'whitelist' | 'xp' | 'ability'
-    | 'aimassist' | 'alwaysday' | 'camera' | 'camerashake' | 'changesetting'
-    | 'clearspawnpoint' | 'connect' | 'daylock' | 'dedicatedwsserver' | 'dialogue'
-    | 'event' | 'fog' | 'gametest' | 'gametips' | 'hud' | 'immutableworld'
-    | 'inputpermission' | 'mobevent' | 'music' | 'ops' | 'permission' | 'playanimation'
-    | 'reloadconfig' | 'save' | 'script' | 'scriptevent' | 'set_movement_authority'
-    | 'setmaxplayers' | 'structure' | 'tickingarea' | 'titleraw' | 'wb' | 'worldbuilder'
-    | 'wsserver') ' '
-    ;
+// Lexical rules
+// Commands
 
-JAVA_COMMAND
+MC_COMMAND
     : ('advancement' | 'attribute' | 'ban' | 'ban-ip' | 'banlist' | 'bossbar'
     | 'clear' | 'clone' | 'damage' | 'data' | 'datapack' | 'debug'
     | 'defaultgamemode' | 'deop' | 'difficulty' | 'effect' | 'enchant'
@@ -59,25 +41,28 @@ JAVA_COMMAND
     | 'setworldspawn' | 'spawnpoint' | 'spectate' | 'spreadplayers' | 'stop'
     | 'stopsound' | 'summon' | 'tag' | 'team' | 'teammsg' | 'teleport' | 'tell'
     | 'tellraw' | 'tick' | 'time' | 'title' | 'tm' | 'tp' | 'transfer' | 'trigger'
-    | 'w' | 'warden_spawn_tracker' | 'weather' | 'whitelist' | 'worldborder' | 'xp') ' '
+    | 'w' | 'warden_spawn_tracker' | 'weather' | 'whitelist' | 'worldborder' | 'xp') ' ' (~[\r\n]+)?
     ;
 
 IDENTIFIER
-    : [a-zA-Z_][a-zA-Z0-9_]*
+    : [A-Z][a-zA-Z0-9_\-]*
     ;
 
-NEWLINE
-    : [\r\n]+
-    ;
-
-WS
-    : [ \t]+ -> skip
-    ;
-
+// Comment
 COMMENT
-    : '//' ~[\r\n]* -> skip
+    : '#' ~[\r\n]* -> channel(HIDDEN)
     ;
 
-MULTILINE_COMMENT
-    : '/*' .*? '*/' -> skip
-    ; 
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> channel(HIDDEN)
+    ;
+
+// Function
+FUNC
+    : 'func'
+    ;
+
+// Ignore whitespace
+WS
+    : [ \t\r\n]+ -> skip
+    ;

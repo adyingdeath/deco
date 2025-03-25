@@ -11,31 +11,28 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Deco语言解析器示例");
+        System.out.println("Deco Example");
         
         try {
-            // 从文件加载Deco代码
+            // Load Deco code from file
             String filePath = "src/main/resources/example.deco";
-            System.out.println("正在解析文件: " + filePath);
+            System.out.println("Parsing file: " + filePath);
             
-            // 创建词法分析器
+            // Create lexer
             DecoLexer lexer = new DecoLexer(CharStreams.fromPath(Paths.get(filePath)));
-            // 创建词法符号流
+            // Create token stream
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            // 创建语法分析器
+            // Create parser
             DecoParser parser = new DecoParser(tokens);
-            // 解析代码
+            // Parse code
             ParseTree tree = parser.program();
             
-            // 打印语法树
-            System.out.println("解析成功！语法树:");
+            // Print syntax tree
+            System.out.println("Done! Tree: ");
             System.out.println(tree.toStringTree(parser));
             
         } catch (IOException e) {
-            System.err.println("文件读取错误: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("解析错误: " + e.getMessage());
+            System.err.println("Wrong: " + e.getMessage());
             e.printStackTrace();
         }
     }
