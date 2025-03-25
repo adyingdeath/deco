@@ -24,6 +24,7 @@ public class Main {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             // Create parser
             DecoParser parser = new DecoParser(tokens);
+            parser.addParseListener(new DecoListener());
             // Parse code
             ParseTree tree = parser.program();
             

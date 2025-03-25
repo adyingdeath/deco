@@ -10,17 +10,18 @@ statement
     | COMMENT
     | BLOCK_COMMENT
     | function
+    | blockStatement
     ;
 
 function
-    : function_decorator? FUNC name=IDENTIFIER function_body
+    : function_decorator? FUNC name=IDENTIFIER blockStatement
     ;
 
 function_decorator
     : '@' name=IDENTIFIER
     ;
 
-function_body
+blockStatement
     : '{' statement* '}'
     ;
 
@@ -50,7 +51,7 @@ IDENTIFIER
 
 // Comment
 COMMENT
-    : '#' ~[\r\n]* -> channel(HIDDEN)
+    : ('//' | '#') ~[\r\n]* -> channel(HIDDEN)
     ;
 
 BLOCK_COMMENT

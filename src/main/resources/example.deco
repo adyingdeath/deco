@@ -2,5 +2,8 @@
 say 123 123
 @Test
 func Test {
+    say 123
+    // test
+    function test:test
 }
-# This is a test
+// This is a test
