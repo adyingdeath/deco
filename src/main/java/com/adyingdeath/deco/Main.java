@@ -2,6 +2,7 @@ package com.adyingdeath.deco;
 
 import com.adyingdeath.deco.parser.DecoParser;
 import com.adyingdeath.deco.parser.DecoLexer;
+import com.adyingdeath.deco.sandbox.Sandbox;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -11,6 +12,7 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
+        Sandbox sandbox = new Sandbox();
         System.out.println("Deco Example");
         
         try {
@@ -24,7 +26,7 @@ public class Main {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             // Create parser
             DecoParser parser = new DecoParser(tokens);
-            parser.addParseListener(new DecoListener());
+            parser.addParseListener(new DecoListener(sandbox));
             // Parse code
             ParseTree tree = parser.program();
             

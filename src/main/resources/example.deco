@@ -1,9 +1,10 @@
 
 say 123 123
-@Test
+@TestDeco
 func Test {
     say 123
     // test
     function test:test
+    func Red {}
 }
 // This is a test
