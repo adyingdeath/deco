@@ -29,7 +29,7 @@ public class DecoWalker extends DecoBaseListener {
         // Add all commands to the function
         ctx.blockStatement().statement().forEach((e) -> {
             if (e.MC_COMMAND() != null) {
-                function.addCommand(e.getText());
+                function.addCommand(e.getText().trim());
             }
         });
         // Add the function to the sandbox
@@ -43,7 +43,7 @@ public class DecoWalker extends DecoBaseListener {
                 .setPath(sandbox.getCurrentFile().getPath());
         ctx.statement().forEach((stat) -> {
             if (stat.MC_COMMAND() != null) {
-                function.addCommand(stat.getText());
+                function.addCommand(stat.getText().trim());
             }
         });
         if (!function.getCommands().isEmpty()) {

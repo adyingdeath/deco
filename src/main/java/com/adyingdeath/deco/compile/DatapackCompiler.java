@@ -4,6 +4,7 @@ import com.adyingdeath.deco.sandbox.Function;
 import com.adyingdeath.deco.sandbox.Sandbox;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,12 +64,32 @@ public class DatapackCompiler {
                     .map(File::getName)
                     .toList();
 
-            this.compileNamespace(
-                    this.namespaces.get(0),
-                    Paths.get(this.srcPath, "data", this.namespaces.get(0), "functions").toFile(),
-                    Paths.get("/"));
+            // Compile all the namespaces
+            for (String namespace : this.namespaces) {
+                this.compileNamespace(
+                        namespace,
+                        Paths.get(this.srcPath, "data", namespace, "functions").toFile(),
+                        Paths.get("/"));
+            }
 
-            System.out.println("done");
+            if (!createDatapackStructure()) {
+                System.err.println("Failed to create datapack structure");
+                return false;
+            }
+
+            // Write mcfunction files
+            for (Function function : this.sandbox.getFunctions()) {
+                File functionFile = Paths
+                        .get(this.outputPath, "data", function.getNamespace(), "functions")
+                        .resolve(function.getPath()).resolve(function.getName() + ".mcfunction").toFile();
+
+                functionFile.createNewFile();
+
+                FileWriter writer = new FileWriter(functionFile);
+                writer.write(String.join("\n", function.getCommands()));
+                writer.close();
+            }
+
             return true;
         } catch (Exception e) {
             System.err.println("Error during datapack compilation: " + e.getMessage());
