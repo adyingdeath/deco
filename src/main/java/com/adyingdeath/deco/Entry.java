@@ -21,6 +21,16 @@ public class Entry {
       --version            Display version information
       --help, -h           Display this help message
     """;
+    static final String BANNER = """
+            '########::'########::'######:::'#######::
+             ##.... ##: ##.....::'##... ##:'##.... ##:
+             ##:::: ##: ##::::::: ##:::..:: ##:::: ##:
+             ##:::: ##: ######::: ##::::::: ##:::: ##:
+             ##:::: ##: ##...:::: ##::::::: ##:::: ##:
+             ##:::: ##: ##::::::: ##::: ##: ##:::: ##:
+             ########:: ########:. ######::. #######::
+            ........:::........:::......::::.......:::
+            """;
 
     // Options that can be set via command line
     static String outputPath = "./data";
@@ -31,10 +41,11 @@ public class Entry {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        AnsiConsole.systemInstall();
         // Parse command line arguments
         Entry.parseArguments(args);
 
-        AnsiConsole.systemInstall();
+        System.out.println(Ansi.ansi().fgGreen().a(Entry.BANNER).reset());
         
         // Check if input directory is specified
         if (srcPath == null) {
@@ -59,15 +70,12 @@ public class Entry {
         String absoluteSrcPath = toAbsolutePath(srcPath);
         String absoluteOutputPath = toAbsolutePath(outputPath);
         
-        System.out.println("Input directory: " + absoluteSrcPath);
-        System.out.println("Output directory: " + absoluteOutputPath);
-        
         // Create datapack compiler and process the input directory
         DatapackCompiler datapackCompiler = new DatapackCompiler(absoluteSrcPath, absoluteOutputPath);
         boolean success = datapackCompiler.compile();
         
         if (success) {
-            System.out.println("Datapack compilation completed successfully");
+            System.out.println("> Compilation completed");
             System.out.println("Output datapack: " + absoluteOutputPath);
         } else {
             System.err.println("Datapack compilation failed");
