@@ -3,6 +3,8 @@ package com.adyingdeath.deco;
 import com.adyingdeath.deco.compile.DatapackCompiler;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Entry point for the Deco compiler
@@ -48,16 +50,45 @@ public class Entry {
             return;
         }
         
+        // Convert paths to absolute paths
+        String absoluteSrcPath = toAbsolutePath(srcPath);
+        String absoluteOutputPath = toAbsolutePath(outputPath);
+        
+        System.out.println("Input directory: " + absoluteSrcPath);
+        System.out.println("Output directory: " + absoluteOutputPath);
+        
         // Create datapack compiler and process the input directory
-        DatapackCompiler datapackCompiler = new DatapackCompiler(srcPath, outputPath);
+        DatapackCompiler datapackCompiler = new DatapackCompiler(absoluteSrcPath, absoluteOutputPath);
         boolean success = datapackCompiler.compile();
         
         if (success) {
             System.out.println("Datapack compilation completed successfully");
-            System.out.println("Output datapack: " + outputPath);
+            System.out.println("Output datapack: " + absoluteOutputPath);
         } else {
             System.err.println("Datapack compilation failed");
         }
+    }
+    
+    /**
+     * Convert a relative path to an absolute path based on the working directory
+     * @param path The path to convert
+     * @return The absolute path
+     */
+    private static String toAbsolutePath(String path) {
+        Path pathObj = Paths.get(path);
+        
+        // If the path is already absolute, just return it
+        if (pathObj.isAbsolute()) {
+            return pathObj.normalize().toString();
+        }
+        
+        // Get current working directory as a Path object
+        Path workingDir = Paths.get(System.getProperty("user.dir"));
+        
+        // Resolve the path against working directory and normalize
+        Path resolvedPath = workingDir.resolve(pathObj).normalize();
+        
+        return resolvedPath.toString();
     }
     
     /**
