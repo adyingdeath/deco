@@ -72,17 +72,18 @@ public class DatapackCompiler {
                         Paths.get("/"));
             }
 
-            if (!createDatapackStructure()) {
+            /* if (!createDatapackStructure()) {
                 System.err.println("Failed to create datapack structure");
                 return false;
-            }
+            } */
 
             // Write mcfunction files
             for (Function function : this.sandbox.getFunctions()) {
                 File functionFile = Paths
-                        .get(this.outputPath, "data", function.getNamespace(), "functions")
-                        .resolve(function.getPath()).resolve(function.getName() + ".mcfunction").toFile();
+                        .get(this.outputPath, "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
+                        .toFile();
 
+                functionFile.getParentFile().mkdirs();
                 functionFile.createNewFile();
 
                 FileWriter writer = new FileWriter(functionFile);
