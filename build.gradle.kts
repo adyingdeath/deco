@@ -45,3 +45,41 @@ tasks.test {
 tasks.clean {
     delete.add("$buildDir/generated-src")
 }
+
+// Configure jar task to create an executable jar with main class
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "com.adyingdeath.deco.Entry",
+            "Implementation-Title" to project.name,
+            "Implementation-Version" to project.version
+        )
+    }
+    
+    // Include dependencies in the JAR (fat jar)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
+// Optional: create a task to make a standalone distributable jar
+tasks.register<Jar>("fatJar") {
+    archiveClassifier.set("fat")
+    
+    manifest {
+        attributes(
+            "Main-Class" to "com.adyingdeath.deco.Entry",
+            "Implementation-Title" to project.name,
+            "Implementation-Version" to project.version
+        )
+    }
+    
+    from(sourceSets.main.get().output)
+    
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
