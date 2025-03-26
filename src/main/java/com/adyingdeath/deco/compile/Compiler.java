@@ -35,7 +35,6 @@ public class Compiler {
      * @return true if compilation was successful, false otherwise
      */
     public boolean compile(DecoFile src) {
-
         // Create lexer
         DecoLexer lexer = new DecoLexer(CharStreams.fromString(src.getContent()));
 
@@ -47,9 +46,8 @@ public class Compiler {
         parser.addParseListener(new DecoListener(sandbox));
 
         // Parse code
-        ParseTree tree = parser.program();
+        parser.program();
 
-        // TODO: Add code generation and output writing
         // For now, we just return true to indicate success
         return true;
     }

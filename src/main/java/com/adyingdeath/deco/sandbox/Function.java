@@ -9,27 +9,17 @@ import java.util.List;
  */
 public class Function {
     /**
-     * The namespace of the function (e.g. "minecraft", "custom")
+     * The namespace of the function (e.g. "minecraft", "deco")
      */
     private String namespace;
-
     /**
-     * The path of the function (e.g. "functions/custom")
+     * The path of the function (e.g. "deco/test/")
      */
     private String path;
     /**
      * The name of the function
      */
     private String name;
-    /**
-     * The decorator type of the function (e.g. "tick", "load")
-     */
-    private String decorator;
-    
-    /**
-     * Parameters for the decorator
-     */
-    private List<String> decoratorParameters;
     /**
      * The command body of the function
      */
@@ -42,8 +32,6 @@ public class Function {
     public Function(String name) {
         this.name = name;
         this.commands = new ArrayList<>();
-        this.decorator = null;
-        this.decoratorParameters = new ArrayList<>();
         this.namespace = "minecraft";
         this.path = "";
     }
@@ -71,17 +59,6 @@ public class Function {
         }
         return this;
     }
-
-    /**
-     * Set the decorator of the function
-     * @param decorator The decorator
-     * @return The function instance for method chaining
-     */
-    public Function setDecorator(String decorator) {
-        this.decorator = decorator;
-        return this;
-    }
-
     /**
      * Add a command to the function
      * @param command The command to add
@@ -93,18 +70,6 @@ public class Function {
         }
         return this;
     }
-    
-    /**
-     * Add a decorator parameter
-     * @param parameter The parameter to add
-     * @return The function instance for method chaining
-     */
-    public Function addDecoratorParameter(String parameter) {
-        if (parameter != null && !parameter.isEmpty()) {
-            this.decoratorParameters.add(parameter);
-        }
-        return this;
-    }
 
     /**
      * Get the full path of the function
@@ -113,23 +78,6 @@ public class Function {
     public String getFullPath() {
         return namespace + ":" + path + "/" + name;
     }
-
-    /**
-     * Get the decorator of the function
-     * @return The decorator
-     */
-    public String getDecorator() {
-        return decorator;
-    }
-    
-    /**
-     * Get the decorator parameters
-     * @return The list of decorator parameters
-     */
-    public List<String> getDecoratorParameters() {
-        return decoratorParameters;
-    }
-
     /**
      * Get the name of the function
      * @return The name
@@ -160,33 +108,5 @@ public class Function {
      */
     public String getPath() {
         return path;
-    }
-    
-    /**
-     * Generate the function content as a string
-     * @return The function content
-     */
-    public String generateContent() {
-        StringBuilder content = new StringBuilder();
-        
-        // Add any header comments for the decorator
-        if (decorator != null && !decorator.isEmpty()) {
-            content.append("# @").append(decorator);
-            
-            if (!decoratorParameters.isEmpty()) {
-                content.append("(");
-                content.append(String.join(", ", decoratorParameters));
-                content.append(")");
-            }
-            
-            content.append("\n");
-        }
-        
-        // Add all commands
-        for (String command : commands) {
-            content.append(command).append("\n");
-        }
-        
-        return content.toString();
     }
 }
