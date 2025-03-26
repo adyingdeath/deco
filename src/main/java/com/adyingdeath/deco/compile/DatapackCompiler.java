@@ -6,6 +6,7 @@ import com.adyingdeath.deco.sandbox.Sandbox;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class DatapackCompiler {
             this.compileNamespace(
                     this.namespaces.get(0),
                     Paths.get(this.srcPath, "data", this.namespaces.get(0), "functions").toFile(),
-                    "");
+                     Paths.get("/"));
 
             System.out.println("done");
             // Create datapack directory structure
@@ -86,7 +87,7 @@ public class DatapackCompiler {
      * @param currentFile The current file or directory being processed
      * @param relativePath The path relative to the namespace directory
      */
-    private void compileNamespace(String namespace, File currentFile, String relativePath) {
+    private void compileNamespace(String namespace, File currentFile, Path relativePath) {
         if (currentFile.isDirectory()) {
             // Process all files in directory
             File[] files = currentFile.listFiles();
@@ -95,8 +96,7 @@ public class DatapackCompiler {
             }
 
             for (File file : files) {
-                String newRelativePath = relativePath.isEmpty() ?
-                        file.getName() : relativePath + "/" + file.getName();
+                Path newRelativePath = relativePath.resolve(file.getName());
 
                 this.compileNamespace(namespace, file, newRelativePath);
             }
@@ -112,13 +112,6 @@ public class DatapackCompiler {
             String baseName = filenameParts[0];
             String extension = filenameParts[1];
 
-            // Calculate path relative to functions directory
-            String functionPath = "";
-            if (relativePath.contains("/")) {
-                int lastSlashIndex = relativePath.lastIndexOf("/");
-                functionPath = relativePath.substring(0, lastSlashIndex);
-            }
-
             if (extension.equals("deco") || extension.equals("mcfunction")) {
                 try {
                     // Read file content
@@ -126,10 +119,10 @@ public class DatapackCompiler {
                     
                     // Create DecoFile object
                     DecoFile decoFile = new DecoFile(namespace, 
-                                                   functionPath.isEmpty() ? "" : functionPath, 
+                                                   relativePath.getParent().toString(),
                                                    baseName, 
                                                    content);
-                    
+
                     // Compile the file using DecoFile
                     boolean result = compiler.compile(decoFile);
                     

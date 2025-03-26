@@ -3,16 +3,15 @@ package com.adyingdeath.deco.compile;
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
 
-import java.util.stream.Collectors;
-
 import com.adyingdeath.deco.sandbox.Function;
 import com.adyingdeath.deco.sandbox.Sandbox;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 
-public class DecoListener extends DecoBaseListener {
+public class DecoWalker extends DecoBaseListener {
     private Sandbox sandbox;
 
-    public DecoListener(Sandbox sandbox) {
+    public DecoWalker(Sandbox sandbox) {
         super();
         this.sandbox = sandbox;
     }
@@ -24,11 +23,9 @@ public class DecoListener extends DecoBaseListener {
      */
     @Override
     public void exitFunction(DecoParser.FunctionContext ctx) {
-        Function function = new Function(ctx.name.getText());
-        // Set function decorator if it exists
-        if (ctx.function_decorator() != null) {
-            function.setDecorator(ctx.function_decorator().name.getText());
-        }
+        Function function = new Function(ctx.name.getText())
+                .setNamespace(sandbox.getCurrentFile().getNamespace())
+                .setPath(sandbox.getCurrentFile().getPath());
         // Add all commands to the function
         ctx.blockStatement().statement().forEach((e) -> {
             if (e.MC_COMMAND() != null) {
@@ -37,5 +34,20 @@ public class DecoListener extends DecoBaseListener {
         });
         // Add the function to the sandbox
         sandbox.addFunction(function);
+    }
+
+    @Override
+    public void exitProgram(DecoParser.ProgramContext ctx) {
+        Function function = new Function(sandbox.getCurrentFile().getFilename())
+                .setNamespace(sandbox.getCurrentFile().getNamespace())
+                .setPath(sandbox.getCurrentFile().getPath());
+        ctx.statement().forEach((stat) -> {
+            if (stat.MC_COMMAND() != null) {
+                function.addCommand(stat.getText());
+            }
+        });
+        if (!function.getCommands().isEmpty()) {
+            sandbox.addFunction(function);
+        }
     }
 }

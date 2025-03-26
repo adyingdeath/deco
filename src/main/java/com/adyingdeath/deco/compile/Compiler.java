@@ -5,7 +5,6 @@ import com.adyingdeath.deco.parser.DecoLexer;
 import com.adyingdeath.deco.sandbox.Sandbox;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,6 +34,7 @@ public class Compiler {
      * @return true if compilation was successful, false otherwise
      */
     public boolean compile(DecoFile src) {
+        this.sandbox.setCurrentFile(src);
         // Create lexer
         DecoLexer lexer = new DecoLexer(CharStreams.fromString(src.getContent()));
 
@@ -43,7 +43,7 @@ public class Compiler {
 
         // Create parser
         DecoParser parser = new DecoParser(tokens);
-        parser.addParseListener(new DecoListener(sandbox));
+        parser.addParseListener(new DecoWalker(sandbox));
 
         // Parse code
         parser.program();
