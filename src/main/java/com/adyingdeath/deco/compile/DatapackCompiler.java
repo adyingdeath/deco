@@ -72,10 +72,10 @@ public class DatapackCompiler {
                         Paths.get("/"));
             }
 
-            /* if (!createDatapackStructure()) {
+            if (!createDatapackStructure()) {
                 System.err.println("Failed to create datapack structure");
                 return false;
-            } */
+            }
 
             // Write mcfunction files
             for (Function function : this.sandbox.getFunctions()) {
@@ -174,30 +174,23 @@ public class DatapackCompiler {
             File functionTagsDir = new File(tagsDir, "functions");
             
             // Create directories
-            createDirectory(outputDir);
-            createDirectory(dataDir);
-            createDirectory(minecraftDir);
-            createDirectory(functionsDir);
-            createDirectory(tagsDir);
-            createDirectory(functionTagsDir);
+            outputDir.mkdirs();
+            dataDir.mkdirs();
+            minecraftDir.mkdirs();
+            functionsDir.mkdirs();
+            tagsDir.mkdirs();
+            functionTagsDir.mkdirs();
+
+
+            // Copy pack.mcmeta
+            File packMcmeta = new File(srcPath, "pack.mcmeta");
+            File packMcmetaOutput = new File(outputPath, "pack.mcmeta");
+            Files.copy(packMcmeta.toPath(), packMcmetaOutput.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             
             return true;
         } catch (Exception e) {
             System.err.println("Error creating datapack structure: " + e.getMessage());
             return false;
-        }
-    }
-    
-    /**
-     * Create a directory if it doesn't exist
-     * 
-     * @param dir Directory to create
-     */
-    private void createDirectory(File dir) throws IOException {
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new IOException("Failed to create directory: " + dir.getPath());
-            }
         }
     }
 }
