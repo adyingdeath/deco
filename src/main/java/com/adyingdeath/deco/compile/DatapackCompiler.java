@@ -66,13 +66,9 @@ public class DatapackCompiler {
             this.compileNamespace(
                     this.namespaces.get(0),
                     Paths.get(this.srcPath, "data", this.namespaces.get(0), "functions").toFile(),
-                     Paths.get("/"));
+                    Paths.get("/"));
 
             System.out.println("done");
-            // Create datapack directory structure
-            if (!createDatapackStructure()) {
-                return false;
-            }
             return true;
         } catch (Exception e) {
             System.err.println("Error during datapack compilation: " + e.getMessage());
@@ -119,7 +115,7 @@ public class DatapackCompiler {
                     
                     // Create DecoFile object
                     DecoFile decoFile = new DecoFile(namespace, 
-                                                   relativePath.getParent().toString(),
+                                                   relativePath.getParent() != null ? relativePath.getParent().toString() : "",
                                                    baseName, 
                                                    content);
 
