@@ -13,6 +13,9 @@ repositories {
 dependencies {
     implementation("org.antlr:antlr4-runtime:4.13.1") // antlr runtime
     antlr("org.antlr:antlr4:4.13.1") // lexer and parser generation
+    // Colorful terminal print
+    // https://mvnrepository.com/artifact/org.fusesource.jansi/jansi
+    implementation("org.fusesource.jansi:jansi:2.4.1")
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")

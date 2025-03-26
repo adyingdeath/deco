@@ -6,6 +6,9 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.AnsiConsole;
+
 /**
  * Entry point for the Deco compiler
  */
@@ -30,11 +33,13 @@ public class Entry {
     public static void main(String[] args) {
         // Parse command line arguments
         Entry.parseArguments(args);
+
+        AnsiConsole.systemInstall();
         
         // Check if input directory is specified
         if (srcPath == null) {
-            System.err.println("Error: No input directory specified");
-            System.out.println(Entry.HELP);
+            System.out.println(Ansi.ansi().fgRed().a("Error: No input directory specified").reset());
+            System.out.println("Use -h to see the help menu");
             return;
         }
         
