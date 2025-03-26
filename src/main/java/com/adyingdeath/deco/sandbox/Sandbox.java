@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Sandbox {
     // Function List
-    private List<Function> functions;
+    private final List<Function> functions;
     
     // The output directory for generated files
     private String outputDirectory;

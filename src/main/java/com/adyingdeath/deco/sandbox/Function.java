@@ -9,6 +9,19 @@ import java.util.List;
  */
 public class Function {
     /**
+     * The namespace of the function (e.g. "minecraft", "custom")
+     */
+    private String namespace;
+
+    /**
+     * The path of the function (e.g. "functions/custom")
+     */
+    private String path;
+    /**
+     * The name of the function
+     */
+    private String name;
+    /**
      * The decorator type of the function (e.g. "tick", "load")
      */
     private String decorator;
@@ -17,31 +30,10 @@ public class Function {
      * Parameters for the decorator
      */
     private List<String> decoratorParameters;
-    
-    /**
-     * The name of the function
-     */
-    private String name;
-    
     /**
      * The command body of the function
      */
     private List<String> commands;
-    
-    /**
-     * The namespace of the function (e.g. "minecraft", "custom")
-     */
-    private String namespace;
-    
-    /**
-     * The path of the function (e.g. "functions/custom")
-     */
-    private String path;
-
-    /**
-     * The file name of the function
-     */
-    private String fileName;
     
     /**
      * Create a simple function without decorator
@@ -54,16 +46,29 @@ public class Function {
         this.decoratorParameters = new ArrayList<>();
         this.namespace = "minecraft";
         this.path = "";
-        this.fileName = name;
     }
 
     /**
-     * Set the file name of the function
-     * @param fileName The file name
+     * Set the namespace of the function
+     * @param namespace The namespace
      * @return The function instance for method chaining
      */
-    public Function setFileName(String fileName) {
-        this.fileName = fileName;
+    public Function setNamespace(String namespace) {
+        if (namespace != null && !namespace.isEmpty()) {
+            this.namespace = namespace;
+        }
+        return this;
+    }
+
+    /**
+     * Set the path of the function
+     * @param path The path
+     * @return The function instance for method chaining
+     */
+    public Function setPath(String path) {
+        if (path != null && !path.isEmpty()) {
+            this.path = path;
+        }
         return this;
     }
 
@@ -97,30 +102,6 @@ public class Function {
     public Function addDecoratorParameter(String parameter) {
         if (parameter != null && !parameter.isEmpty()) {
             this.decoratorParameters.add(parameter);
-        }
-        return this;
-    }
-    
-    /**
-     * Set the namespace of the function
-     * @param namespace The namespace
-     * @return The function instance for method chaining
-     */
-    public Function setNamespace(String namespace) {
-        if (namespace != null && !namespace.isEmpty()) {
-            this.namespace = namespace;
-        }
-        return this;
-    }
-    
-    /**
-     * Set the path of the function
-     * @param path The path
-     * @return The function instance for method chaining
-     */
-    public Function setPath(String path) {
-        if (path != null && !path.isEmpty()) {
-            this.path = path;
         }
         return this;
     }

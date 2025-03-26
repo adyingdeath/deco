@@ -1,4 +1,4 @@
-package com.adyingdeath.deco;
+package com.adyingdeath.deco.compile;
 
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
