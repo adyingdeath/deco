@@ -5,15 +5,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Compiler for generating Minecraft datapacks from Deco source files
  */
 public class DatapackCompiler {
-    private final String inputPath;
+    private final String srcPath;
     private final String outputPath;
     
     // Default datapack format version (for pack.mcmeta)
@@ -26,11 +26,11 @@ public class DatapackCompiler {
     /**
      * Constructor for DatapackCompiler
      * 
-     * @param inputPath The input directory path containing Deco source files
+     * @param srcPath The source folder with the same structure as a normal datapack
      * @param outputPath The output directory path for the generated datapack
      */
-    public DatapackCompiler(String inputPath, String outputPath) {
-        this.inputPath = inputPath;
+    public DatapackCompiler(String srcPath, String outputPath) {
+        this.srcPath = srcPath;
         this.outputPath = outputPath;
     }
     
@@ -41,26 +41,41 @@ public class DatapackCompiler {
      */
     public boolean compile() {
         try {
+            // Read source datapack
+            File dataDir = new File(this.srcPath, "data");
+            File[] namespaceFiles = dataDir.listFiles();
+            if (namespaceFiles == null) {
+                System.out.println("There is nothing in the datapack. Compilation done.");
+                return true;
+            }
+
+            // Get all the namespaces, and build a String array of their name.
+            List<String> namespaces = Arrays.stream(namespaceFiles)
+                    .filter((File::isDirectory))
+                    .map(File::getName)
+                    .toList();
+
+            System.out.println("Done");
             // Create datapack directory structure
             if (!createDatapackStructure()) {
                 return false;
             }
-            
+
             // Find all Deco files recursively
-            List<File> decoFiles = findDecoFiles(new File(inputPath));
-            
+            List<File> decoFiles = findDecoFiles(new File(srcPath));
+
             if (decoFiles.isEmpty()) {
-                System.err.println("Warning: No .deco files found in " + inputPath);
+                System.err.println("Warning: No .deco files found in " + srcPath);
                 return false;
             }
-            
+
             // Compile each Deco file
             int successCount = 0;
             int failureCount = 0;
-            
+
             for (File decoFile : decoFiles) {
-                String relativePath = getRelativePath(new File(inputPath), decoFile);
-                
+                String relativePath = getRelativePath(new File(srcPath), decoFile);
+
                 try {
                     boolean success = compileDecoFile(decoFile, relativePath);
                     if (success) {
@@ -73,15 +88,15 @@ public class DatapackCompiler {
                     System.err.println("Error compiling " + relativePath + ": " + e.getMessage());
                 }
             }
-            
+
             // Print summary
             System.out.println("Datapack compilation complete. Summary:");
             System.out.println("  Total files: " + decoFiles.size());
             System.out.println("  Successful: " + successCount);
             System.out.println("  Failed: " + failureCount);
-            
+
             return failureCount == 0;
-            
+
         } catch (Exception e) {
             System.err.println("Error during datapack compilation: " + e.getMessage());
             return false;
@@ -97,8 +112,11 @@ public class DatapackCompiler {
         try {
             // Create base directories
             File outputDir = new File(outputPath);
+            // [datapack]/data
             File dataDir = new File(outputPath, "data");
+            // [datapack]/data/minecraft
             File minecraftDir = new File(dataDir, "minecraft");
+
             File functionsDir = new File(minecraftDir, "functions");
             File tagsDir = new File(minecraftDir, "tags");
             File functionTagsDir = new File(tagsDir, "functions");
@@ -110,9 +128,6 @@ public class DatapackCompiler {
             createDirectory(functionsDir);
             createDirectory(tagsDir);
             createDirectory(functionTagsDir);
-            
-            // Create pack.mcmeta file
-            createPackMcmeta();
             
             return true;
         } catch (Exception e) {
@@ -132,25 +147,6 @@ public class DatapackCompiler {
                 throw new IOException("Failed to create directory: " + dir.getPath());
             }
         }
-    }
-    
-    /**
-     * Create the pack.mcmeta file
-     */
-    private void createPackMcmeta() throws IOException {
-        File packFile = new File(outputPath, "pack.mcmeta");
-        String packContent = String.format(
-            "{\n" +
-            "  \"pack\": {\n" +
-            "    \"pack_format\": %d,\n" +
-            "    \"description\": \"%s\"\n" +
-            "  }\n" +
-            "}",
-            DEFAULT_PACK_FORMAT,
-            DEFAULT_PACK_DESCRIPTION
-        );
-        
-        Files.writeString(packFile.toPath(), packContent);
     }
     
     /**
