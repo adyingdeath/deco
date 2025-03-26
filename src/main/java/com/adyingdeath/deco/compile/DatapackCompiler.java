@@ -19,6 +19,7 @@ public class DatapackCompiler {
     private final String outputPath;
     private final Sandbox sandbox;
     private List<String> namespaces;
+    private final Compiler compiler;
     
     // Default datapack format version (for pack.mcmeta)
     private static final int DEFAULT_PACK_FORMAT = 15; // for Minecraft 1.20.x
@@ -37,6 +38,7 @@ public class DatapackCompiler {
         this.srcPath = srcPath;
         this.outputPath = outputPath;
         this.sandbox = new Sandbox();
+        this.compiler = new Compiler(this.sandbox);
     }
     
     /**
@@ -119,30 +121,6 @@ public class DatapackCompiler {
 
             if (extension.equals("deco") || extension.equals("mcfunction")) {
                 try {
-                    // Process the file using the Compiler
-                    Compiler compiler = new Compiler(this.sandbox);
-                    
-                    // Calculate output file path for the function
-                    String outputDirPath = Paths.get(
-                        this.outputPath,
-                        "data",
-                        namespace,
-                        "functions",
-                        functionPath
-                    ).toString();
-                    
-                    String outputFilePath = Paths.get(
-                        outputDirPath,
-                        baseName + ".mcfunction"
-                    ).toString();
-                    
-                    // Ensure output directory exists
-                    File outputDir = new File(outputDirPath);
-                    if (!outputDir.exists() && !outputDir.mkdirs()) {
-                        System.err.println("Failed to create output directory: " + outputDir.getPath());
-                        return;
-                    }
-                    
                     // Read file content
                     String content = Files.readString(currentFile.toPath());
                     
