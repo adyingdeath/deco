@@ -38,7 +38,7 @@ public class DatapackCompiler {
     public DatapackCompiler(String srcPath, String outputPath) {
         this.srcPath = srcPath;
         this.outputPath = outputPath;
-        this.datapack = new Datapack();
+        this.datapack = new Datapack(this);
         this.compiler = new Compiler(this.datapack);
     }
     
@@ -152,6 +152,12 @@ public class DatapackCompiler {
                 }
             }
         }
+    }
+
+    public String getSrcPath() { return this.srcPath; }
+
+    public List<String> getNamespaces() {
+        return this.namespaces;
     }
     
     /**

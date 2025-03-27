@@ -20,7 +20,6 @@ public interface Decorator {
      * @param params Parameters passed to the decorator
      * @param function The function to decorate
      * @param datapack The datapack
-     * @return The decorated function
      */
-    Function apply(Map<String, Object> params, Function function, Datapack datapack);
+    void apply(Map<String, Object> params, Function function, Datapack datapack);
 }
