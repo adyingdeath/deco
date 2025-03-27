@@ -1,5 +1,7 @@
 package com.adyingdeath.deco.datapack.decorator;
 
+import com.adyingdeath.deco.datapack.decorator.builtin.TickDecorator;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -29,8 +31,8 @@ public class DecoratorLoader {
      */
     private void registerBuiltinDecorators() {
         // Register built-in decorators
-        /* registerDecorator(new TickDecorator());
-        registerDecorator(new LoadDecorator());
+        registerDecorator(new TickDecorator());
+        /* registerDecorator(new LoadDecorator());
         registerDecorator(new PrivateDecorator()); */
     }
 

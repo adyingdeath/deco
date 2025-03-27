@@ -2,6 +2,7 @@ package com.adyingdeath.deco.compile;
 
 import com.adyingdeath.deco.datapack.Function;
 import com.adyingdeath.deco.datapack.Datapack;
+import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,6 +22,7 @@ public class DatapackCompiler {
     private final Datapack datapack;
     private List<String> namespaces;
     private final Compiler compiler;
+    public final DecoratorLoader decoratorLoader;
     
     // Default datapack format version (for pack.mcmeta)
     private static final int DEFAULT_PACK_FORMAT = 15; // for Minecraft 1.20.x
@@ -41,8 +43,10 @@ public class DatapackCompiler {
 
         this.iterateNamespace();
 
+        this.decoratorLoader = new DecoratorLoader();
         this.datapack = new Datapack(this);
         this.compiler = new Compiler(this.datapack);
+
     }
 
     private void iterateNamespace() {

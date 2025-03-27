@@ -14,6 +14,6 @@ public class TickDecorator implements Decorator {
 
     @Override
     public void apply(Map<String, Object> params, Function function, Datapack datapack) {
-
+        System.out.println(function.getPath());
     }
 }

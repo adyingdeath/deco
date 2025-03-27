@@ -1,5 +1,6 @@
 package com.adyingdeath.deco.compile;
 
+import com.adyingdeath.deco.datapack.decorator.Decorator;
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
 
@@ -33,6 +34,11 @@ public class DecoWalker extends DecoBaseListener {
         });
         // Add the function to the sandbox
         datapack.addFunction(function);
+
+        if (ctx.function_decorator() != null) {
+            Decorator decorator = this.datapack.decoratorLoader.getDecorator(ctx.function_decorator().name.getText());
+            decorator.apply(null, function, this.datapack);
+        }
     }
 
     @Override

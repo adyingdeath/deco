@@ -2,6 +2,7 @@ package com.adyingdeath.deco.datapack;
 
 import com.adyingdeath.deco.compile.DatapackCompiler;
 import com.adyingdeath.deco.compile.DecoFile;
+import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -18,11 +19,13 @@ public class Datapack {
     private final List<Function> functions;
     private final Map<String, String> functionTags;
     private final DatapackCompiler compiler;
+    public final DecoratorLoader decoratorLoader;
 
     public Datapack(DatapackCompiler compiler) {
         this.functions = new ArrayList<>();
         this.functionTags = new HashMap<>();
         this.compiler = compiler;
+        this.decoratorLoader = compiler.decoratorLoader;
 
         this.loadFunctionTags();
     }
