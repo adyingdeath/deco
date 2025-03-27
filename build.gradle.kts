@@ -16,6 +16,8 @@ dependencies {
     // Colorful terminal print
     // https://mvnrepository.com/artifact/org.fusesource.jansi/jansi
     implementation("org.fusesource.jansi:jansi:2.4.1")
+    // JSON processing with Gson
+    implementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")

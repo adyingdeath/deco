@@ -1,6 +1,7 @@
 package com.adyingdeath.deco.datapack.decorator.builtin;
 
 import com.adyingdeath.deco.datapack.Datapack;
+import com.adyingdeath.deco.datapack.DatapackUtil;
 import com.adyingdeath.deco.datapack.Function;
 import com.adyingdeath.deco.datapack.decorator.Decorator;
 
@@ -14,6 +15,7 @@ public class TickDecorator implements Decorator {
 
     @Override
     public void apply(Map<String, Object> params, Function function, Datapack datapack) {
-        System.out.println(function.getPath());
+        String location = DatapackUtil.standardizeResourceLocation(function.getNamespace(), function.getFullPath());
+        datapack.getFunctionTag("minecraft:tick").addValue(location);
     }
 }

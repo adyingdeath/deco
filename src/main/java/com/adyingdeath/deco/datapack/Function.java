@@ -76,7 +76,7 @@ public class Function {
      * @return The full path (namespace:path/name)
      */
     public String getFullPath() {
-        return namespace + ":" + path + "/" + name;
+        return path + "/" + name;
     }
     /**
      * Get the name of the function

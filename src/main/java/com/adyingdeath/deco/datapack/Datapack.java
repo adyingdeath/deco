@@ -17,7 +17,8 @@ public class Datapack {
     private DecoFile currentFile;
     // Function List
     private final List<Function> functions;
-    private final Map<String, String> functionTags;
+    // Function Tags Map (resource location -> FunctionTag)
+    private final Map<String, FunctionTag> functionTags;
     private final DatapackCompiler compiler;
     public final DecoratorLoader decoratorLoader;
 
@@ -46,18 +47,29 @@ public class Datapack {
                         String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
                         Path relativePath = relative.getParent() != null ? relative.getParent().resolve(baseName) : Paths.get(baseName);
                         String resourceLocation = namespace + ":" + relativePath.toString();
-                        functionTags.put(resourceLocation, Files.readString(file));
+                        
+                        // Parse JSON content into FunctionTag
+                        String jsonContent = Files.readString(file);
+                        FunctionTag functionTag = FunctionTag.fromJson(jsonContent);
+                        functionTags.put(resourceLocation, functionTag);
+                        
                         return FileVisitResult.CONTINUE;
                     }
                 });
             }
-            System.out.println(1);
+            // Default create tick and load
+            if(this.getFunctionTag("minecraft:tick") == null) {
+                this.functionTags.put("minecraft:tick", new FunctionTag());
+            }
+            if(this.getFunctionTag("minecraft:load") == null) {
+                this.functionTags.put("minecraft:load", new FunctionTag());
+            }
         } catch (IOException e) {
             System.out.println("Error: Fail to load tags");
             return;
         }
-
     }
+    
     /**
      * Set the current file
      * @param currentFile The file to set
@@ -73,6 +85,7 @@ public class Datapack {
     public DecoFile getCurrentFile() {
         return this.currentFile;
     }
+    
     /**
      * Add a function to the sandbox
      * @param function The function to add
@@ -89,6 +102,34 @@ public class Datapack {
      */
     public List<Function> getFunctions() {
         return this.functions;
+    }
+    
+    /**
+     * Add a function tag to the datapack
+     * @param resourceLocation The resource location of the tag (namespace:path/to/tag)
+     * @param functionTag The function tag to add
+     */
+    public void addFunctionTag(String resourceLocation, FunctionTag functionTag) {
+        if (resourceLocation != null && !resourceLocation.isEmpty() && functionTag != null) {
+            this.functionTags.put(resourceLocation, functionTag);
+        }
+    }
+    
+    /**
+     * Get a function tag by resource location
+     * @param resourceLocation The resource location of the tag (namespace:path/to/tag)
+     * @return The function tag, or null if not found
+     */
+    public FunctionTag getFunctionTag(String resourceLocation) {
+        return this.functionTags.get(resourceLocation);
+    }
+    
+    /**
+     * Get all function tags in the datapack
+     * @return Map of resource locations to function tags
+     */
+    public Map<String, FunctionTag> getFunctionTags() {
+        return this.functionTags;
     }
 }
 
