@@ -15,12 +15,12 @@ import org.fusesource.jansi.AnsiConsole;
 public class Entry {
     static final String VERSION = "0.1";
     static final String HELP = """
-    Usage: java -jar deco.jar [options] <input_directory>
-    Options:
-      --output, -o <path>  Specify output datapack directory (default: ./data)
-      --version            Display version information
-      --help, -h           Display this help message
-    """;
+            Usage: java -jar deco.jar [options] <input_directory>
+            Options:
+              --output, -o <path>  Specify output datapack directory (default: ./data)
+              --version            Display version information
+              --help, -h           Display this help message
+            """;
     static final String BANNER = """
             '########::'########::'######:::'#######::
              ##.... ##: ##.....::'##... ##:'##.... ##:

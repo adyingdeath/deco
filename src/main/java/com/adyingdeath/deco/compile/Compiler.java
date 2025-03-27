@@ -2,7 +2,7 @@ package com.adyingdeath.deco.compile;
 
 import com.adyingdeath.deco.parser.DecoParser;
 import com.adyingdeath.deco.parser.DecoLexer;
-import com.adyingdeath.deco.sandbox.Sandbox;
+import com.adyingdeath.deco.datapack.Datapack;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -16,15 +16,15 @@ import java.io.File;
  * The Deco language compiler
  */
 public class Compiler {
-    private final Sandbox sandbox;
+    private final Datapack datapack;
     
     /**
      * Constructor for the Compiler
      * 
-     * @param sandbox Sandbox used to store compilation information
+     * @param datapack Sandbox used to store compilation information
      */
-    public Compiler(Sandbox sandbox) {
-        this.sandbox = sandbox;
+    public Compiler(Datapack datapack) {
+        this.datapack = datapack;
     }
     
     /**
@@ -34,7 +34,7 @@ public class Compiler {
      * @return true if compilation was successful, false otherwise
      */
     public boolean compile(DecoFile src) {
-        this.sandbox.setCurrentFile(src);
+        this.datapack.setCurrentFile(src);
         // Create lexer
         DecoLexer lexer = new DecoLexer(CharStreams.fromString(src.getContent()));
 
@@ -43,7 +43,7 @@ public class Compiler {
 
         // Create parser
         DecoParser parser = new DecoParser(tokens);
-        parser.addParseListener(new DecoWalker(sandbox));
+        parser.addParseListener(new DecoWalker(datapack));
 
         // Parse code
         parser.program();

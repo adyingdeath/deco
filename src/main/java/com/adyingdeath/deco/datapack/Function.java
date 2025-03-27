@@ -1,4 +1,4 @@
-package com.adyingdeath.deco.sandbox;
+package com.adyingdeath.deco.datapack;
 
 import java.util.ArrayList;
 import java.util.List;

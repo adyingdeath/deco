@@ -3,17 +3,16 @@ package com.adyingdeath.deco.compile;
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
 
-import com.adyingdeath.deco.sandbox.Function;
-import com.adyingdeath.deco.sandbox.Sandbox;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import com.adyingdeath.deco.datapack.Function;
+import com.adyingdeath.deco.datapack.Datapack;
 
 
 public class DecoWalker extends DecoBaseListener {
-    private Sandbox sandbox;
+    private Datapack datapack;
 
-    public DecoWalker(Sandbox sandbox) {
+    public DecoWalker(Datapack datapack) {
         super();
-        this.sandbox = sandbox;
+        this.datapack = datapack;
     }
 
     /**
@@ -24,8 +23,8 @@ public class DecoWalker extends DecoBaseListener {
     @Override
     public void exitFunction(DecoParser.FunctionContext ctx) {
         Function function = new Function(ctx.name.getText())
-                .setNamespace(sandbox.getCurrentFile().getNamespace())
-                .setPath(sandbox.getCurrentFile().getPath());
+                .setNamespace(datapack.getCurrentFile().getNamespace())
+                .setPath(datapack.getCurrentFile().getPath());
         // Add all commands to the function
         ctx.blockStatement().statement().forEach((e) -> {
             if (e.MC_COMMAND() != null) {
@@ -33,21 +32,21 @@ public class DecoWalker extends DecoBaseListener {
             }
         });
         // Add the function to the sandbox
-        sandbox.addFunction(function);
+        datapack.addFunction(function);
     }
 
     @Override
     public void exitProgram(DecoParser.ProgramContext ctx) {
-        Function function = new Function(sandbox.getCurrentFile().getFilename())
-                .setNamespace(sandbox.getCurrentFile().getNamespace())
-                .setPath(sandbox.getCurrentFile().getPath());
+        Function function = new Function(datapack.getCurrentFile().getFilename())
+                .setNamespace(datapack.getCurrentFile().getNamespace())
+                .setPath(datapack.getCurrentFile().getPath());
         ctx.statement().forEach((stat) -> {
             if (stat.MC_COMMAND() != null) {
                 function.addCommand(stat.getText().trim());
             }
         });
         if (!function.getCommands().isEmpty()) {
-            sandbox.addFunction(function);
+            datapack.addFunction(function);
         }
     }
 }

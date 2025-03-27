@@ -1,7 +1,7 @@
 package com.adyingdeath.deco.compile;
 
-import com.adyingdeath.deco.sandbox.Function;
-import com.adyingdeath.deco.sandbox.Sandbox;
+import com.adyingdeath.deco.datapack.Function;
+import com.adyingdeath.deco.datapack.Datapack;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +18,7 @@ import java.util.List;
 public class DatapackCompiler {
     private final String srcPath;
     private final String outputPath;
-    private final Sandbox sandbox;
+    private final Datapack datapack;
     private List<String> namespaces;
     private final Compiler compiler;
     
@@ -39,8 +38,8 @@ public class DatapackCompiler {
     public DatapackCompiler(String srcPath, String outputPath) {
         this.srcPath = srcPath;
         this.outputPath = outputPath;
-        this.sandbox = new Sandbox();
-        this.compiler = new Compiler(this.sandbox);
+        this.datapack = new Datapack();
+        this.compiler = new Compiler(this.datapack);
     }
     
     /**
@@ -78,7 +77,7 @@ public class DatapackCompiler {
             }
 
             // Write mcfunction files
-            for (Function function : this.sandbox.getFunctions()) {
+            for (Function function : this.datapack.getFunctions()) {
                 File functionFile = Paths
                         .get(this.outputPath, "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
                         .toFile();

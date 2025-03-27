@@ -1,22 +1,16 @@
-package com.adyingdeath.deco.sandbox;
+package com.adyingdeath.deco.datapack;
 
 import com.adyingdeath.deco.compile.DecoFile;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Sandbox {
+public class Datapack {
     private DecoFile currentFile;
     // Function List
     private final List<Function> functions;
 
-    public Sandbox() {
+    public Datapack() {
         this.functions = new ArrayList<>();
     }
     /**
