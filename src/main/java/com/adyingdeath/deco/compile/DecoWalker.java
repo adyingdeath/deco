@@ -35,9 +35,12 @@ public class DecoWalker extends DecoBaseListener {
         // Add the function to the sandbox
         datapack.addFunction(function);
 
-        if (ctx.function_decorator() != null) {
-            Decorator decorator = this.datapack.decoratorLoader.getDecorator(ctx.function_decorator().name.getText());
-            decorator.apply(null, function, this.datapack);
+        if (!ctx.function_decorator().isEmpty()) {
+            for (DecoParser.Function_decoratorContext decoratorObj : ctx.function_decorator()) {
+                Decorator decorator = this.datapack.decoratorLoader.getDecorator(decoratorObj.name.getText());
+                decorator.apply(null, function, this.datapack);
+            }
+
         }
     }
 

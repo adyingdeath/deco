@@ -14,7 +14,7 @@ statement
     ;
 
 function
-    : function_decorator? FUNC name=IDENTIFIER blockStatement
+    : function_decorator* FUNC name=IDENTIFIER blockStatement
     ;
 
 function_decorator

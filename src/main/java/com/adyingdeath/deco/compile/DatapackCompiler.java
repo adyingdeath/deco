@@ -102,7 +102,7 @@ public class DatapackCompiler {
             // Write function tags
             for (String resourceLocation : this.datapack.getFunctionTags().keySet()) {
                 String[] resourceLocationParts = resourceLocation.split(":");
-                if (resourceLocationParts.length != 2) continue;
+                if (resourceLocationParts.length != 2 || this.datapack.getFunctionTags().get(resourceLocation).getValues().isEmpty()) continue;
                 String namespace = resourceLocationParts[0];
                 String path = resourceLocationParts[1];
                 File functionTagFile = Paths.get(this.outputPath.toString(), "data", namespace, "tags", "functions", path + ".json").toFile();
