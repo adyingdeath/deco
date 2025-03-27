@@ -16,8 +16,8 @@ import java.util.List;
  * Compiler for generating Minecraft datapacks from Deco source files
  */
 public class DatapackCompiler {
-    private final String srcPath;
-    private final String outputPath;
+    private final Path srcPath;
+    private final Path outputPath;
     private final Datapack datapack;
     private List<String> namespaces;
     private final Compiler compiler;
@@ -36,10 +36,29 @@ public class DatapackCompiler {
      * @param outputPath The output directory path for the generated datapack
      */
     public DatapackCompiler(String srcPath, String outputPath) {
-        this.srcPath = srcPath;
-        this.outputPath = outputPath;
+        this.srcPath = Path.of(srcPath);
+        this.outputPath = Path.of(outputPath);
+
+        this.iterateNamespace();
+
         this.datapack = new Datapack(this);
         this.compiler = new Compiler(this.datapack);
+    }
+
+    private void iterateNamespace() {
+        // Read source datapack
+        File dataDir = new File(this.srcPath.toString(), "data");
+        File[] namespaceFiles = dataDir.listFiles();
+        if (namespaceFiles == null) {
+            System.out.println("There is nothing in the datapack. Compilation done.");
+            return;
+        }
+
+        // Get all the namespaces, and build a String array of their name.
+        this.namespaces = Arrays.stream(namespaceFiles)
+            .filter((File::isDirectory))
+            .map(File::getName)
+            .toList();
     }
     
     /**
@@ -49,25 +68,11 @@ public class DatapackCompiler {
      */
     public boolean compile() {
         try {
-            // Read source datapack
-            File dataDir = new File(this.srcPath, "data");
-            File[] namespaceFiles = dataDir.listFiles();
-            if (namespaceFiles == null) {
-                System.out.println("There is nothing in the datapack. Compilation done.");
-                return true;
-            }
-
-            // Get all the namespaces, and build a String array of their name.
-            this.namespaces = Arrays.stream(namespaceFiles)
-                    .filter((File::isDirectory))
-                    .map(File::getName)
-                    .toList();
-
             // Compile all the namespaces
             for (String namespace : this.namespaces) {
                 this.compileNamespace(
                         namespace,
-                        Paths.get(this.srcPath, "data", namespace, "functions").toFile(),
+                        Paths.get(this.srcPath.toString(), "data", namespace, "functions").toFile(),
                         Paths.get("/"));
             }
 
@@ -79,7 +84,7 @@ public class DatapackCompiler {
             // Write mcfunction files
             for (Function function : this.datapack.getFunctions()) {
                 File functionFile = Paths
-                        .get(this.outputPath, "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
+                        .get(this.outputPath.toString(), "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
                         .toFile();
 
                 functionFile.getParentFile().mkdirs();
@@ -154,7 +159,7 @@ public class DatapackCompiler {
         }
     }
 
-    public String getSrcPath() { return this.srcPath; }
+    public Path getSrcPath() { return this.srcPath; }
 
     public List<String> getNamespaces() {
         return this.namespaces;
@@ -168,9 +173,9 @@ public class DatapackCompiler {
     private boolean createDatapackStructure() {
         try {
             // Create base directories
-            File outputDir = new File(outputPath);
+            File outputDir = this.outputPath.toFile();
             // [datapack]/data
-            File dataDir = new File(outputPath, "data");
+            File dataDir = this.outputPath.resolve("data").toFile();
             // [datapack]/data/minecraft
             File minecraftDir = new File(dataDir, "minecraft");
 
@@ -188,8 +193,8 @@ public class DatapackCompiler {
 
 
             // Copy pack.mcmeta
-            File packMcmeta = new File(srcPath, "pack.mcmeta");
-            File packMcmetaOutput = new File(outputPath, "pack.mcmeta");
+            File packMcmeta = this.srcPath.resolve("pack.mcmeta").toFile();
+            File packMcmetaOutput = this.outputPath.resolve("pack.mcmeta").toFile();
             Files.copy(packMcmeta.toPath(), packMcmetaOutput.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             
             return true;
