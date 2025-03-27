@@ -99,6 +99,21 @@ public class DatapackCompiler {
                 writer.close();
             }
 
+            // Write function tags
+            for (String resourceLocation : this.datapack.getFunctionTags().keySet()) {
+                String[] resourceLocationParts = resourceLocation.split(":");
+                if (resourceLocationParts.length != 2) continue;
+                String namespace = resourceLocationParts[0];
+                String path = resourceLocationParts[1];
+                File functionTagFile = Paths.get(this.outputPath.toString(), "data", namespace, "tags", "functions", path + ".json").toFile();
+                functionTagFile.getParentFile().mkdirs();
+                functionTagFile.createNewFile();
+
+                FileWriter writer = new FileWriter(functionTagFile);
+                writer.write(this.datapack.getFunctionTags().get(resourceLocation).toJson());
+                writer.close();
+            }
+
             return true;
         } catch (Exception e) {
             System.err.println("Error during datapack compilation: " + e.getMessage());
