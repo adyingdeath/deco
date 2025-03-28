@@ -30,7 +30,7 @@ public class Function {
      * @param name The name of the function
      */
     public Function(String name) {
-        this.name = name;
+        this.name = name.toLowerCase();
         this.commands = new ArrayList<>();
         this.namespace = "minecraft";
         this.path = "";
