@@ -4,6 +4,28 @@ Deco is a newly designed language specifically for creating Minecraft datapacks.
 
 Deco is currently under development. The current version supports tick, load, and function tags, as well as onPlaceBlock event binding.
 
+## Table of Contents
+
+- [Introduction](#deco)
+- [Features](#features)
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+  - [Command Format](#basic-usage)
+  - [Specify Output Directory](#basic-usage)
+- [Registering as System Command](#registering-deco-as-a-system-command)
+  - [Windows](#windows)
+  - [macOS](#macos)
+- [Syntax Examples](#syntax-examples)
+  - [Event Binding](#event-binding)
+  - [Function Definition](#function-definition)
+
+## Features
+
+- Fully compatible with vanilla datapacks
+- Support for tick, load, and function tags
+- Block placement event binding
+- Clean syntax for improved development efficiency
+
 ## Installation
 
 1. Download the latest version of the `deco.jar` file from [here](#)
@@ -101,30 +123,6 @@ sudo mv /path/to/deco /usr/local/bin/
 
 ```
 deco <your_datapack_folder>
-```
-
-### Using Docker
-
-If you use Docker, you can create a Docker image for Deco:
-
-1. Create a `Dockerfile`:
-
-```dockerfile
-FROM openjdk:11
-COPY deco.jar /app/deco.jar
-ENTRYPOINT ["java", "-jar", "/app/deco.jar"]
-```
-
-2. Build the Docker image:
-
-```
-docker build -t deco .
-```
-
-3. Run Deco using Docker:
-
-```
-docker run -v $(pwd):/data deco /data
 ```
 
 ## Deco Project Structure
