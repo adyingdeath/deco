@@ -3,6 +3,7 @@ package com.adyingdeath.deco.datapack.decorator.builtin;
 import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.DatapackUtil;
 import com.adyingdeath.deco.datapack.Function;
+import com.adyingdeath.deco.datapack.FunctionTag;
 import com.adyingdeath.deco.datapack.decorator.Decorator;
 
 import java.util.Map;
@@ -15,7 +16,19 @@ public class FunctionTagDecorator implements Decorator {
 
     @Override
     public void apply(String[] params, Function function, Datapack datapack) {
+        if (params.length != 1 || params[0].isEmpty()) return;
+        String tag = params[0];
+        String[] tagSplit = tag.split(":");
+        if (tagSplit.length != 2) return;
         String location = DatapackUtil.standardizeResourceLocation(function.getNamespace(), function.getFullPath());
-        datapack.getFunctionTag("minecraft:load").addValue(location);
+        // Create tag file if not existed
+        if (datapack.getFunctionTag(tag) == null) {
+            datapack.addFunctionTag(
+                DatapackUtil.standardizeResourceLocation(tagSplit[0], tagSplit[1]),
+                new FunctionTag().addValue(location)
+            );
+        } else {
+            datapack.getFunctionTag("minecraft:load").addValue(location);
+        }
     }
 }

@@ -44,7 +44,7 @@ public class DecoWalker extends DecoBaseListener {
                     String[] parameters = decoratorObj.parameterList().STRING()
                             .stream().map((i) -> {
                                 String str = i.getText();
-                                return str.substring(1, str.length() - 2);
+                                return str.substring(1, str.length() - 1);
                             })
                             .toArray(String[]::new);
                     

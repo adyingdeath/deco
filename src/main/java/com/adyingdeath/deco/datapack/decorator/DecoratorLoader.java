@@ -1,5 +1,6 @@
 package com.adyingdeath.deco.datapack.decorator;
 
+import com.adyingdeath.deco.datapack.decorator.builtin.FunctionTagDecorator;
 import com.adyingdeath.deco.datapack.decorator.builtin.LoadDecorator;
 import com.adyingdeath.deco.datapack.decorator.builtin.TickDecorator;
 
@@ -34,6 +35,7 @@ public class DecoratorLoader {
         // Register built-in decorators
         registerDecorator(new LoadDecorator());
         registerDecorator(new TickDecorator());
+        registerDecorator(new FunctionTagDecorator());
     }
 
     /**
