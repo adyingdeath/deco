@@ -3,6 +3,7 @@ package com.adyingdeath.deco.compile;
 import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Compiler for generating Minecraft datapacks from Deco source files
@@ -85,7 +87,9 @@ public class DatapackCompiler {
                 return false;
             }
 
-            // Write mcfunction files
+            // ====================================================== //
+            // =============== Write mcfunction files =============== //
+            // ====================================================== //
             for (Function function : this.datapack.getFunctions()) {
                 File functionFile = Paths
                         .get(this.outputPath.toString(), "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
@@ -99,7 +103,9 @@ public class DatapackCompiler {
                 writer.close();
             }
 
-            // Write function tags
+            // ====================================================== //
+            // ================= Write function tags ================ //
+            // ====================================================== //
             for (String resourceLocation : this.datapack.getFunctionTags().keySet()) {
                 String[] resourceLocationParts = resourceLocation.split(":");
                 if (resourceLocationParts.length != 2 || this.datapack.getFunctionTags().get(resourceLocation).getValues().isEmpty()) continue;
@@ -111,6 +117,25 @@ public class DatapackCompiler {
 
                 FileWriter writer = new FileWriter(functionTagFile);
                 writer.write(this.datapack.getFunctionTags().get(resourceLocation).toJson());
+                writer.close();
+            }
+
+            // ====================================================== //
+            // =============== Write advancements ================= //
+            // ====================================================== //
+            for (Map.Entry<String, JsonObject> entry : this.datapack.advancementManager.getAdvancements().entrySet()) {
+                String location = entry.getKey();
+                JsonObject advancement = entry.getValue();
+                // [0] for namespace and [1] for path
+                String[] locationSplit = location.split(":");
+                if (locationSplit.length != 2) continue;
+
+                File advancementFile = Paths.get(this.outputPath.toString(), "data", locationSplit[0], "advancements", locationSplit[1] + ".json").toFile();
+                advancementFile.getParentFile().mkdirs();
+                advancementFile.createNewFile();
+
+                FileWriter writer = new FileWriter(advancementFile);
+                writer.write(advancement.toString());
                 writer.close();
             }
 

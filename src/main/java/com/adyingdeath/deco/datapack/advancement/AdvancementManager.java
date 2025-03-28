@@ -15,4 +15,8 @@ public class AdvancementManager {
     public void addAdvancement(String location, JsonObject ad) {
         this.advancements.put(location, ad);
     }
+
+    public Map<String, JsonObject> getAdvancements() {
+        return this.advancements;
+    }
 }

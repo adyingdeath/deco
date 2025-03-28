@@ -3,6 +3,7 @@ package com.adyingdeath.deco.datapack.decorator;
 import com.adyingdeath.deco.datapack.decorator.builtin.FunctionTagDecorator;
 import com.adyingdeath.deco.datapack.decorator.builtin.LoadDecorator;
 import com.adyingdeath.deco.datapack.decorator.builtin.TickDecorator;
+import com.adyingdeath.deco.datapack.decorator.builtin.event.OnPlaceBlockDecorator;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,9 @@ public class DecoratorLoader {
         registerDecorator(new LoadDecorator());
         registerDecorator(new TickDecorator());
         registerDecorator(new FunctionTagDecorator());
+
+        // Events
+        registerDecorator(new OnPlaceBlockDecorator());
     }
 
     /**
