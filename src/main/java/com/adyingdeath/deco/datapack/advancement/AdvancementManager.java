@@ -2,20 +2,17 @@ package com.adyingdeath.deco.datapack.advancement;
 
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdvancementManager {
-    private final List<JsonObject> advancements;
+    private final Map<String, JsonObject> advancements;
     public AdvancementManager() {
-        this.advancements = new ArrayList<>();
+        this.advancements = new HashMap<>();
     }
 
-    public void addAdvancement(JsonObject ad) {
-        this.advancements.add(ad);
-    }
-
-    public List<JsonObject> getAdvancements() {
-        return advancements;
+    public void addAdvancement(String location, JsonObject ad) {
+        this.advancements.put(location, ad);
     }
 }
