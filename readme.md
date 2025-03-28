@@ -15,6 +15,7 @@ Deco is currently under development. The current version supports tick, load, an
 - [Registering as System Command](#registering-deco-as-a-system-command)
   - [Windows](#windows)
   - [macOS](#macos)
+  - [linux](#linux)
 - [Syntax Examples](#syntax-examples)
   - [Event Binding](#event-binding)
   - [Function Definition](#function-definition)
@@ -46,6 +47,8 @@ java -jar deco.jar -o <output_folder> <your_datapack_folder>
 ```
 
 ## Registering Deco as a System Command
+
+**This is optional, you can jump directly to [Deco Syntax](#deco-syntax) for basic syntax.**
 
 ### Windows
 
@@ -124,6 +127,8 @@ sudo mv /path/to/deco /usr/local/bin/
 ```
 deco <your_datapack_folder>
 ```
+
+# Deco Syntax
 
 ## Deco Project Structure
 
