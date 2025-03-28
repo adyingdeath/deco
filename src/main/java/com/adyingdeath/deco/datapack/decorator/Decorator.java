@@ -21,5 +21,5 @@ public interface Decorator {
      * @param function The function to decorate
      * @param datapack The datapack
      */
-    void apply(Map<String, Object> params, Function function, Datapack datapack);
+    void apply(String[] params, Function function, Datapack datapack);
 }

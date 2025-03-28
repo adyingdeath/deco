@@ -14,7 +14,7 @@ public class TickDecorator implements Decorator {
     }
 
     @Override
-    public void apply(Map<String, Object> params, Function function, Datapack datapack) {
+    public void apply(String[] params, Function function, Datapack datapack) {
         String location = DatapackUtil.standardizeResourceLocation(function.getNamespace(), function.getFullPath());
         datapack.getFunctionTag("minecraft:tick").addValue(location);
     }

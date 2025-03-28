@@ -6,6 +6,7 @@ import com.adyingdeath.deco.parser.DecoParser;
 
 import com.adyingdeath.deco.datapack.Function;
 import com.adyingdeath.deco.datapack.Datapack;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 
 public class DecoWalker extends DecoBaseListener {
@@ -38,9 +39,20 @@ public class DecoWalker extends DecoBaseListener {
         if (!ctx.function_decorator().isEmpty()) {
             for (DecoParser.Function_decoratorContext decoratorObj : ctx.function_decorator()) {
                 Decorator decorator = this.datapack.decoratorLoader.getDecorator(decoratorObj.name.getText());
-                decorator.apply(null, function, this.datapack);
+                if (decoratorObj.parameterList() != null) {
+                    // The decorator has parameters
+                    String[] parameters = decoratorObj.parameterList().STRING()
+                            .stream().map((i) -> {
+                                String str = i.getText();
+                                return str.substring(1, str.length() - 2);
+                            })
+                            .toArray(String[]::new);
+                    
+                    decorator.apply(parameters, function, this.datapack);
+                } else {
+                    decorator.apply(null, function, this.datapack);
+                }
             }
-
         }
     }
 

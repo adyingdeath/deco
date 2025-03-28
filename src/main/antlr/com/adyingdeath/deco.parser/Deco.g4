@@ -11,6 +11,7 @@ statement
     | BLOCK_COMMENT
     | function
     | blockStatement
+    | expression
     ;
 
 function
@@ -18,11 +19,21 @@ function
     ;
 
 function_decorator
-    : '@' name=IDENTIFIER
+    : '@' name=IDENTIFIER ('(' parameterList? ')')?
+    ;
+
+parameterList
+    : STRING (',' STRING)*
     ;
 
 blockStatement
     : '{' statement* '}'
+    ;
+
+// Expression rules
+expression
+    : STRING
+    | IDENTIFIER
     ;
 
 // Lexical rules
@@ -57,6 +68,21 @@ MC_COMMAND
 // Function
 FUNC
     : 'func'
+    ;
+
+// String literal
+STRING
+    : '"' ( ESC | ~["\\] )* '"'
+    | '\'' ( ESC | ~['\\] )* '\''
+    ;
+
+fragment ESC
+    : '\\' [btnfr"'\\]    // Common escape sequences: \b \t \n \f \r \" \' \\
+    | '\\u' HEX HEX HEX HEX   // Unicode escape sequences
+    ;
+
+fragment HEX
+    : [0-9a-fA-F]
     ;
 
 IDENTIFIER
