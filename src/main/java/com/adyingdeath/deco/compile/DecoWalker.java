@@ -4,9 +4,8 @@ import com.adyingdeath.deco.datapack.decorator.Decorator;
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
 
-import com.adyingdeath.deco.datapack.Function;
+import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.datapack.Datapack;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 
 public class DecoWalker extends DecoBaseListener {

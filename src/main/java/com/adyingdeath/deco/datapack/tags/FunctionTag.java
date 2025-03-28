@@ -1,4 +1,4 @@
-package com.adyingdeath.deco.datapack;
+package com.adyingdeath.deco.datapack.tags;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

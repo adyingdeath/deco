@@ -1,6 +1,6 @@
 package com.adyingdeath.deco.compile;
 
-import com.adyingdeath.deco.datapack.Function;
+import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
 

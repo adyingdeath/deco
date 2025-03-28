@@ -3,6 +3,8 @@ package com.adyingdeath.deco.datapack;
 import com.adyingdeath.deco.compile.DatapackCompiler;
 import com.adyingdeath.deco.compile.DecoFile;
 import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
+import com.adyingdeath.deco.datapack.function.Function;
+import com.adyingdeath.deco.datapack.tags.FunctionTag;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -11,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class Datapack {
     private DecoFile currentFile;

@@ -1,9 +1,7 @@
 package com.adyingdeath.deco.datapack.decorator;
 
 import com.adyingdeath.deco.datapack.Datapack;
-import com.adyingdeath.deco.datapack.Function;
-
-import java.util.Map;
+import com.adyingdeath.deco.datapack.function.Function;
 
 /**
  * Interface for function decorators
