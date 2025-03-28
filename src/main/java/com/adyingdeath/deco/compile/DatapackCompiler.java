@@ -1,13 +1,12 @@
 package com.adyingdeath.deco.compile;
 
+import com.adyingdeath.deco.datapack.DatapackUtil;
 import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
 import com.google.gson.JsonObject;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -98,9 +97,7 @@ public class DatapackCompiler {
                 functionFile.getParentFile().mkdirs();
                 functionFile.createNewFile();
 
-                FileWriter writer = new FileWriter(functionFile);
-                writer.write(String.join("\n", function.getCommands()));
-                writer.close();
+                DatapackUtil.UTF8Write(functionFile, String.join("\n", function.getCommands()));
             }
 
             // ====================================================== //
@@ -115,9 +112,7 @@ public class DatapackCompiler {
                 functionTagFile.getParentFile().mkdirs();
                 functionTagFile.createNewFile();
 
-                FileWriter writer = new FileWriter(functionTagFile);
-                writer.write(this.datapack.getFunctionTags().get(resourceLocation).toJson());
-                writer.close();
+                DatapackUtil.UTF8Write(functionTagFile, this.datapack.getFunctionTags().get(resourceLocation).toJson());
             }
 
             // ====================================================== //
@@ -134,9 +129,7 @@ public class DatapackCompiler {
                 advancementFile.getParentFile().mkdirs();
                 advancementFile.createNewFile();
 
-                FileWriter writer = new FileWriter(advancementFile);
-                writer.write(advancement.toString());
-                writer.close();
+                DatapackUtil.UTF8Write(advancementFile, advancement.toString());
             }
 
             return true;

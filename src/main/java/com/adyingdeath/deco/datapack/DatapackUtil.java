@@ -1,5 +1,10 @@
 package com.adyingdeath.deco.datapack;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -31,5 +36,18 @@ public class DatapackUtil {
         }
         
         return result.toString();
+    }
+
+    /**
+     * Writes a string to a file using UTF-8 encoding, preventing character encoding issues
+     * @param file the file to write to
+     * @param content the string to write to the file
+     * @throws IOException if an I/O error occurs
+     */
+    public static void UTF8Write(File file, String content) throws IOException {
+        // Use OutputStreamWriter with UTF-8 encoding to avoid character encoding issues
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+            writer.write(content);
+        }
     }
 }
