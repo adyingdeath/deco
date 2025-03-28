@@ -191,8 +191,12 @@ public class DatapackCompiler {
      */
     private boolean createDatapackStructure() {
         try {
-            // Create base directories
+            // Remove all the original files in the output path
             File outputDir = this.outputPath.toFile();
+            if (outputDir.exists()) {
+                deleteDirectory(outputDir);
+            }
+
             // [datapack]/data
             File dataDir = this.outputPath.resolve("data").toFile();
             // [datapack]/data/minecraft
@@ -221,5 +225,33 @@ public class DatapackCompiler {
             System.err.println("Error creating datapack structure: " + e.getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Recursively delete a directory and all its contents
+     * 
+     * @param directory The directory to delete
+     * @return true if successful, false otherwise
+     */
+    private boolean deleteDirectory(File directory) {
+        if (directory.exists()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteDirectory(file);
+                    } else {
+                        if (!file.delete()) {
+                            System.err.println("Failed to delete file: " + file.getAbsolutePath());
+                            return false;
+                        }
+                    }
+                }
+            }
+            
+            // After deleting all contents, delete the directory itself
+            return directory.delete();
+        }
+        return true;
     }
 }
