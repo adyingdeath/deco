@@ -175,3 +175,21 @@ java -jar deco.jar -o /example_compiled ./example
 ```
 
 You'll see a folder called `example_compiled` generated. Place it in Minecraft's datapack folder and enter the game. When you place black wool, you'll see a message in the chat box: "xxx just placed a black wool.", and similarly for sand.
+
+The same ways for `@load`, `@tick` and `@tag()`:
+```
+@load
+func xxx {
+    xxx
+}
+
+@tick
+func xxx {
+    xxx
+}
+
+@tag("deco:core")
+func xxx {
+    xxx
+}
+```
