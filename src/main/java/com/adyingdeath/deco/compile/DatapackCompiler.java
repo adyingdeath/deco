@@ -89,7 +89,7 @@ public class DatapackCompiler {
             // ====================================================== //
             // =============== Write mcfunction files =============== //
             // ====================================================== //
-            for (Function function : this.datapack.getFunctions()) {
+            for (Function function : this.datapack.getFunction()) {
                 File functionFile = Paths
                         .get(this.outputPath.toString(), "data", function.getLocation().getNamespace(), "functions", function.getLocation().getPath(), function.getLocation().getName() + ".mcfunction")
                         .toFile();

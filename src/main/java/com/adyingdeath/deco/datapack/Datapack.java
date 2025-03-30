@@ -18,7 +18,7 @@ import java.util.Map;
 public class Datapack {
     private DecoFile currentFile;
     // Function List
-    private final List<Function> functions;
+    public final List<Function> function;
     // Function Tags Map (resource location -> FunctionTag)
     private final Map<String, FunctionTag> functionTags;
     private final DatapackCompiler compiler;
@@ -27,7 +27,7 @@ public class Datapack {
     public final Advancement advancement;
 
     public Datapack(DatapackCompiler compiler) {
-        this.functions = new ArrayList<>();
+        this.function = new ArrayList<>();
         this.functionTags = new HashMap<>();
         this.compiler = compiler;
         this.decoratorLoader = compiler.decoratorLoader;
@@ -97,7 +97,7 @@ public class Datapack {
      */
     public void addFunction(Function function) {
         if (function != null) {
-            this.functions.add(function);
+            this.function.add(function);
         }
     }
 
@@ -105,8 +105,8 @@ public class Datapack {
      * Get all functions in the sandbox
      * @return The list of functions
      */
-    public List<Function> getFunctions() {
-        return this.functions;
+    public List<Function> getFunction() {
+        return this.function;
     }
     
     /**
