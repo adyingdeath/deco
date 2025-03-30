@@ -9,9 +9,33 @@ public class ResourceLocation {
     private String path;
     private String name;
 
-    public static void main(String[] args) {
-        ResourceLocation rl = new ResourceLocation("deco:core/main");
-        System.out.println(rl);
+    /**
+     * Standardizes a resource location string.
+     * @param location The resource location string to standardize
+     * @return The standardized resource location string, or null if the string is not a valid resource location
+     */
+    public static String standardize(String location) {
+        String[] locationSplit = location.split(":");
+        if (locationSplit.length != 2) {
+            return null;
+        }
+        String[] pathParts = Arrays.stream(locationSplit[1].split("[/\\\\]"))
+                .filter(part -> !part.isEmpty())
+                .toArray(String[]::new);
+        return locationSplit[0] + ":" + String.join("/", pathParts);
+    }
+
+    /**
+     * Standardizes a resource location string.
+     * @param namespace The namespace of the resource location
+     * @param path The path of the resource location
+     * @return The standardized resource location string
+     */
+    public static String standardize(String namespace, String path) {
+        String[] pathParts = Arrays.stream(path.split("[/\\\\]"))
+                .filter(part -> !part.isEmpty())
+                .toArray(String[]::new);
+        return namespace + ":" + String.join("/", pathParts);
     }
 
     /**
