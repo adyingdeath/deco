@@ -29,7 +29,7 @@ Deco is currently under development. The current version supports tick, load, an
 
 ## Installation
 
-1. Download the latest version of the `deco.jar` file from [here](/adyingdeath/deco/releases/)
+1. Download the latest version of the `deco.jar` file from [here](https://github.com/adyingdeath/deco/releases/)
 2. Place the file in your preferred directory
 
 ## Basic Usage
