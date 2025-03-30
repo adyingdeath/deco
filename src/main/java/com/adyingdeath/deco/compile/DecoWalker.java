@@ -23,9 +23,11 @@ public class DecoWalker extends DecoBaseListener {
      */
     @Override
     public void exitFunction(DecoParser.FunctionContext ctx) {
-        Function function = new Function(ctx.name.getText())
-                .setNamespace(datapack.getCurrentFile().getNamespace())
-                .setPath(datapack.getCurrentFile().getPath());
+        String locationStr = datapack.getCurrentFile().getNamespace()
+                + ":"
+                + datapack.getCurrentFile().getPath()
+                + ctx.name.getText();
+        Function function = new Function(locationStr);
         // Add all commands to the function
         ctx.blockStatement().statement().forEach((e) -> {
             if (e.MC_COMMAND() != null) {

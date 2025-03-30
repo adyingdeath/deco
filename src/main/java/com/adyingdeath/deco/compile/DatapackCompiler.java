@@ -91,7 +91,7 @@ public class DatapackCompiler {
             // ====================================================== //
             for (Function function : this.datapack.getFunctions()) {
                 File functionFile = Paths
-                        .get(this.outputPath.toString(), "data", function.getNamespace(), "functions", function.getPath(), function.getName() + ".mcfunction")
+                        .get(this.outputPath.toString(), "data", function.getLocation().getNamespace(), "functions", function.getLocation().getPath(), function.getLocation().getName() + ".mcfunction")
                         .toFile();
 
                 functionFile.getParentFile().mkdirs();

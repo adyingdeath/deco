@@ -15,7 +15,7 @@ public class ResourceLocation {
      * @return The standardized resource location string, or null if the string is not a valid resource location
      */
     public static String standardize(String location) {
-        String[] locationSplit = location.split(":");
+        String[] locationSplit = location.toLowerCase().split(":");
         if (locationSplit.length != 2) {
             return null;
         }
@@ -32,10 +32,10 @@ public class ResourceLocation {
      * @return The standardized resource location string
      */
     public static String standardize(String namespace, String path) {
-        String[] pathParts = Arrays.stream(path.split("[/\\\\]"))
+        String[] pathParts = Arrays.stream(path.toLowerCase().split("[/\\\\]"))
                 .filter(part -> !part.isEmpty())
                 .toArray(String[]::new);
-        return namespace + ":" + String.join("/", pathParts);
+        return namespace.toLowerCase() + ":" + String.join("/", pathParts);
     }
 
     /**
@@ -43,7 +43,7 @@ public class ResourceLocation {
      * @param location The full location string, e.g. "deco:core/main"
      */
     public ResourceLocation(String location) {
-        String[] locationSplit = location.split(":");
+        String[] locationSplit = location.toLowerCase().split(":");
         if (locationSplit.length != 2) {
             return;
         }
@@ -70,10 +70,10 @@ public class ResourceLocation {
      * @param pathWithName The path with name, e.g. "core/main"
      */
     public ResourceLocation(String namespace, String pathWithName) {
-        this.namespace = namespace;
+        this.namespace = namespace.toLowerCase();
 
         // Handle pathWithName
-        String[] pathSplit = Stream.of(pathWithName.split("[\\\\\\/]"))
+        String[] pathSplit = Stream.of(pathWithName.toLowerCase().split("[\\\\\\/]"))
                 .filter((str) -> !str.isEmpty())
                 .map(String::trim)
                 .toArray(String[]::new);
@@ -94,16 +94,20 @@ public class ResourceLocation {
      * @param name The name of the resource location
      */
     public ResourceLocation(String namespace, String path, String name) {
-        this.namespace = namespace;
-        this.path = path;
-        this.name = name;
+        this.namespace = namespace.toLowerCase();
+        this.path = path.toLowerCase();
+        this.name = name.toLowerCase();
     }
 
     /**
      * Returns the full location string, e.g. "deco:core/main"
      */
     public String toString() {
-        return this.namespace + ":" + this.path + "/" + this.name;
+        if (this.path.isEmpty()) {
+            return this.namespace + ":" + this.name;
+        } else {
+            return this.namespace + ":" + this.path + "/" + this.name;
+        }
     }
 
     public String getNamespace() {
@@ -111,7 +115,7 @@ public class ResourceLocation {
     }
 
     public void setNamespace(String namespace) {
-        this.namespace = namespace;
+        this.namespace = namespace.toLowerCase();
     }
 
     public String getPath() {
@@ -119,7 +123,7 @@ public class ResourceLocation {
     }
 
     public void setPath(String path) {
-        this.path = path;
+        this.path = path.toLowerCase();
     }
 
     public String getName() {
@@ -127,6 +131,6 @@ public class ResourceLocation {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name.toLowerCase();
     }
 }

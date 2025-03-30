@@ -1,5 +1,7 @@
 package com.adyingdeath.deco.datapack.function;
 
+import com.adyingdeath.deco.datapack.ResourceLocation;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,18 +10,7 @@ import java.util.List;
  * This class stores the information needed to generate an mcfunction file
  */
 public class Function {
-    /**
-     * The namespace of the function (e.g. "minecraft", "deco")
-     */
-    private String namespace;
-    /**
-     * The path of the function (e.g. "deco/test/")
-     */
-    private String path;
-    /**
-     * The name of the function
-     */
-    private String name;
+    private ResourceLocation location;
     /**
      * The command body of the function
      */
@@ -27,13 +18,11 @@ public class Function {
     
     /**
      * Create a simple function without decorator
-     * @param name The name of the function
+     * @param location The name of the function
      */
-    public Function(String name) {
-        this.name = name.toLowerCase();
+    public Function(String location) {
+        this.location = new ResourceLocation(location);
         this.commands = new ArrayList<>();
-        this.namespace = "minecraft";
-        this.path = "";
     }
 
     /**
@@ -43,7 +32,7 @@ public class Function {
      */
     public Function setNamespace(String namespace) {
         if (namespace != null && !namespace.isEmpty()) {
-            this.namespace = namespace;
+            this.location.setNamespace(namespace);
         }
         return this;
     }
@@ -55,7 +44,7 @@ public class Function {
      */
     public Function setPath(String path) {
         if (path != null && !path.isEmpty()) {
-            this.path = path;
+            this.location.setPath(path);
         }
         return this;
     }
@@ -72,19 +61,22 @@ public class Function {
     }
 
     /**
-     * Get the full path of the function
-     * @return The full path (namespace:path/name)
+     * Get the location of the function
+     * @return The location
      */
-    public String getFullPath() {
-        return path + "/" + name;
+    public ResourceLocation getLocation() {
+        return location;
     }
+
     /**
-     * Get the name of the function
-     * @return The name
+     * Set the location of the function
+     * @param location The location
+     * @return The function instance for method chaining
      */
-    public String getName() {
-        return name;
-    }   
+    public Function setLocation(ResourceLocation location) {
+        this.location = location;
+        return this;
+    }
 
     /**
      * Get the commands of the function
@@ -92,21 +84,5 @@ public class Function {
      */
     public List<String> getCommands() {
         return commands;
-    }
-    
-    /**
-     * Get the namespace of the function
-     * @return The namespace
-     */
-    public String getNamespace() {
-        return namespace;
-    }
-    
-    /**
-     * Get the path of the function
-     * @return The path
-     */
-    public String getPath() {
-        return path;
     }
 }

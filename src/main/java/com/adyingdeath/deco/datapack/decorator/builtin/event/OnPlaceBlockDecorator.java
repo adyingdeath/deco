@@ -2,6 +2,7 @@ package com.adyingdeath.deco.datapack.decorator.builtin.event;
 
 import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.DatapackUtil;
+import com.adyingdeath.deco.datapack.ResourceLocation;
 import com.adyingdeath.deco.datapack.decorator.Decorator;
 import com.adyingdeath.deco.datapack.function.Function;
 import com.google.gson.JsonArray;
@@ -33,9 +34,7 @@ public class OnPlaceBlockDecorator implements Decorator {
     @Override
     public void apply(String[] params, Function function, Datapack datapack) {
         JsonObject advancement = JsonParser.parseString(template).getAsJsonObject();
-        String functionLocation = DatapackUtil.standardizeResourceLocation(
-            function.getNamespace(), function.getFullPath()
-        );
+        String functionLocation = function.getLocation().toString();
         // Set rewards.function to the decorated function
         advancement.getAsJsonObject("rewards").addProperty("function", functionLocation);
 
