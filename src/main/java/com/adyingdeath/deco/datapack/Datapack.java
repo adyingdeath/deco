@@ -2,7 +2,7 @@ package com.adyingdeath.deco.datapack;
 
 import com.adyingdeath.deco.compile.DatapackCompiler;
 import com.adyingdeath.deco.compile.DecoFile;
-import com.adyingdeath.deco.datapack.advancement.AdvancementManager;
+import com.adyingdeath.deco.datapack.advancement.Advancement;
 import com.adyingdeath.deco.datapack.decorator.DecoratorLoader;
 import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.datapack.tags.FunctionTag;
@@ -24,14 +24,14 @@ public class Datapack {
     private final DatapackCompiler compiler;
     public final DecoratorLoader decoratorLoader;
 
-    public final AdvancementManager advancementManager;
+    public final Advancement advancement;
 
     public Datapack(DatapackCompiler compiler) {
         this.functions = new ArrayList<>();
         this.functionTags = new HashMap<>();
         this.compiler = compiler;
         this.decoratorLoader = compiler.decoratorLoader;
-        this.advancementManager = new AdvancementManager();
+        this.advancement = new Advancement();
 
         this.loadFunctionTags();
     }

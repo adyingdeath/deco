@@ -4,9 +4,7 @@ import com.adyingdeath.deco.datapack.Datapack;
 import com.adyingdeath.deco.datapack.DatapackUtil;
 import com.adyingdeath.deco.datapack.decorator.Decorator;
 import com.adyingdeath.deco.datapack.function.Function;
-import com.adyingdeath.deco.datapack.tags.FunctionTag;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -59,7 +57,7 @@ public class OnPlaceBlockDecorator implements Decorator {
 
         String randomName = "deco:place_block_" + DatapackUtil.randomCode(8);
 
-        datapack.advancementManager.addAdvancement(randomName, advancement);
+        datapack.advancement.addAdvancement(randomName, advancement);
         function.addCommand("advancement revoke @s only " + randomName);
     }
 }

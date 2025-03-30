@@ -118,7 +118,7 @@ public class DatapackCompiler {
             // ====================================================== //
             // =============== Write advancements ================= //
             // ====================================================== //
-            for (Map.Entry<String, JsonObject> entry : this.datapack.advancementManager.getAdvancements().entrySet()) {
+            for (Map.Entry<String, JsonObject> entry : this.datapack.advancement.getAdvancements().entrySet()) {
                 String location = entry.getKey();
                 JsonObject advancement = entry.getValue();
                 // [0] for namespace and [1] for path
