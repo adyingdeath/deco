@@ -18,36 +18,36 @@ public class RaycastFunction extends DecoFunction {
         // Random code used to avoid conflicts
         String randomCode = DatapackUtil.randomCode(8);
 
-        Function hitBlock = new Function("deco:raycast/hit_block" + randomCode);
-        hitBlock.addCommand("scoreboard players set deco.9rjyi591 deco.raycast 1\n" + callback);
-        datapack.function.add(hitBlock);
+        Function hit = new Function("deco:raycast/hit" + randomCode);
+        hit.addCommand("scoreboard players set deco.9rjyi591 deco.raycast 1\n" + callback);
+        datapack.function.add(hit);
 
         Function ray = new Function("deco:raycast/ray" + randomCode);
         ray.addCommand("""
-                execute if block ~ ~ ~ <block> run function <deco:raycast/hit_block>
+                execute if block ~ ~ ~ <block> run function <deco:raycast/hit>
                 scoreboard players add deco.56y56u63 deco.raycast 1
                 execute if score deco.9rjyi591 deco.raycast matches 0 if score deco.56y56u63 deco.raycast matches ..<limit> positioned ^ ^ ^<step> run function <deco:raycast/ray>
                 """
                 .replace("<block>", block)
                 .replace("<limit>", String.valueOf((int) (distance / step)))
                 .replace("<step>", String.valueOf(step))
-                .replace("<deco:raycast/hit_block>", "deco:raycast/hit_block" + randomCode)
+                .replace("<deco:raycast/hit>", "deco:raycast/hit" + randomCode)
                 .replace("<deco:raycast/ray>", "deco:raycast/ray" + randomCode));
         datapack.function.add(ray);
 
-        Function startRay = new Function("deco:raycast/start_ray" + randomCode);
-        startRay.addCommand("""
+        Function start = new Function("deco:raycast/start" + randomCode);
+        start.addCommand("""
                 tag @s add vdvray
                 scoreboard players set deco.9rjyi591 deco.raycast 0
                 scoreboard players set deco.56y56u63 deco.raycast 0
                 function <deco:raycast/ray>
                 tag @s remove vdvray
                 """.replace("<deco:raycast/ray>", "deco:raycast/ray" + randomCode));
-        datapack.function.add(startRay);
+        datapack.function.add(start);
 
         datapack.addLoad("scoreboard objectives add deco.raycast dummy");
 
-        function.addCommand("execute as <shooter> at @s anchored eyes positioned ^ ^ ^ anchored feet run function deco:raycast/start_ray".replace("<shooter>", shooter) + randomCode);
+        function.addCommand("execute as <shooter> at @s anchored eyes positioned ^ ^ ^ anchored feet run function deco:raycast/start".replace("<shooter>", shooter) + randomCode);
     }
     public void leaveFunction(Datapack datapack, Function function, DecoParser.ArgumentListContext arguments) {
 
