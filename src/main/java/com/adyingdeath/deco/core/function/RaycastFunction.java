@@ -37,11 +37,9 @@ public class RaycastFunction extends DecoFunction {
 
         Function start = new Function("deco:raycast/start" + randomCode);
         start.addCommand("""
-                tag @s add vdvray
                 scoreboard players set deco.9rjyi591 deco.raycast 0
                 scoreboard players set deco.56y56u63 deco.raycast 0
                 function <deco:raycast/ray>
-                tag @s remove vdvray
                 """.replace("<deco:raycast/ray>", "deco:raycast/ray" + randomCode));
         datapack.function.add(start);
 
