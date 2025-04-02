@@ -19,6 +19,8 @@ Deco is currently under development. The current version supports tick, load, an
 - [Syntax Examples](#syntax-examples)
   - [Event Binding](#event-binding)
   - [Function Definition](#function-definition)
+  - [Core Functions](#core-functions)
+    - [raycast](#raycast)
 
 ## Features
 
@@ -198,7 +200,7 @@ func xxx {
 
 ## Core Functions
 
-### Raycasting
+### raycast
 
 **Syntax**: `raycast(shooter, block, step, distance, callback)`
 - **`shooter`**: A string specifying the origin of the ray. Accepts selectors like `@a`, `@s`, or a player's name.
