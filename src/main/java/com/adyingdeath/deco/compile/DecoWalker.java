@@ -1,5 +1,6 @@
 package com.adyingdeath.deco.compile;
 
+import com.adyingdeath.deco.core.DecoFunctionRunner;
 import com.adyingdeath.deco.datapack.decorator.Decorator;
 import com.adyingdeath.deco.parser.DecoBaseListener;
 import com.adyingdeath.deco.parser.DecoParser;
@@ -31,14 +32,21 @@ public class DecoWalker extends DecoBaseListener {
         // Add all commands to the function
         ctx.blockStatement().statement().forEach((e) -> {
             if (e.MC_COMMAND() != null) {
+                // This is MC command
                 function.addCommand(e.getText().trim());
+            } else if (e.expression() != null) {
+                if (e.expression() instanceof DecoParser.FuncCallExprContext) {
+                    DecoParser.FuncCallExprContext expr = (DecoParser.FuncCallExprContext) e.expression();
+                    String functionName = expr.functionCall().name.getText();
+                    DecoFunctionRunner.run(functionName, datapack, function, expr.functionCall().argumentList());
+                }
             }
         });
         // Add the function to the sandbox
         datapack.addFunction(function);
 
-        if (!ctx.function_decorator().isEmpty()) {
-            for (DecoParser.Function_decoratorContext decoratorObj : ctx.function_decorator()) {
+        if (!ctx.functionDecorator().isEmpty()) {
+            for (DecoParser.FunctionDecoratorContext decoratorObj : ctx.functionDecorator()) {
                 Decorator decorator = this.datapack.decoratorLoader.getDecorator(decoratorObj.name.getText());
                 if (decoratorObj.parameterList() != null) {
                     // The decorator has parameters

@@ -55,7 +55,7 @@ primaryExpression
     ;
 
 functionCall
-    : IDENTIFIER '(' argumentList? ')'
+    : name=IDENTIFIER '(' argumentList? ')'
     ;
 
 argumentList

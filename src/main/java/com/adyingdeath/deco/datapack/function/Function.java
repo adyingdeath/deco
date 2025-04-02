@@ -3,6 +3,7 @@ package com.adyingdeath.deco.datapack.function;
 import com.adyingdeath.deco.datapack.ResourceLocation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -50,14 +51,25 @@ public class Function {
     }
     /**
      * Add a command to the function
+     *
      * @param command The command to add
-     * @return The function instance for method chaining
      */
-    public Function addCommand(String command) {
+    public void addCommand(String command) {
         if (command != null && !command.isEmpty()) {
-            this.commands.add(command);
+            if (command.contains("\n")) {
+                // If the command contains a newline, split it into multiple commands and add them to the list one by one
+                String[] commandList = command.split("\n");
+                for (String cmd : commandList) {
+                    if (cmd.trim().isEmpty()) {
+                        continue;
+                    }
+                    this.commands.add(cmd);
+                }
+            } else {
+                // If the command doesn't contain a newline, add it to the list
+                this.commands.add(command);
+            }
         }
-        return this;
     }
 
     /**
