@@ -2,6 +2,8 @@
 
 Deco is a newly designed language specifically for creating Minecraft datapacks. It follows a progressive design philosophy, meaning that original Minecraft datapacks and mcfunction files are valid Deco code, allowing you to gradually incorporate Deco syntax to leverage its power.
 
+**Note:** Original datapacks (including all mcfunction files, pack.mcmeta, etc.) can be processed through Deco compilation. This means you can make a copy of your existing datapack or the one you're currently working on, and start leveraging Deco's features by simply creating a `.deco` file within it, without needing to make **ANY CHANGES** to any other files! Start your Deco journey, right now!
+
 Deco is currently under development. The current version supports tick, load, and function tags, as well as onPlaceBlock event binding.
 
 ## Table of Contents
