@@ -3,6 +3,7 @@ package com.adyingdeath.deco.core.function;
 import com.adyingdeath.deco.compile.DecoUtil;
 import com.adyingdeath.deco.core.DecoFunction;
 import com.adyingdeath.deco.datapack.Datapack;
+import com.adyingdeath.deco.datapack.DatapackUtil;
 import com.adyingdeath.deco.datapack.function.Function;
 import com.adyingdeath.deco.parser.DecoParser;
 
@@ -13,35 +14,40 @@ public class RaycastFunction extends DecoFunction {
         float step = Float.parseFloat(arguments.expression(2).getText());
         float distance = Float.parseFloat(arguments.expression(3).getText());
         String callback = DecoUtil.processString(arguments.expression(4).getText());
+        
+        // Random code used to avoid conflicts
+        String randomCode = DatapackUtil.randomCode(8);
 
-        Function hitBlock = new Function("deco:raycast/hit_block");
+        Function hitBlock = new Function("deco:raycast/hit_block" + randomCode);
         hitBlock.addCommand("scoreboard players set deco.9rjyi591 deco.raycast 1\n" + callback);
         datapack.function.add(hitBlock);
 
-        Function ray = new Function("deco:raycast/ray");
+        Function ray = new Function("deco:raycast/ray" + randomCode);
         ray.addCommand("""
-                execute if block ~ ~ ~ <block> run function deco:raycast/hit_block
+                execute if block ~ ~ ~ <block> run function <deco:raycast/hit_block>
                 scoreboard players add deco.56y56u63 deco.raycast 1
-                execute if score deco.9rjyi591 deco.raycast matches 0 if score deco.56y56u63 deco.raycast matches ..<limit> positioned ^ ^ ^<step> run function deco:raycast/ray
+                execute if score deco.9rjyi591 deco.raycast matches 0 if score deco.56y56u63 deco.raycast matches ..<limit> positioned ^ ^ ^<step> run function <deco:raycast/ray>
                 """
                 .replace("<block>", block)
                 .replace("<limit>", String.valueOf((int) (distance / step)))
-                .replace("<step>", String.valueOf(step)));
+                .replace("<step>", String.valueOf(step))
+                .replace("<deco:raycast/hit_block>", "deco:raycast/hit_block" + randomCode)
+                .replace("<deco:raycast/ray>", "deco:raycast/ray" + randomCode));
         datapack.function.add(ray);
 
-        Function startRay = new Function("deco:raycast/start_ray");
+        Function startRay = new Function("deco:raycast/start_ray" + randomCode);
         startRay.addCommand("""
                 tag @s add vdvray
                 scoreboard players set deco.9rjyi591 deco.raycast 0
                 scoreboard players set deco.56y56u63 deco.raycast 0
-                function deco:raycast/ray
+                function <deco:raycast/ray>
                 tag @s remove vdvray
-                """);
+                """.replace("<deco:raycast/ray>", "deco:raycast/ray" + randomCode));
         datapack.function.add(startRay);
 
         datapack.addLoad("scoreboard objectives add deco.raycast dummy");
 
-        function.addCommand("execute as <shooter> at @s anchored eyes positioned ^ ^ ^ anchored feet run function deco:raycast/start_ray".replace("<shooter>", shooter));
+        function.addCommand("execute as <shooter> at @s anchored eyes positioned ^ ^ ^ anchored feet run function deco:raycast/start_ray".replace("<shooter>", shooter) + randomCode);
     }
     public void leaveFunction(Datapack datapack, Function function, DecoParser.ArgumentListContext arguments) {
 
