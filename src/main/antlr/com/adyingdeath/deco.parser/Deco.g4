@@ -15,15 +15,19 @@ statement
     ;
 
 function
-    : function_decorator* FUNC name=IDENTIFIER blockStatement
+    : functionDecorator* FUNC name=IDENTIFIER blockStatement
     ;
 
-function_decorator
+functionDecorator
     : '@' name=IDENTIFIER ('(' parameterList? ')')?
     ;
 
 parameterList
-    : STRING (',' STRING)*
+    : parameter (',' parameter)*
+    ;
+
+parameter
+    : expression
     ;
 
 blockStatement
@@ -32,8 +36,30 @@ blockStatement
 
 // Expression rules
 expression
+    : primaryExpression                                  #PrimaryExpr
+    | functionCall                                       #FuncCallExpr
+    | expression op=('+' | '-' | '*' | '/' | '%') expression   #BinaryExpr
+    | expression op=('==' | '!=' | '<' | '>' | '<=' | '>=') expression  #ComparisonExpr
+    | expression op=('&&' | '||') expression            #LogicalExpr
+    | '!' expression                                     #NotExpr
+    | '(' expression ')'                                 #ParenExpr
+    ;
+
+primaryExpression
     : STRING
+    | NUMBER
     | IDENTIFIER
+    | 'true'
+    | 'false'
+    | 'null'
+    ;
+
+functionCall
+    : IDENTIFIER '(' argumentList? ')'
+    ;
+
+argumentList
+    : expression (',' expression)*
     ;
 
 // Lexical rules
@@ -74,6 +100,11 @@ FUNC
 STRING
     : '"' ( ESC | ~["\\] )* '"'
     | '\'' ( ESC | ~['\\] )* '\''
+    ;
+
+// Number literal
+NUMBER
+    : [0-9]+ ('.' [0-9]+)?
     ;
 
 fragment ESC

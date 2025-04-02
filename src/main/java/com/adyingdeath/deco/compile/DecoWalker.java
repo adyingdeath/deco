@@ -42,7 +42,7 @@ public class DecoWalker extends DecoBaseListener {
                 Decorator decorator = this.datapack.decoratorLoader.getDecorator(decoratorObj.name.getText());
                 if (decoratorObj.parameterList() != null) {
                     // The decorator has parameters
-                    String[] parameters = decoratorObj.parameterList().STRING()
+                    String[] parameters = decoratorObj.parameterList().parameter()
                             .stream().map((i) -> {
                                 String str = i.getText();
                                 return str.substring(1, str.length() - 1);
