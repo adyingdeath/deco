@@ -35,6 +35,8 @@ public class RaycastFunction extends DecoFunction {
                 """);
         datapack.function.add(startRay);
 
+        datapack.addLoad("scoreboard objectives add vdvcasttemp dummy");
+
         function.addCommand("execute as <shooter> at @s anchored eyes positioned ^ ^ ^ anchored feet run function deco:raycast/start_ray".replace("<shooter>", shooter));
     }
     public void leaveFunction(Datapack datapack, Function function, DecoParser.ArgumentListContext arguments) {

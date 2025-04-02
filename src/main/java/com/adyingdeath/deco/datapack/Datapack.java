@@ -26,6 +26,10 @@ public class Datapack {
 
     public final Advancement advancement;
 
+    // Add default load and tick functions
+    private Function loadFunction = new Function("deco:core/load");
+    private Function tickFunction = new Function("deco:core/tick");
+
     public Datapack(DatapackCompiler compiler) {
         this.function = new ArrayList<>();
         this.functionTags = new HashMap<>();
@@ -89,6 +93,40 @@ public class Datapack {
      */
     public DecoFile getCurrentFile() {
         return this.currentFile;
+    }
+
+    /**
+     * Register load and tick functions if they have commands
+     */
+    public void registerLoadTick() {
+        if (!this.loadFunction.getCommands().isEmpty()) {
+            this.function.add(this.loadFunction);
+            FunctionTag tag = this.functionTags.get("minecraft:load");
+            tag.addValue("deco:core/load");
+        }
+        if (!this.tickFunction.getCommands().isEmpty()) {
+            this.function.add(this.tickFunction);
+            FunctionTag tag = this.functionTags.get("minecraft:tick");
+            tag.addValue("deco:core/tick");
+        }
+    }
+
+    /**
+     * Add a command to the deco core load function.
+     * This is used to enable programmers to easily add commands which need to be executed when the datapack is loaded.
+     * @param command The command to add
+     */
+    public void addLoad(String command) {
+        this.loadFunction.addCommand(command);
+    }
+
+    /**
+     * Add a command to the deco core tick function
+     * This is used to enable programmers to easily add commands which need to be executed every tick.
+     * @param command The command to add
+     */
+    public void addTick(String command) {
+        this.tickFunction.addCommand(command);
     }
     
     /**
