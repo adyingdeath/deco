@@ -51,10 +51,7 @@ public class DecoWalker extends DecoBaseListener {
                 if (decoratorObj.parameterList() != null) {
                     // The decorator has parameters
                     String[] parameters = decoratorObj.parameterList().parameter()
-                            .stream().map((i) -> {
-                                String str = i.getText();
-                                return str.substring(1, str.length() - 1);
-                            })
+                            .stream().map((i) -> DecoUtil.processString(i.getText()))
                             .toArray(String[]::new);
                     
                     decorator.apply(parameters, function, this.datapack);
