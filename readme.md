@@ -154,11 +154,13 @@ Place the following example code in your `.deco` file:
 @onPlaceBlock("minecraft:black_wool")
 func onBlackWool {
     tellraw @a [{"selector":"@s"},{"text":" just placed a black wool."}]
+    raycast("@s", "minecraft:black_wool", 0.01, 10, "setblock ~ ~ ~ iron_block")
 }
 
 @onPlaceBlock("minecraft:sand")
 func onSand {
     tellraw @a [{"selector":"@s"},{"text":" just placed a sand."}]
+    raycast("@s", "minecraft:sand", 0.01, 10, "setblock ~ ~ ~ gold_block")
 }
 ```
 
@@ -174,7 +176,7 @@ Or if you haven't set up the command alias:
 java -jar deco.jar -o /example_compiled ./example
 ```
 
-You'll see a folder called `example_compiled` generated. Place it in Minecraft's datapack folder and enter the game. When you place black wool, you'll see a message in the chat box: "xxx just placed a black wool.", and similarly for sand.
+You'll see a folder called `example_compiled` generated. Place it in Minecraft's datapack folder and enter the game. When you place black wool, you'll see a message in the chat box: "xxx just placed a black wool." and the black wool will be replaced by an iron block, and similarly for sand.
 
 The same ways for `@load`, `@tick` and `@tag()`:
 ```
@@ -193,3 +195,20 @@ func xxx {
     xxx
 }
 ```
+
+## Core Functions
+
+### Raycasting
+
+**Syntax**: `raycast(shooter, block, step, distance, callback)`
+- **`shooter`**: A string specifying the origin of the ray. Accepts selectors like `@a`, `@s`, or a player's name.
+- **`block`**: A string defining the target block(s) to detect. Can be a block ID (e.g., `"minecraft:stone"`) or a block tag.
+- **`step`**: A number controlling the ray's precision (e.g., `0.1` for finer detection).
+- **`distance`**: A number setting the maximum ray length in blocks (e.g., `10`).
+- **`callback`**: A string containing Minecraft command(s) to execute upon hitting the target block(s). Supports single or multi-line commands.
+
+**Example**:
+```
+raycast("@s", "minecraft:stone", 0.01, 10, "setblock ~ ~ ~ minecraft:gold_block")
+```
+*"Turn stone to gold!"*
