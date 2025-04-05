@@ -25,6 +25,7 @@ public class Datapack {
     public final DecoratorLoader decoratorLoader;
 
     public final Advancement advancement;
+    public final Map<String, Object> memory;
 
     // Add default load and tick functions
     private Function loadFunction = new Function("deco:core/load");
@@ -36,6 +37,7 @@ public class Datapack {
         this.compiler = compiler;
         this.decoratorLoader = compiler.decoratorLoader;
         this.advancement = new Advancement();
+        this.memory = new HashMap<>();
 
         this.loadFunctionTags();
     }

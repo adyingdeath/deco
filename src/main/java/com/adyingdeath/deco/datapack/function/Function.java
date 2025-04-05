@@ -49,6 +49,26 @@ public class Function {
         }
         return this;
     }
+
+    /**
+     * Insert a command to the function
+     * @param index The index to insert the command at. Negative index counts from the end of the list.
+     * @param command The command to insert
+     */
+    public void insertCommand(int index, String command) {
+        if (command != null && !command.isEmpty()) {
+            if (index < 0) {
+                // Handle negative index, convert it to a positive index counting from the end of the list
+                int actualIndex = this.commands.size() + index;
+                // Ensure the index is not less than 0
+                actualIndex = Math.max(0, actualIndex);
+                this.commands.add(actualIndex, command);
+            } else {
+                this.commands.add(index, command);
+            }
+        }
+    }
+    
     /**
      * Add a command to the function
      *
