@@ -22,7 +22,7 @@ public class OnPlaceBlockDecorator implements Decorator {
                 }
             },
             "rewards": {
-                "function": "<PLACE_HOLDER>"
+                "function": "<func>"
             }
         }
         """;
@@ -33,10 +33,10 @@ public class OnPlaceBlockDecorator implements Decorator {
 
     @Override
     public void apply(String[] params, Function function, Datapack datapack) {
-        JsonObject advancement = JsonParser.parseString(template).getAsJsonObject();
-        String functionLocation = function.getLocation().toString();
-        // Set rewards.function to the decorated function
-        advancement.getAsJsonObject("rewards").addProperty("function", functionLocation);
+        JsonObject advancement = JsonParser.parseString(
+                // Set rewards.function to the decorated function
+                template.replace("<func>", function.getLocation().toString())
+        ).getAsJsonObject();
 
         // Extract blocks from params if existed, and apply them to the advancement
         if (params != null) {
