@@ -1,0 +1,64 @@
+# Build and output directories
+bin/
+obj/
+
+# ANTLR generated Java files (keep C# files)
+language/.antlr/
+language/*.java
+
+# ANTLR temporary files
+language/*.interp
+language/*.tokens
+
+# NuGet packages directory
+packages/
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+
+# Visual Studio cache directory
+.vs/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+bld/
+
+# .NET Core files
+*.nupkg
+*.dotCover
+
+# MSBuild
+*.csproj.user
+*.csproj.nuget.*
+project.assets.json
+project.nuget.cache
+
+# Rider/VS Code
+.idea/
+.vscode/
+
+# Runtime files
+*.runtimeconfig.json
+*.deps.json
+
+# Executables
+*.exe
+*.dll
+*.pdb
+
+# Local development files
+*.Up2Date
+*.cache
+*.txt
+
+# Generated files (except C#)
+*.g.cs
+*.AssemblyAttributes.cs
+*.AssemblyInfo.cs
+*.GlobalUsings.g.cs
