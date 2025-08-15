@@ -29,20 +29,20 @@ public class MinecraftCommandWrapper
         // You can easily add or remove keywords from this list as needed.
         _commandKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            'advancement', 'attribute', 'ban', 'ban-ip', 'banlist', 'bossbar',
-            'clear', 'clone', 'damage', 'data', 'datapack', 'debug', 'defaultgamemode',
-            'deop', 'dialog', 'difficulty', 'effect', 'enchant', 'execute',
-            'experience', 'fill', 'fillbiome', 'forceload', 'function', 'gamemode',
-            'gamerule', 'give', 'help', 'item', 'jfr', 'kick', 'kill', 'list',
-            'locate', 'loot', 'me', 'msg', 'op', 'pardon', 'pardon-ip', 'particle',
-            'perf', 'place', 'playsound', 'publish', 'random', 'recipe', 'reload',
-            'ride', 'rotate', 'save-all', 'save-off', 'save-on', 'say', 'schedule',
-            'scoreboard', 'seed', 'setblock', 'setidletimeout', 'setworldspawn',
-            'spawnpoint', 'spectate', 'spreadplayers', 'stop', 'stopsound', 'summon',
-            'tag', 'team', 'teammsg', 'teleport', 'tell', 'tellraw', 'test', 'tick',
-            'time', 'title', 'tm', 'tp', 'transfer', 'trigger', 'version', 'w',
-            'waypoint', 'weather', 'whitelist', 'worldborder', 'xp'
-        };//'return' this is special case and we should handle it specially.
+            "advancement", "attribute", "ban", "ban-ip", "banlist", "bossbar",
+            "clear", "clone", "damage", "data", "datapack", "debug", "defaultgamemode",
+            "deop", "dialog", "difficulty", "effect", "enchant", "execute",
+            "experience", "fill", "fillbiome", "forceload", "function", "gamemode",
+            "gamerule", "give", "help", "item", "jfr", "kick", "kill", "list",
+            "locate", "loot", "me", "msg", "op", "pardon", "pardon-ip", "particle",
+            "perf", "place", "playsound", "publish", "random", "recipe", "reload",
+            "ride", "rotate", "save-all", "save-off", "save-on", "say", "schedule",
+            "scoreboard", "seed", "setblock", "setidletimeout", "setworldspawn",
+            "spawnpoint", "spectate", "spreadplayers", "stop", "stopsound", "summon",
+            "tag", "team", "teammsg", "teleport", "tell", "tellraw", "test", "tick",
+            "time", "title", "tm", "tp", "transfer", "trigger", "version", "w",
+            "waypoint", "weather", "whitelist", "worldborder", "xp"
+        };//"return" this is special case and we should handle it specially.
     }
 
     /// <summary>
@@ -82,7 +82,8 @@ public class MinecraftCommandWrapper
             {
                 // A complete command was found.
                 string command = code.Substring(commandStartIndex, commandEndIndex - commandStartIndex + 1);
-                resultBuilder.Append("\"\"\"").Append(command).Append("\"\"\"");
+                command = command.TrimEnd(';').Replace("`", "\\`");
+                resultBuilder.Append("@`").Append(command).Append("`;");
                 currentIndex = commandEndIndex + 1;
             }
             else

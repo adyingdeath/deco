@@ -5,7 +5,7 @@ grammar Deco;
 program: (function)* EOF;
 
 function:
-    'func' name=IDENTIFIER '(' (arguments)? ')' (':' type=IDENTIFIER)? '{'
+    type=IDENTIFIER name=IDENTIFIER '(' (arguments)? ')' '{'
         (statement)*
     '}';
 
@@ -19,6 +19,7 @@ statement:
     (COMMAND ';')
     | (expression ';')
     | (variableDefinition ';')
+    | (assignment ';')
     | (return ';')
     ;
 
@@ -26,6 +27,7 @@ expression:
     NUMBER
     | IDENTIFIER
     | functionCall
+    | expression ('+' | '-' | '*' | '/') expression
     ;
 
 variableDefinition:
@@ -36,11 +38,15 @@ functionCall:
     name=IDENTIFIER '(' (expression (',' expression)*)? ')'
     ;
 
+assignment:
+    IDENTIFIER '=' expression
+    ;
+
 return: 'return' expression ;
 
 // --- Lexer Rules ---
 
-COMMAND: '"""' .*? '"""';
+COMMAND: '@' '`' ( '\\' . | ~[`\\] )* '`';
 
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 

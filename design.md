@@ -28,7 +28,7 @@ Deco的程序源文件以`.deco`为后缀，每一个文件中可以有一个或
 函数其实直接对应于我的世界数据包中的函数，使用`func`关键字定义。
 
 ```
-func functionName() {
+void functionName() {
 
 }
 ```
@@ -40,7 +40,7 @@ func functionName() {
 函数可以带有若干个参数，参数的传递方式取决于参数的类型，对于boolean和int型，直接使用一个临时计分板来传递，其他类型要特殊处理，某些类型的数据可能需要使用宏函数来传递。
 
 ```
-func functionName(type1 arg1, type2 arg2, ...): int {
+int functionName(type1 arg1, type2 arg2, ...) {
 
 }
 ```
@@ -50,7 +50,7 @@ func functionName(type1 arg1, type2 arg2, ...): int {
 通过以下格式来定义函数返回值（不写则表示无返回值）：
 
 ```
-func functionName(): int {
+int functionName() {
 
 }
 ```
@@ -75,7 +75,7 @@ Deco核心库提供一些基本游戏事件的绑定修饰符，如`@onPlaceBloc
 
 ```
 @onPlaceBlock("minecraft:stone")
-func place_block() {
+void place_block() {
     // 这个函数会在玩家放置石头的时候被执行
 }
 ```
