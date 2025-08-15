@@ -110,6 +110,27 @@ namespace Deco.Compiler.Data
         {
             Location = location;
         }
+
+        /// <summary>
+        /// Prepend commands to command list.
+        /// </summary>
+        /// <param name="commands">Commands to prepend.</param>
+        public void PrependCommands(string[] commands)
+        {
+            for (int i = commands.Length - 1; i >= 0; i--)
+            {
+                Commands.Insert(0, commands[i]);
+            }
+        }
+
+        /// <summary>
+        /// append commands to command list.
+        /// </summary>
+        /// <param name="commands">Commands to append.</param>
+        public void AppendCommands(string[] commands)
+        {
+            Commands.AddRange(commands);
+        }
     }
 
     /// <summary>

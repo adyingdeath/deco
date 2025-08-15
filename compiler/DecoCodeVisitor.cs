@@ -43,8 +43,6 @@ namespace Deco.Compiler
                 }
             }
 
-            Console.Out.WriteLine(" >>>>>>>>>>>>> " + functionLocation);
-
             var currentFunction = _dataPack.FindOrCreateFunction(functionLocation);
 
             // Second pass on modifiers to handle tags and other properties
