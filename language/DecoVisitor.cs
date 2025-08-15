@@ -62,21 +62,33 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitStatement([NotNull] DecoParser.StatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitExpression([NotNull] DecoParser.ExpressionContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.variableDefinition"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitVariableDefinition([NotNull] DecoParser.VariableDefinitionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.functionCall"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFunctionCall([NotNull] DecoParser.FunctionCallContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.assignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAssignment([NotNull] DecoParser.AssignmentContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.return"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitReturn([NotNull] DecoParser.ReturnContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecoParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExpression([NotNull] DecoParser.ExpressionContext context);
 }

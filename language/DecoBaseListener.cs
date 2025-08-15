@@ -96,6 +96,18 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStatement([NotNull] DecoParser.StatementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterExpression([NotNull] DecoParser.ExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitExpression([NotNull] DecoParser.ExpressionContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.variableDefinition"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -108,6 +120,30 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitVariableDefinition([NotNull] DecoParser.VariableDefinitionContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.functionCall"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFunctionCall([NotNull] DecoParser.FunctionCallContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.functionCall"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFunctionCall([NotNull] DecoParser.FunctionCallContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAssignment([NotNull] DecoParser.AssignmentContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAssignment([NotNull] DecoParser.AssignmentContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.return"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -119,18 +155,6 @@ public partial class DecoBaseListener : IDecoListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReturn([NotNull] DecoParser.ReturnContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DecoParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExpression([NotNull] DecoParser.ExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DecoParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExpression([NotNull] DecoParser.ExpressionContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>
