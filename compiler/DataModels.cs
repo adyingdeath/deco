@@ -10,16 +10,60 @@ namespace Deco.Compiler.Data
     /// </summary>
     public class ResourceLocation
     {
-        public string Namespace { get; }
-        public string Path { get; }
+        public string Namespace { set; get; }
+        public string Path { set; get; }
 
-        public ResourceLocation(string path, string @namespace = "deco")
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ResourceLocation"/> class from a string.
+        /// </summary>
+        /// <param name="location">The string representation of the resource location (e.g., 'minecraft:stone' or 'stone').</param>
+        public ResourceLocation(string location)
+        {
+            SetLocation(location);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ResourceLocation"/> class with a specified path and optional namespace.
+        /// </summary>
+        /// <param name="path">The path part of the resource location.</param>
+        /// <param name="namespace">The namespace part of the resource location. Defaults to "minecraft".</param>
+        /// <exception cref="ArgumentException">Thrown if the path is null or empty.</exception>
+        public ResourceLocation(string path, string @namespace = "minecraft")
         {
             if (string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException("Path cannot be null or empty.", nameof(path));
-            
+
             Namespace = @namespace;
             Path = path;
+        }
+
+        /// <summary>
+        /// Sets the resource location from a string.
+        /// </summary>
+        /// <param name="location">The string representation of the resource location (e.g., 'minecraft:stone' or 'stone').</param>
+        public void SetLocation(string location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                throw new ArgumentException("Location string cannot be null or empty.", nameof(location));
+            }
+
+            if (location.Contains(':'))
+            {
+                var parts = location.Split(':', 2);
+                // Basic validation: ensure parts are not empty after split for robustness
+                if (string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
+                {
+                    throw new FormatException($"Invalid resource location format: '{location}'. Expected 'namespace:path' or 'path'.");
+                }
+                this.Namespace = parts[0];
+                this.Path = parts[1];
+            }
+            else
+            {
+                this.Namespace = "minecraft";
+                this.Path = location;
+            }
         }
 
         public override string ToString() => $"{Namespace}:{Path}";
@@ -30,7 +74,7 @@ namespace Deco.Compiler.Data
     /// </summary>
     public enum TagType
     {
-        Functions,
+        Function,
         Items,
         Blocks,
         EntityTypes,

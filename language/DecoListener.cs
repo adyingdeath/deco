@@ -41,6 +41,16 @@ public interface IDecoListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitProgram([NotNull] DecoParser.ProgramContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.modifier"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterModifier([NotNull] DecoParser.ModifierContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.modifier"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitModifier([NotNull] DecoParser.ModifierContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.function"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

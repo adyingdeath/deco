@@ -4,7 +4,12 @@ grammar Deco;
 
 program: (function)* EOF;
 
+modifier:
+    '@' name=IDENTIFIER ('(' (expression (',' expression)*)? ')')?
+    ;
+
 function:
+    (modifier)*
     type=IDENTIFIER name=IDENTIFIER '(' (arguments)? ')' '{'
         (statement)*
     '}';
@@ -24,8 +29,9 @@ statement:
     ;
 
 expression:
-    NUMBER
-    | IDENTIFIER
+    IDENTIFIER
+    | STRING
+    | NUMBER
     | functionCall
     | expression ('+' | '-' | '*' | '/') expression
     ;
@@ -47,6 +53,8 @@ return: 'return' expression ;
 // --- Lexer Rules ---
 
 COMMAND: '@' '`' ( '\\' . | ~[`\\] )* '`';
+
+STRING: '"' ( '"' | ~["] )* '"' ;
 
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 

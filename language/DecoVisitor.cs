@@ -38,6 +38,12 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitProgram([NotNull] DecoParser.ProgramContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.modifier"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitModifier([NotNull] DecoParser.ModifierContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.function"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

@@ -48,6 +48,18 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitProgram([NotNull] DecoParser.ProgramContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.modifier"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterModifier([NotNull] DecoParser.ModifierContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.modifier"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitModifier([NotNull] DecoParser.ModifierContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.function"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
