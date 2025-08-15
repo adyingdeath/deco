@@ -5,14 +5,25 @@ grammar Deco;
 program: (function)* EOF;
 
 function:
-    'func' IDENTIFIER '(' ')' '{'
+    'func' functionName=IDENTIFIER '(' (arguments)? ')' (':' returnType=IDENTIFIER)? '{'
         (statement)*
     '}';
 
+arguments:
+    argument (',' argument)*;
+
+argument:
+    IDENTIFIER IDENTIFIER;
+
 statement:
     COMMAND
-    | return // 例如：return value;
-    | IDENTIFIER '(' expression ')' ';' // 例如：callFunc(arg);
+    | variableDefinition
+    | return
+    | IDENTIFIER '(' expression ')' ';'
+    ;
+
+variableDefinition:
+    IDENTIFIER IDENTIFIER ';'
     ;
 
 return: 'return' expression ';' ;
@@ -24,100 +35,7 @@ expression:
 
 // --- Lexer Rules ---
 
-COMMAND: // All the minecraft commands, and optional macros symbol
-    //{getCharPositionInLine()==0}?
-    ('$')?
-    (
-        'advancement'
-        | 'attribute'
-        | 'ban'
-        | 'ban-ip'
-        | 'banlist'
-        | 'bossbar'
-        | 'clear'
-        | 'clone'
-        | 'damage'
-        | 'data'
-        | 'datapack'
-        | 'debug'
-        | 'defaultgamemode'
-        | 'deop'
-        | 'dialog'
-        | 'difficulty'
-        | 'effect'
-        | 'enchant'
-        | 'execute'
-        | 'experience'
-        | 'fill'
-        | 'fillbiome'
-        | 'forceload'
-        | 'function'
-        | 'gamemode'
-        | 'gamerule'
-        | 'give'
-        | 'help'
-        | 'item'
-        | 'jfr'
-        | 'kick'
-        | 'kill'
-        | 'list'
-        | 'locate'
-        | 'loot'
-        | 'me'
-        | 'msg'
-        | 'op'
-        | 'pardon'
-        | 'pardon-ip'
-        | 'particle'
-        | 'perf'
-        | 'place'
-        | 'playsound'
-        | 'publish'
-        | 'random'
-        | 'recipe'
-        | 'reload'
-//        | 'return' this is special case and we should handle it specially.
-        | 'ride'
-        | 'rotate'
-        | 'save-all'
-        | 'save-off'
-        | 'save-on'
-        | 'say'
-        | 'schedule'
-        | 'scoreboard'
-        | 'seed'
-        | 'setblock'
-        | 'setidletimeout'
-        | 'setworldspawn'
-        | 'spawnpoint'
-        | 'spectate'
-        | 'spreadplayers'
-        | 'stop'
-        | 'stopsound'
-        | 'summon'
-        | 'tag'
-        | 'team'
-        | 'teammsg'
-        | 'teleport'
-        | 'tell'
-        | 'tellraw'
-        | 'test'
-        | 'tick'
-        | 'time'
-        | 'title'
-        | 'tm'
-        | 'tp'
-        | 'transfer'
-        | 'trigger'
-        | 'version'
-        | 'w'
-        | 'waypoint'
-        | 'weather'
-        | 'whitelist'
-        | 'worldborder'
-        | 'xp'
-    ) (' ' ~';'+)* ';'
-;
+COMMAND: '"""' .*? '"""';
 
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 
