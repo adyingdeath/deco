@@ -27,7 +27,7 @@ namespace Deco.Compiler
         public void Write()
         {
             // Get the root path for the datapack and ensure the directory is clean
-            string rootPath = _dataPack.Name;
+            string rootPath = $"D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";//_dataPack.Name;
             if (Directory.Exists(rootPath))
             {
                 Directory.Delete(rootPath, true);

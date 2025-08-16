@@ -52,11 +52,17 @@ namespace Deco.Compiler
         private void ProcessFunctionCall(DecoParser.FunctionCallContext context, McFunction currentMcFunction)
         {
             string functionName = context.name.Text;
+            
+            // Handle built-in library functions
+            if (functionName == "print")
+            {
+                LibraryFunctions.HandlePrintFunction(context, currentMcFunction, _dataPack);
+                return; // Handled, so return
+            }
 
             // 1. Look up function signature and location
             if (!_dataPack.Functions.Table.TryGetValue(functionName, out var signature) ||
-                !_dataPack.Functions.Locations.TryGetValue(functionName, out var locationToCall))
-            {
+                !_dataPack.Functions.Locations.TryGetValue(functionName, out var locationToCall)) {
                 // Error: calling an undefined function
                 Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionName}'.");
                 return;

@@ -110,27 +110,12 @@ namespace Deco.Compiler.Data {
     }
 
     /// <summary>
-    /// Defines how a parameter's value is stored.
-    /// </summary>
-    public enum ParameterStorageType {
-        /// <summary>
-        /// Stored in a scoreboard objective.
-        /// </summary>
-        Scoreboard,
-        /// <summary>
-        /// Stored in a data storage.
-        /// </summary>
-        Storage
-    }
-
-    /// <summary>
     /// Holds information about a function's parameter.
     /// </summary>
     public class ParameterInfo {
         public string Type { get; set; }
         public string Name { get; set; }
         public string StorageName { get; set; }
-        public ParameterStorageType StorageType { get; set; }
     }
 
     /// <summary>

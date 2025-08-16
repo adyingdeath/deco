@@ -10,7 +10,7 @@ int main_tick() {
 }
 
 void main_load(int a, string te, float cc, int ff) {
-    @`say tick!`;
+    print(1);
 }
 ";
 
