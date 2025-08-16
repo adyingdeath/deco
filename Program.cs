@@ -5,14 +5,11 @@ using Deco.Compiler.Data;
 // --- Stage 1: Source Code Input ---
 string sourceCode = @"
 @load
-@name(""deco:test/great"")
-tick main_tick(int a) {
-    @`scoreboard players add @p ticks 1`;
-    @`say running tick...`;
+int main_tick() {
+    main_load(1, ""aaa"", 1, 2);
 }
 
-@tick
-load main_load() {
+void main_load(int a, string te, float cc, int ff) {
     @`say tick!`;
 }
 ";
@@ -33,8 +30,15 @@ Console.WriteLine("Parsing complete.");
 // --- Stage 3: Visiting the Parse Tree to Populate Data Model ---
 Console.WriteLine("--- Visitor Stage ---");
 var dataPack = new DataPack("ukx34rhy", "generated_datapack", "deco");
-var visitor = new DecoCodeVisitor(dataPack);
-visitor.Visit(tree);
+// Pass 1: Discover all function signatures
+var discoveryVisitor = new SymbolCollector(dataPack);
+discoveryVisitor.Visit(tree);
+Console.WriteLine($"Discovery pass finished. Found {dataPack.FunctionTable.Count} function signatures.");
+Console.WriteLine(dataPack);
+
+// Pass 2: Visit the parse tree to generate code
+var codeVisitor = new DecoCompiler(dataPack);
+codeVisitor.GenerateCode();
 Console.WriteLine($"Visitor finished. Found {dataPack.Functions.Count} functions and {dataPack.Tags.Count} tags.");
 
 // --- Stage 4: Writing the Data Pack to Files ---

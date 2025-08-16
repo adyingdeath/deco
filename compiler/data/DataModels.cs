@@ -115,6 +115,23 @@ namespace Deco.Compiler.Data {
     }
 
     /// <summary>
+    /// Holds information about a function's parameter.
+    /// </summary>
+    public class ParameterInfo {
+        public string Type { get; set; }
+        public string Name { get; set; }
+        public string StorageName { get; set; }
+    }
+
+    /// <summary>
+    /// Holds the signature of a declared function (return type and parameters).
+    /// </summary>
+    public class FunctionSignature {
+        public string ReturnType { get; set; }
+        public List<ParameterInfo> Parameters { get; } = new List<ParameterInfo>();
+    }
+
+    /// <summary>
     /// Represents the entire Minecraft data pack to be generated.
     /// </summary>
     public class DataPack {
@@ -125,6 +142,10 @@ namespace Deco.Compiler.Data {
         public McFunction OnLoadFunction { get; }
         public List<Tag> Tags { get; } = [];
         public Dictionary<string, string> Flags { get; } = [];
+        public Dictionary<string, FunctionSignature> FunctionTable { get; } = new();
+        public Dictionary<string, ResourceLocation> FunctionLocations { get; } = new();
+        public Dictionary<string, DecoParser.FunctionContext> FunctionContexts { get; } = new();
+        public int ParameterIdCounter { get; set; } = 0;
 
         public DataPack(string id, string name, string mainNamespace) {
             ID = id;
