@@ -80,17 +80,13 @@ namespace Deco.Compiler.Data {
         public List<ResourceLocation> Values { get; } = new List<ResourceLocation>();
     }
 
-    public class McFunctionArgument(string type, string name) {
-        public string Type { get; } = type;
-        public string Name { get; } = name;
-    }
+    
 
     /// <summary>
     /// Represents a single Minecraft function.
     /// </summary>
     public class McFunction(ResourceLocation location) {
         public ResourceLocation Location { get; } = location;
-        public List<McFunctionArgument> Arguments { get; } = new List<McFunctionArgument>();
         public List<string> Commands { get; } = new List<string>();
 
 
@@ -114,12 +110,27 @@ namespace Deco.Compiler.Data {
     }
 
     /// <summary>
+    /// Defines how a parameter's value is stored.
+    /// </summary>
+    public enum ParameterStorageType {
+        /// <summary>
+        /// Stored in a scoreboard objective.
+        /// </summary>
+        Scoreboard,
+        /// <summary>
+        /// Stored in a data storage.
+        /// </summary>
+        Storage
+    }
+
+    /// <summary>
     /// Holds information about a function's parameter.
     /// </summary>
     public class ParameterInfo {
         public string Type { get; set; }
         public string Name { get; set; }
         public string StorageName { get; set; }
+        public ParameterStorageType StorageType { get; set; }
     }
 
     /// <summary>

@@ -62,3 +62,5 @@ project.nuget.cache
 *.AssemblyAttributes.cs
 *.AssemblyInfo.cs
 *.GlobalUsings.g.cs
+
+.gemini/
