@@ -26,7 +26,7 @@ namespace Deco.Compiler.Data
             Functions = new FunctionCollection(onLoadFunction);
 
             // Create the minecraft:load tag and link it to the OnLoadFunction
-            var loadTag = new Tag(new ResourceLocation("minecraft:load"), TagType.Function);
+            var loadTag = new Tag(ResourceLocation.Parse("minecraft:load", "minecraft"), TagType.Function);
             loadTag.Values.Add(Functions.OnLoadFunction.Location);
             Tags.Add(loadTag);
         }

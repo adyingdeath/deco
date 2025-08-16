@@ -8,11 +8,9 @@ namespace Deco.Compiler.Data
     /// </summary>
     public class FunctionCollection
     {
-        public List<McFunction> Items { get; } = new List<McFunction>();
+        public List<McFunction> McFunctions { get; } = new List<McFunction>();
+        public Dictionary<string, DecoFunction> DecoFunctions { get; } = new Dictionary<string, DecoFunction>();
         public McFunction OnLoadFunction { get; }
-        public Dictionary<string, FunctionSignature> Table { get; } = new Dictionary<string, FunctionSignature>();
-        public Dictionary<string, ResourceLocation> Locations { get; } = new Dictionary<string, ResourceLocation>();
-        public Dictionary<string, DecoParser.FunctionContext> Contexts { get; } = new Dictionary<string, DecoParser.FunctionContext>();
         public int ParameterIdCounter { get; set; } = 0;
 
         /// <summary>
@@ -22,16 +20,16 @@ namespace Deco.Compiler.Data
         public FunctionCollection(McFunction onLoadFunction)
         {
             OnLoadFunction = onLoadFunction;
-            Items.Add(OnLoadFunction);
+            McFunctions.Add(OnLoadFunction);
         }
 
-        public McFunction FindOrCreate(ResourceLocation location)
+        public McFunction FindOrCreateMcFunction(ResourceLocation location)
         {
-            var existing = Items.FirstOrDefault(f => f.Location.ToString() == location.ToString());
+            var existing = McFunctions.FirstOrDefault(f => f.Location.ToString() == location.ToString());
             if (existing != null) return existing;
 
             var newFunc = new McFunction(location);
-            Items.Add(newFunc);
+            McFunctions.Add(newFunc);
             return newFunc;
         }
     }

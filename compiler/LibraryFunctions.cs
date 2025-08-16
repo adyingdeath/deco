@@ -1,15 +1,11 @@
 using Deco.Compiler.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Deco.Compiler {
     public static class LibraryFunctions {
-        public static void HandlePrintFunction(DecoParser.FunctionCallContext context, DataPack dataPack, string functionName) {
+        public static void HandlePrintFunction(DecoParser.FunctionCallContext context, DataPack dataPack, DecoFunction currentDecoFunction) {
             var arguments = context.expression();
-            var currentMcFunction = dataPack.Functions.FindOrCreate(dataPack.Functions.Locations[functionName]);
+            var currentMcFunction = currentDecoFunction.McFunction;
 
             if (arguments.Length == 0) {
                 Console.Error.WriteLine("Error: Function 'print' expects at least 1 argument.");
@@ -24,16 +20,12 @@ namespace Deco.Compiler {
 
                 if (argument.IDENTIFIER() != null) {
                     string identifierName = argument.IDENTIFIER().GetText();
-
-                    if (!dataPack.Functions.Table.TryGetValue(functionName, out var containingFunctionSignature)) {
-                        Console.Error.WriteLine($"Internal Error: Could not find signature for function '{functionName}'.");
-                        return;
-                    }
+                    var containingFunctionSignature = currentDecoFunction.Signature;
 
                     ParameterInfo info = containingFunctionSignature.Parameters.Find(p => p.Name == identifierName);
 
                     if (info == null) {
-                        Console.Error.WriteLine($"Error: Unknown identifier '{identifierName}' in function '{functionName}'. Only function parameters are currently supported in 'print'.");
+                        Console.Error.WriteLine($"Error: Unknown identifier '{identifierName}' in function '{currentDecoFunction.Name}'. Only function parameters are currently supported in 'print'.");
                         return;
                     }
 

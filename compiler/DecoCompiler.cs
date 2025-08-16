@@ -17,23 +17,19 @@ namespace Deco.Compiler
 
         public void GenerateCode()
         {
-            foreach (var functionName in _dataPack.Functions.Contexts.Keys)
+            foreach (var decoFunction in _dataPack.Functions.DecoFunctions.Values)
             {
-                var context = _dataPack.Functions.Contexts[functionName];
-                var functionLocation = _dataPack.Functions.Locations[functionName];
-                var currentMcFunction = _dataPack.Functions.FindOrCreate(functionLocation);
-
                 // Process each statement in the function body
-                foreach (var statement in context.statement())
+                foreach (var statement in decoFunction.Context.statement())
                 {
-                    ProcessStatement(statement, functionName);
+                    ProcessStatement(statement, decoFunction);
                 }
             }
         }
 
-        private void ProcessStatement(DecoParser.StatementContext statement, string functionName)
+        private void ProcessStatement(DecoParser.StatementContext statement, DecoFunction decoFunction)
         {
-            var currentMcFunction = _dataPack.Functions.FindOrCreate(_dataPack.Functions.Locations[functionName]);
+            var currentMcFunction = decoFunction.McFunction;
             if (statement.COMMAND() != null) {
                 string rawCommand = statement.COMMAND().GetText();
                 if (rawCommand.StartsWith("@`") && rawCommand.EndsWith("`")) {
@@ -41,36 +37,37 @@ namespace Deco.Compiler
                     currentMcFunction.Commands.Add(command);
                 }
             } else if (statement.expression()?.functionCall() != null) {
-                ProcessFunctionCall(statement.expression().functionCall(), functionName);
+                ProcessFunctionCall(statement.expression().functionCall(), decoFunction);
             }
             // Other statement types (variable definitions, assignments, etc.) can be handled here.
         }
 
-        private void ProcessFunctionCall(DecoParser.FunctionCallContext context, string currentFunction)
+        private void ProcessFunctionCall(DecoParser.FunctionCallContext context, DecoFunction currentDecoFunction)
         {
-            string functionName = context.name.Text;
-            McFunction currentMcFunction = _dataPack.Functions.FindOrCreate(_dataPack.Functions.Locations[currentFunction]);
+            string functionNameToCall = context.name.Text;
+            McFunction currentMcFunction = currentDecoFunction.McFunction;
             
             // Handle built-in library functions
-            if (functionName == "print") {
-                LibraryFunctions.HandlePrintFunction(context, _dataPack, currentFunction);
+            if (functionNameToCall == "print") {
+                LibraryFunctions.HandlePrintFunction(context, _dataPack, currentDecoFunction);
                 return; // Handled, so return
             }
 
-            // 1. Look up function signature and location
-            if (!_dataPack.Functions.Table.TryGetValue(functionName, out var signature) ||
-                !_dataPack.Functions.Locations.TryGetValue(functionName, out var locationToCall)) {
+            // 1. Look up function
+            if (!_dataPack.Functions.DecoFunctions.TryGetValue(functionNameToCall, out var calledDecoFunction)) {
                 // Error: calling an undefined function
-                Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionName}'.");
+                Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionNameToCall}'.");
                 return;
             }
+            var signature = calledDecoFunction.Signature;
+            var locationToCall = calledDecoFunction.McFunction.Location;
 
             var arguments = context.expression();
 
             // 2. Check argument count
             if (arguments.Length != signature.Parameters.Count)
             {
-                Console.Error.WriteLine($"Error: Function '{functionName}' expects {signature.Parameters.Count} arguments, but received {arguments.Length}.");
+                Console.Error.WriteLine($"Error: Function '{functionNameToCall}' expects {signature.Parameters.Count} arguments, but received {arguments.Length}.");
                 return;
             }
 
@@ -120,7 +117,5 @@ namespace Deco.Compiler
             // 4. Call the function
             currentMcFunction.Commands.Add($"function {locationToCall}");
         }
-
-        
     }
 }

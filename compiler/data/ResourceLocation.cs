@@ -4,23 +4,12 @@ namespace Deco.Compiler.Data
 {
     /// <summary>
     /// Represents a Minecraft resource location, like 'minecraft:stone' or 'deco:my_function'.
+    /// This class is immutable.
     /// </summary>
     public class ResourceLocation
     {
-        public string Namespace { get; private set; }
-        public string Path { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResourceLocation"/> class from a string.
-        /// If no namespace is provided, 'minecraft' is used as the default.
-        /// </summary>
-        /// <param name="location">The string representation of the resource location (e.g., 'minecraft:stone' or 'stone').</param>
-        public ResourceLocation(string location)
-        {
-            // Set a default namespace before parsing.
-            this.Namespace = "minecraft";
-            SetLocation(location);
-        }
+        public string Namespace { get; }
+        public string Path { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceLocation"/> class with a specified path and namespace.
@@ -40,11 +29,14 @@ namespace Deco.Compiler.Data
         }
 
         /// <summary>
-        /// Sets the resource location from a string. If the location string does not contain a namespace,
-        /// the existing namespace on the object is preserved.
+        /// Parses a string into a <see cref="ResourceLocation"/>.
         /// </summary>
         /// <param name="location">The string representation of the resource location (e.g., 'minecraft:stone' or 'stone').</param>
-        public void SetLocation(string location)
+        /// <param name="defaultNamespace">The namespace to use if the location string does not specify one.</param>
+        /// <returns>A new <see cref="ResourceLocation"/> instance.</returns>
+        /// <exception cref="ArgumentException">Thrown if the location string is null or empty.</exception>
+        /// <exception cref="FormatException">Thrown if the location string is malformed.</exception>
+        public static ResourceLocation Parse(string location, string defaultNamespace)
         {
             if (string.IsNullOrWhiteSpace(location))
             {
@@ -58,14 +50,11 @@ namespace Deco.Compiler.Data
                 {
                     throw new FormatException($"Invalid resource location format: '{location}'. Expected 'namespace:path'.");
                 }
-                this.Namespace = parts[0];
-                this.Path = parts[1];
+                return new ResourceLocation(parts[1], parts[0]);
             }
             else
             {
-                // If no namespace is provided in the string, only update the path,
-                // preserving the existing namespace.
-                this.Path = location;
+                return new ResourceLocation(location, defaultNamespace);
             }
         }
 

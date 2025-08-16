@@ -1,4 +1,5 @@
 using Deco.Compiler.Data;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -48,10 +49,10 @@ namespace Deco.Compiler
             File.WriteAllText(mcmetaPath, JsonSerializer.Serialize(mcmetaContent, new JsonSerializerOptions { WriteIndented = true }));
             Console.WriteLine($"  -> Created {Path.GetFullPath(mcmetaPath)}");
 
-            Console.WriteLine("\n--- Function Generation Stage ---");
+            Console.WriteLine("--- Function Generation Stage ---");
             WriteFunctions(rootPath);
 
-            Console.WriteLine("\n--- Tag Generation Stage ---");
+            Console.WriteLine("--- Tag Generation Stage ---");
             WriteTags(rootPath);
         }
 
@@ -61,7 +62,7 @@ namespace Deco.Compiler
         /// <param name="rootPath">The root directory of the data pack.</param>
         private void WriteFunctions(string rootPath)
         {
-            foreach (var function in _dataPack.Functions.Items)
+            foreach (var function in _dataPack.Functions.McFunctions)
             {
                 string functionDirectory = Path.Combine(rootPath, "data", function.Location.Namespace, "function");
                 Directory.CreateDirectory(functionDirectory); // Ensure directory exists
@@ -88,15 +89,12 @@ namespace Deco.Compiler
                 string filePath = Path.Combine(tagDirectory, $"{tag.Location.Path}.json");
 
                 // Build the JSON content
-                var jsonBuilder = new StringBuilder();
-                jsonBuilder.AppendLine("{");
-                jsonBuilder.AppendLine("  \"values\": [");
-                jsonBuilder.Append(string.Join(",\n", tag.Values.Select(v => $"    \"{v}\"")));
-                jsonBuilder.AppendLine();
-                jsonBuilder.AppendLine("  ]");
-                jsonBuilder.AppendLine("}");
+                var data = new {
+                    values = tag.Values.Select(v => v.ToString()).ToList() // 确保是一个List或数组，JsonSerializer才能正确序列化
+                };
+                var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
 
-                Util.WriteFile(filePath, jsonBuilder.ToString());
+                Util.WriteFile(filePath, json);
                 Console.WriteLine($"  -> Generated tag ({tag.Type}): {Path.GetFullPath(filePath)}");
             }
         }

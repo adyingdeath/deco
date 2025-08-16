@@ -1,6 +1,5 @@
 using Antlr4.Runtime.Misc;
 using Deco.Compiler.Data;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Deco.Compiler
@@ -23,7 +22,7 @@ namespace Deco.Compiler
         {
             string functionName = context.name.Text;
 
-            if (_dataPack.Functions.Table.ContainsKey(functionName))
+            if (_dataPack.Functions.DecoFunctions.ContainsKey(functionName))
             {
                 // Optionally, log a warning here about a duplicate function definition.
                 return null;
@@ -51,25 +50,24 @@ namespace Deco.Compiler
                     });
                 }
             }
-            _dataPack.Functions.Table.Add(functionName, signature);
 
             // 2. Determine ResourceLocation
-            ResourceLocation functionLocation = new ResourceLocation(Util.GenerateRandomString(8), _dataPack.MainNamespace);
+            ResourceLocation functionLocation;
             var nameModifier = context.modifier().FirstOrDefault(m => m.name.Text == "name");
-            if (nameModifier != null)
+            if (nameModifier != null && nameModifier.expression().Length > 0 && nameModifier.expression()[0].STRING() != null)
             {
-                var expressions = nameModifier.expression();
-                if (expressions.Length > 0 && expressions[0].STRING() != null)
-                {
-                    string nameValue = expressions[0].STRING().GetText().Trim('"');
-                    functionLocation.SetLocation(nameValue);
-                }
+                string nameValue = nameModifier.expression()[0].STRING().GetText().Trim('"');
+                functionLocation = ResourceLocation.Parse(nameValue, _dataPack.MainNamespace);
+            }
+            else
+            {
+                functionLocation = new ResourceLocation(Util.GenerateRandomString(8), _dataPack.MainNamespace);
             }
 
             // 3. Create McFunction and store mappings
-            var currentFunction = _dataPack.Functions.FindOrCreate(functionLocation);
-            _dataPack.Functions.Locations.Add(functionName, functionLocation);
-            _dataPack.Functions.Contexts.Add(functionName, context);
+            var mcFunction = _dataPack.Functions.FindOrCreateMcFunction(functionLocation);
+            var decoFunction = new DecoFunction(functionName, signature, mcFunction, context);
+            _dataPack.Functions.DecoFunctions.Add(functionName, decoFunction);
 
             // 4. Handle other modifiers
             foreach (var modifierContext in context.modifier())
@@ -81,9 +79,9 @@ namespace Deco.Compiler
                     case "tick":
                         var tagLocation = new ResourceLocation(modifierName, "minecraft");
                         var tag = _dataPack.FindOrCreateTag(tagLocation, TagType.Function);
-                        if (!tag.Values.Any(v => v.ToString() == currentFunction.Location.ToString()))
+                        if (!tag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
                         {
-                            tag.Values.Add(currentFunction.Location);
+                            tag.Values.Add(mcFunction.Location);
                         }
                         break;
 
@@ -92,11 +90,11 @@ namespace Deco.Compiler
                         if (expressions.Length > 0 && expressions[0].STRING() != null)
                         {
                             string tagValue = expressions[0].STRING().GetText().Trim('"');
-                            var customTagLocation = new ResourceLocation(tagValue);
+                            var customTagLocation = ResourceLocation.Parse(tagValue, _dataPack.MainNamespace);
                             var customTag = _dataPack.FindOrCreateTag(customTagLocation, TagType.Function);
-                            if (!customTag.Values.Any(v => v.ToString() == currentFunction.Location.ToString()))
+                            if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
                             {
-                                customTag.Values.Add(currentFunction.Location);
+                                customTag.Values.Add(mcFunction.Location);
                             }
                         }
                         break;

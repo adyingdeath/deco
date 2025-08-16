@@ -32,12 +32,12 @@ class Program
         // Pass 1: Discover all function signatures
         var discoveryVisitor = new SymbolCollector(dataPack);
         discoveryVisitor.Visit(tree);
-        Console.WriteLine($"Discovery pass finished. Found {dataPack.Functions.Table.Count} function signatures.");
+        Console.WriteLine($"Discovery pass finished. Found {dataPack.Functions.DecoFunctions.Count} function signatures.");
         
         // Pass 2: Visit the parse tree to generate code
         var codeVisitor = new DecoCompiler(dataPack);
         codeVisitor.GenerateCode();
-        Console.WriteLine($"Visitor finished. Found {dataPack.Functions.Items.Count} functions and {dataPack.Tags.Count} tags.");
+        Console.WriteLine($"Visitor finished. Found {dataPack.Functions.McFunctions.Count} functions and {dataPack.Tags.Count} tags.");
 
         // --- Stage 4: Writing the Data Pack to Files ---
         Console.WriteLine("--- Writing Output ---");
