@@ -10,4 +10,5 @@ void main_load(int a, string te, float cc, int ff) {
     print(cc);
     print(ff);
     print("Test:", 114514, a, te, cc, ff);
+    @`execute as @a at @s run tp @s ~ ~5 ~`;
 }
