@@ -6,11 +6,14 @@ using Deco.Compiler.Data;
 string sourceCode = @"
 @load
 int main_tick() {
-    main_load(1, ""aaa"", 1, 2);
+    main_load(1, ""aaa"", 1, 333);
 }
 
 void main_load(int a, string te, float cc, int ff) {
-    print(1);
+    print(a);
+    print(te);
+    print(cc);
+    print(ff);
 }
 ";
 

@@ -26,37 +26,34 @@ namespace Deco.Compiler
                 // Process each statement in the function body
                 foreach (var statement in context.statement())
                 {
-                    ProcessStatement(statement, currentMcFunction);
+                    ProcessStatement(statement, functionName);
                 }
             }
         }
 
-        private void ProcessStatement(DecoParser.StatementContext statement, McFunction currentMcFunction)
+        private void ProcessStatement(DecoParser.StatementContext statement, string functionName)
         {
-            if (statement.COMMAND() != null)
-            {
+            var currentMcFunction = _dataPack.Functions.FindOrCreate(_dataPack.Functions.Locations[functionName]);
+            if (statement.COMMAND() != null) {
                 string rawCommand = statement.COMMAND().GetText();
-                if (rawCommand.StartsWith("@`") && rawCommand.EndsWith("`"))
-                {
+                if (rawCommand.StartsWith("@`") && rawCommand.EndsWith("`")) {
                     string command = rawCommand.Substring(2, rawCommand.Length - 3);
                     currentMcFunction.Commands.Add(command);
                 }
-            }
-            else if (statement.expression()?.functionCall() != null)
-            {
-                ProcessFunctionCall(statement.expression().functionCall(), currentMcFunction);
+            } else if (statement.expression()?.functionCall() != null) {
+                ProcessFunctionCall(statement.expression().functionCall(), functionName);
             }
             // Other statement types (variable definitions, assignments, etc.) can be handled here.
         }
 
-        private void ProcessFunctionCall(DecoParser.FunctionCallContext context, McFunction currentMcFunction)
+        private void ProcessFunctionCall(DecoParser.FunctionCallContext context, string currentFunction)
         {
             string functionName = context.name.Text;
+            McFunction currentMcFunction = _dataPack.Functions.FindOrCreate(_dataPack.Functions.Locations[currentFunction]);
             
             // Handle built-in library functions
-            if (functionName == "print")
-            {
-                LibraryFunctions.HandlePrintFunction(context, currentMcFunction, _dataPack);
+            if (functionName == "print") {
+                LibraryFunctions.HandlePrintFunction(context, _dataPack, currentFunction);
                 return; // Handled, so return
             }
 
