@@ -1,5 +1,9 @@
 using Deco.Compiler.Data;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Deco.Compiler {
     public static class LibraryFunctions {
@@ -7,45 +11,77 @@ namespace Deco.Compiler {
             var arguments = context.expression();
             var currentMcFunction = dataPack.Functions.FindOrCreate(dataPack.Functions.Locations[functionName]);
 
-            if (arguments.Length != 1) {
-                Console.Error.WriteLine($"Error: Function 'print' expects 1 argument, but received {arguments.Length}.");
+            if (arguments.Length == 0) {
+                Console.Error.WriteLine("Error: Function 'print' expects at least 1 argument.");
                 return;
             }
-            var contentArgument = arguments[0];
-            string content = "";
 
-            if (contentArgument.IDENTIFIER() != null) {
-                string identifierName = contentArgument.IDENTIFIER().GetText();
-                ParameterInfo info = dataPack.Functions.Table[functionName].Parameters.Find((v) => v.Name == identifierName);
-                if (info == null) return;
-                string trueName = info.StorageName;
-                // Assuming identifiers refer to values stored in the data pack's main storage.
-                // Assuming identifiers refer to values stored in the data pack's main storage.
-                if (info.Type == "int") {
-                    currentMcFunction.Commands.Add($"tellraw @a {{\"score\":{{\"name\":\"{trueName}\",\"objective\":\"{dataPack.ID}\"}}}}");
-                } else if (info.Type == "float") {
-                    currentMcFunction.Commands.Add($"tellraw @a {{\"nbt\":\"{trueName}\",\"storage\":\"{dataPack.ID}\"}}");
-                } else if (info.Type == "string") {
-                    currentMcFunction.Commands.Add($"tellraw @a {{\"nbt\":\"{trueName}\",\"storage\":\"{dataPack.ID}\"}}");
+            var jsonArray = new JsonArray();
+
+            for (int i = 0; i < arguments.Length; i++) {
+                var argument = arguments[i];
+                JsonObject component = null;
+
+                if (argument.IDENTIFIER() != null) {
+                    string identifierName = argument.IDENTIFIER().GetText();
+
+                    if (!dataPack.Functions.Table.TryGetValue(functionName, out var containingFunctionSignature)) {
+                        Console.Error.WriteLine($"Internal Error: Could not find signature for function '{functionName}'.");
+                        return;
+                    }
+
+                    ParameterInfo info = containingFunctionSignature.Parameters.Find(p => p.Name == identifierName);
+
+                    if (info == null) {
+                        Console.Error.WriteLine($"Error: Unknown identifier '{identifierName}' in function '{functionName}'. Only function parameters are currently supported in 'print'.");
+                        return;
+                    }
+
+                    switch (info.Type) {
+                        case "int":
+                            component = new JsonObject {
+                                ["score"] = new JsonObject {
+                                    ["name"] = info.StorageName,
+                                    ["objective"] = dataPack.ID
+                                }
+                            };
+                            break;
+                        case "float":
+                        case "string":
+                            component = new JsonObject {
+                                ["nbt"] = info.StorageName,
+                                ["storage"] = dataPack.ID
+                            };
+                            break;
+                        default:
+                            Console.Error.WriteLine($"Error: Unsupported type '{info.Type}' for print function identifier '{identifierName}'.");
+                            return;
+                    }
+                } else if (argument.STRING() != null) {
+                    string content = argument.STRING().GetText();
+                    if (content.StartsWith('"') && content.EndsWith('"')) {
+                        content = content[1..^1];
+                    }
+                    component = new JsonObject { ["text"] = content };
+                } else if (argument.NUMBER() != null) {
+                    string content = argument.NUMBER().GetText();
+                    component = new JsonObject { ["text"] = content };
                 } else {
-                    Console.Error.WriteLine($"Error: Unsupported type '{info.Type}' for print function identifier.");
+                    Console.Error.WriteLine("Error: unsupported type for 'print'.");
+                    return;
                 }
-            } else if (contentArgument.STRING() != null) {
-                content = contentArgument.STRING().GetText();
-                // Remove quotes from the content if it's a string literal
-                if (content.StartsWith("\"") && content.EndsWith("\"")) {
-                    content = content.Substring(1, content.Length - 2);
+
+                if (component != null) {
+                    jsonArray.Add(component);
                 }
-                // Escape any inner double quotes for JSON
-                content = content.Replace("\"", "\\\"");
-                currentMcFunction.Commands.Add($"tellraw @a {{\"text\":\"{content}\"}}");
-            } else if (contentArgument.NUMBER() != null) {
-                content = contentArgument.NUMBER().GetText();
-                currentMcFunction.Commands.Add($"tellraw @a {{\"text\":\"{content}\"}}");
-            } else {
-                Console.Error.WriteLine($"Error: 'print' function only supports string, number literals, or identifiers as arguments.");
-                return;
+
+                if (i < arguments.Length - 1) {
+                    jsonArray.Add(new JsonObject { ["text"] = "  " });
+                }
             }
+
+            string finalJson = jsonArray.ToJsonString();
+            currentMcFunction.Commands.Add($"tellraw @a {finalJson}");
         }
     }
 }

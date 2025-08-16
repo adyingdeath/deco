@@ -14,6 +14,7 @@ void main_load(int a, string te, float cc, int ff) {
     print(te);
     print(cc);
     print(ff);
+    print(""输出测试:"", 114514, a, te, cc, ff);
 }
 ";
 
