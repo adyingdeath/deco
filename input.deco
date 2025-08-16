@@ -1,0 +1,13 @@
+
+@load
+int main_tick() {
+    main_load(1, "aaa", 1, 333);
+}
+
+void main_load(int a, string te, float cc, int ff) {
+    print(a);
+    print(te);
+    print(cc);
+    print(ff);
+    print("Test:", 114514, a, te, cc, ff);
+}

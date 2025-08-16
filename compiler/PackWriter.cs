@@ -1,5 +1,6 @@
 using Deco.Compiler.Data;
 using System.Text;
+using System.Text.Json;
 
 namespace Deco.Compiler
 {
@@ -27,12 +28,25 @@ namespace Deco.Compiler
         public void Write()
         {
             // Get the root path for the datapack and ensure the directory is clean
-            string rootPath = $"D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";//_dataPack.Name;
+            string rootPath = _dataPack.Name;
             if (Directory.Exists(rootPath))
             {
                 Directory.Delete(rootPath, true);
             }
             Directory.CreateDirectory(rootPath);
+
+            // Create pack.mcmeta
+            string mcmetaPath = Path.Combine(rootPath, "pack.mcmeta");
+            var mcmetaContent = new
+            {
+                pack = new
+                {
+                    pack_format = 48,
+                    description = "A bridging pratice datapack."
+                }
+            };
+            File.WriteAllText(mcmetaPath, JsonSerializer.Serialize(mcmetaContent, new JsonSerializerOptions { WriteIndented = true }));
+            Console.WriteLine($"  -> Created {Path.GetFullPath(mcmetaPath)}");
 
             Console.WriteLine("\n--- Function Generation Stage ---");
             WriteFunctions(rootPath);
