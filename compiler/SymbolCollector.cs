@@ -110,9 +110,7 @@ namespace Deco.Compiler
                     _dataPack.Functions.OnLoadFunction.PrependCommands([
                         $"scoreboard objectives remove {_dataPack.ID}",
                         $"scoreboard objectives add {_dataPack.ID} dummy",
-                        $"data modify storage {_dataPack.ID} stack_int set value []",
-                        $"data modify storage {_dataPack.ID} stack_float set value []",
-                        $"data modify storage {_dataPack.ID} stack_string set value []",
+                        $"data modify storage {_dataPack.ID} system_stack set value []",
                     ]);
                 }
             }
