@@ -6,7 +6,7 @@ using Deco.Compiler.Data;
 string sourceCode = @"
 @load
 @name(""deco:test/great"")
-tick main_tick() {
+tick main_tick(int a) {
     @`scoreboard players add @p ticks 1`;
     @`say running tick...`;
 }
@@ -32,7 +32,7 @@ Console.WriteLine("Parsing complete.");
 
 // --- Stage 3: Visiting the Parse Tree to Populate Data Model ---
 Console.WriteLine("--- Visitor Stage ---");
-var dataPack = new DataPack("generated_datapack");
+var dataPack = new DataPack("ukx34rhy", "generated_datapack", "deco");
 var visitor = new DecoCodeVisitor(dataPack);
 visitor.Visit(tree);
 Console.WriteLine($"Visitor finished. Found {dataPack.Functions.Count} functions and {dataPack.Tags.Count} tags.");

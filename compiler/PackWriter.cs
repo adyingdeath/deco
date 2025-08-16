@@ -53,7 +53,7 @@ namespace Deco.Compiler
                 Directory.CreateDirectory(functionDirectory); // Ensure directory exists
                 string filePath = Path.Combine(functionDirectory, $"{function.Location.Path}.mcfunction");
 
-                FileUtil.WriteFile(filePath, function.Commands);
+                Util.WriteFile(filePath, function.Commands);
                 Console.WriteLine($"  -> Generated function: {Path.GetFullPath(filePath)}");
             }
         }
@@ -82,7 +82,7 @@ namespace Deco.Compiler
                 jsonBuilder.AppendLine("  ]");
                 jsonBuilder.AppendLine("}");
 
-                FileUtil.WriteFile(filePath, jsonBuilder.ToString());
+                Util.WriteFile(filePath, jsonBuilder.ToString());
                 Console.WriteLine($"  -> Generated tag ({tag.Type}): {Path.GetFullPath(filePath)}");
             }
         }
