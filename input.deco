@@ -2,12 +2,12 @@
 @load
 int main_tick() {
     @`scoreboard players set CatDevil counter 0`;
-    main_load("aaa", "bbb");
+    main_load("aaa", "bbb", "ccc");
 }
 
-void main_load(string a, string b) {
+void main_load(string a, string b, string c) {
     @`scoreboard players add CatDevil counter 1`;
     @`execute if score CatDevil counter matches 10.. run return run say done`;
-    print(a, b);
-    main_load(b, a);
+    print(a, b, c);
+    main_load(b, c, "1");
 }
