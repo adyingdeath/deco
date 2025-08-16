@@ -17,11 +17,11 @@ namespace Deco.Compiler
 
         public void GenerateCode()
         {
-            foreach (var functionName in _dataPack.FunctionContexts.Keys)
+            foreach (var functionName in _dataPack.Functions.Contexts.Keys)
             {
-                var context = _dataPack.FunctionContexts[functionName];
-                var functionLocation = _dataPack.FunctionLocations[functionName];
-                var currentMcFunction = _dataPack.FindOrCreateFunction(functionLocation);
+                var context = _dataPack.Functions.Contexts[functionName];
+                var functionLocation = _dataPack.Functions.Locations[functionName];
+                var currentMcFunction = _dataPack.Functions.FindOrCreate(functionLocation);
 
                 // Process each statement in the function body
                 foreach (var statement in context.statement())
@@ -54,8 +54,8 @@ namespace Deco.Compiler
             string functionName = context.name.Text;
 
             // 1. Look up function signature and location
-            if (!_dataPack.FunctionTable.TryGetValue(functionName, out var signature) ||
-                !_dataPack.FunctionLocations.TryGetValue(functionName, out var locationToCall))
+            if (!_dataPack.Functions.Table.TryGetValue(functionName, out var signature) ||
+                !_dataPack.Functions.Locations.TryGetValue(functionName, out var locationToCall))
             {
                 // Error: calling an undefined function
                 Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionName}'.");

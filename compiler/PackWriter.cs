@@ -47,7 +47,7 @@ namespace Deco.Compiler
         /// <param name="rootPath">The root directory of the data pack.</param>
         private void WriteFunctions(string rootPath)
         {
-            foreach (var function in _dataPack.Functions)
+            foreach (var function in _dataPack.Functions.Items)
             {
                 string functionDirectory = Path.Combine(rootPath, "data", function.Location.Namespace, "function");
                 Directory.CreateDirectory(functionDirectory); // Ensure directory exists

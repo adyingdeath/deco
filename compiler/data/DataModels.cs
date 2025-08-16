@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,41 +131,53 @@ namespace Deco.Compiler.Data {
     }
 
     /// <summary>
+    /// A collection of all function-related resources and metadata.
+    /// </summary>
+    public class FunctionCollection {
+        public List<McFunction> Items { get; } = [];
+        public McFunction OnLoadFunction { get; }
+        public Dictionary<string, FunctionSignature> Table { get; } = new();
+        public Dictionary<string, ResourceLocation> Locations { get; } = new();
+        public Dictionary<string, DecoParser.FunctionContext> Contexts { get; } = new();
+        public int ParameterIdCounter { get; set; } = 0;
+
+        public FunctionCollection(string mainNamespace) {
+            // Create the default load function
+            OnLoadFunction = new McFunction(new ResourceLocation(Util.GenerateRandomString(8), mainNamespace));
+            Items.Add(OnLoadFunction);
+        }
+
+        public McFunction FindOrCreate(ResourceLocation location) {
+            var existing = Items.FirstOrDefault(f => f.Location.ToString() == location.ToString());
+            if (existing != null) return existing;
+
+            var newFunc = new McFunction(location);
+            Items.Add(newFunc);
+            return newFunc;
+        }
+    }
+
+    /// <summary>
     /// Represents the entire Minecraft data pack to be generated.
     /// </summary>
     public class DataPack {
         public string ID { get; }
         public string Name { get; }
         public string MainNamespace { get; }
-        public List<McFunction> Functions { get; } = [];
-        public McFunction OnLoadFunction { get; }
+        public FunctionCollection Functions { get; }
         public List<Tag> Tags { get; } = [];
         public Dictionary<string, string> Flags { get; } = [];
-        public Dictionary<string, FunctionSignature> FunctionTable { get; } = new();
-        public Dictionary<string, ResourceLocation> FunctionLocations { get; } = new();
-        public Dictionary<string, DecoParser.FunctionContext> FunctionContexts { get; } = new();
-        public int ParameterIdCounter { get; set; } = 0;
 
         public DataPack(string id, string name, string mainNamespace) {
             ID = id;
             Name = name;
             MainNamespace = mainNamespace;
+            Functions = new FunctionCollection(mainNamespace);
 
-            // Create the default load function
-            OnLoadFunction = new McFunction(new ResourceLocation(Util.GenerateRandomString(8), mainNamespace));
-            Functions.Add(OnLoadFunction);
+            // Create the load tag and link it to the OnLoadFunction from the function collection
             var loadTag = new Tag(new ResourceLocation("minecraft:load"), TagType.Function);
-            loadTag.Values.Add(OnLoadFunction.Location);
+            loadTag.Values.Add(Functions.OnLoadFunction.Location);
             Tags.Add(loadTag);
-        }
-
-        public McFunction FindOrCreateFunction(ResourceLocation location) {
-            var existing = Functions.FirstOrDefault(f => f.Location.ToString() == location.ToString());
-            if (existing != null) return existing;
-
-            var newFunc = new McFunction(location);
-            Functions.Add(newFunc);
-            return newFunc;
         }
 
         public Tag FindOrCreateTag(ResourceLocation location, TagType type) {

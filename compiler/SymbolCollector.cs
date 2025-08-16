@@ -23,7 +23,7 @@ namespace Deco.Compiler
         {
             string functionName = context.name.Text;
 
-            if (_dataPack.FunctionTable.ContainsKey(functionName))
+            if (_dataPack.Functions.Table.ContainsKey(functionName))
             {
                 // Optionally, log a warning here about a duplicate function definition.
                 return null;
@@ -40,8 +40,8 @@ namespace Deco.Compiler
             {
                 foreach (var arg in argsContext.argument())
                 {
-                    string storageName = _dataPack.ParameterIdCounter.ToString("x");
-                    _dataPack.ParameterIdCounter++;
+                    string storageName = _dataPack.Functions.ParameterIdCounter.ToString("x");
+                    _dataPack.Functions.ParameterIdCounter++;
                     
                     signature.Parameters.Add(new ParameterInfo
                     {
@@ -51,7 +51,7 @@ namespace Deco.Compiler
                     });
                 }
             }
-            _dataPack.FunctionTable.Add(functionName, signature);
+            _dataPack.Functions.Table.Add(functionName, signature);
 
             // 2. Determine ResourceLocation
             ResourceLocation functionLocation = new ResourceLocation(Util.GenerateRandomString(8), _dataPack.MainNamespace);
@@ -67,9 +67,9 @@ namespace Deco.Compiler
             }
 
             // 3. Create McFunction and store mappings
-            var currentFunction = _dataPack.FindOrCreateFunction(functionLocation);
-            _dataPack.FunctionLocations.Add(functionName, functionLocation);
-            _dataPack.FunctionContexts.Add(functionName, context);
+            var currentFunction = _dataPack.Functions.FindOrCreate(functionLocation);
+            _dataPack.Functions.Locations.Add(functionName, functionLocation);
+            _dataPack.Functions.Contexts.Add(functionName, context);
 
             // 4. Handle other modifiers
             foreach (var modifierContext in context.modifier())
@@ -109,7 +109,7 @@ namespace Deco.Compiler
                 if (!_dataPack.Flags.ContainsKey("deco.argument.init"))
                 {
                     _dataPack.Flags.Add("deco.argument.init", "true");
-                    _dataPack.OnLoadFunction.PrependCommands([
+                    _dataPack.Functions.OnLoadFunction.PrependCommands([
                         $"scoreboard objectives remove {_dataPack.ID}",
                         $"scoreboard objectives add {_dataPack.ID} dummy",
                         $"data modify storage {_dataPack.ID} stack_int set value []",
