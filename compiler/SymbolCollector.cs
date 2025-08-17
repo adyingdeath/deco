@@ -1,6 +1,8 @@
 using Antlr4.Runtime.Misc;
 using Deco.Compiler.Data;
+using Deco.Compiler.Expressions;
 using System.Linq;
+using System;
 
 namespace Deco.Compiler
 {
@@ -28,6 +30,9 @@ namespace Deco.Compiler
                 return null;
             }
 
+            // Create a new SymbolTable for the function
+            var functionSymbolTable = new SymbolTable(); // No parent for top-level functions
+
             // 1. Discover signature
             var signature = new FunctionSignature
             {
@@ -42,12 +47,20 @@ namespace Deco.Compiler
                     string storageName = _dataPack.Functions.ParameterIdCounter.ToString("x");
                     _dataPack.Functions.ParameterIdCounter++;
                     
-                    signature.Parameters.Add(new ParameterInfo
+                    // Convert string type to SymbolType
+                    SymbolType paramType = SymbolType.Int; // Default
+                    if (Enum.TryParse(arg.type.Text, true, out SymbolType parsedType))
                     {
-                        Type = arg.type.Text,
-                        Name = arg.name.Text,
-                        StorageName = storageName
-                    });
+                        paramType = parsedType;
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"Warning: Unknown parameter type '{arg.type.Text}' for parameter '{arg.name.Text}' in function '{functionName}'. Defaulting to int.");
+                    }
+
+                    var paramInfo = new ParameterInfo(arg.name.Text, paramType, storageName);
+                    signature.Parameters.Add(paramInfo);
+                    functionSymbolTable.Add(paramInfo); // Add parameter to symbol table
                 }
             }
 
@@ -68,7 +81,7 @@ namespace Deco.Compiler
 
             // 3. Create McFunction and store mappings
             var mcFunction = _dataPack.Functions.FindOrCreateMcFunction(functionLocation);
-            var decoFunction = new DecoFunction(functionName, signature, mcFunction, context);
+            var decoFunction = new DecoFunction(functionName, signature, mcFunction, context, functionSymbolTable);
             _dataPack.Functions.DecoFunctions.Add(functionName, decoFunction);
 
             // 4. Handle other modifiers

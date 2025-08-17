@@ -1,4 +1,3 @@
-
 @load
 int main_tick() {
     @`scoreboard players set CatDevil counter 0`;

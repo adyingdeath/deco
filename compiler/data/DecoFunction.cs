@@ -1,3 +1,5 @@
+using Deco.Compiler.Expressions;
+
 namespace Deco.Compiler.Data
 {
     /// <summary>
@@ -10,13 +12,15 @@ namespace Deco.Compiler.Data
         public FunctionSignature Signature { get; }
         public McFunction McFunction { get; }
         public DecoParser.FunctionContext Context { get; }
+        public SymbolTable SymbolTable { get; }
 
-        public DecoFunction(string name, FunctionSignature signature, McFunction mcFunction, DecoParser.FunctionContext context)
+        public DecoFunction(string name, FunctionSignature signature, McFunction mcFunction, DecoParser.FunctionContext context, SymbolTable symbolTable)
         {
             Name = name;
             Signature = signature;
             McFunction = mcFunction;
             Context = context;
+            SymbolTable = symbolTable;
         }
     }
 }

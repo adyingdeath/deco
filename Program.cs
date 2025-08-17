@@ -8,7 +8,7 @@ class Program
     static void Main(string[] args)
     {
         // TODO: Add argument parsing for input and output paths
-        string inputFile = "D:\\programming\\project\\deco_csharp\\input.deco";
+        string inputFile = "D:\\programming\\project\\deco_csharp\\test\\argument_passing.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
 
         // --- Stage 1: Source Code Input ---

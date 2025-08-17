@@ -1,12 +1,15 @@
+using Deco.Compiler.Expressions;
+
 namespace Deco.Compiler.Data
 {
     /// <summary>
     /// Holds information about a function's parameter.
     /// </summary>
-    public class ParameterInfo
+    public class ParameterInfo : Symbol
     {
-        public string Type { get; set; }
-        public string Name { get; set; }
-        public string StorageName { get; set; }
+        public ParameterInfo(string name, SymbolType type, string storageName)
+            : base(name, type, storageName)
+        {
+        }
     }
 }

@@ -1,0 +1,12 @@
+@load
+int main() {
+    int a;
+    int b;
+    a = 54 + 1;
+    b = 11;
+    square(a + 1, b + 1);
+}
+
+int square(int a, int b) {
+    print("The square of", a, "and", b, "is", a * b);
+}
