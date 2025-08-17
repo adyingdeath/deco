@@ -39,9 +39,8 @@ namespace Deco.Compiler {
                     string storageName = _dataPack.Functions.ParameterIdCounter.ToString("x");
                     _dataPack.Functions.ParameterIdCounter++;
 
-                    // Convert string type to SymbolType
                     string paramType = "int"; // Default
-                    if (arg.type.Text == "int" || arg.type.Text == "float" || arg.type.Text == "string") {
+                    if (arg.type.Text == "int" || arg.type.Text == "float" || arg.type.Text == "string" || arg.type.Text == "bool") {
                         paramType = arg.type.Text;
                     } else {
                         Console.Error.WriteLine($"Warning: Unknown parameter type '{arg.type.Text}' for parameter '{arg.name.Text}' in function '{functionName}'. Defaulting to int.");

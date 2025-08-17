@@ -23,6 +23,15 @@ namespace Deco.Compiler {
                 JsonObject component = null;
 
                 switch (evaluatedArg.Type) {
+                    case "bool":
+                        string tempStringStorage = expressionCompiler.GetNextTemp();
+                        currentMcFunction.Commands.Add($"data modify storage {dataPack.ID} {tempStringStorage} set value \"false\"");
+                        currentMcFunction.Commands.Add($"execute if score {evaluatedArg.StorageName} {dataPack.ID} matches 1 run data modify storage {dataPack.ID} {tempStringStorage} set value \"true\"");
+                        component = new JsonObject {
+                            ["nbt"] = tempStringStorage,
+                            ["storage"] = dataPack.ID
+                        };
+                        break;
                     case "int":
                         component = new JsonObject {
                             ["score"] = new JsonObject {

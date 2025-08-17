@@ -38,7 +38,7 @@ namespace Deco.Compiler {
                 string varTypeString = varDef.type.Text;
 
                 string varType = "int"; // Default
-                if (varTypeString == "int" || varTypeString == "float" || varTypeString == "string") {
+                if (varTypeString == "int" || varTypeString == "float" || varTypeString == "string" || varTypeString == "bool") {
                     varType = varTypeString;
                 } else {
                     Console.Error.WriteLine($"Warning: Unknown variable type '{varTypeString}' for variable '{varName}'. Defaulting to int.");
@@ -55,6 +55,7 @@ namespace Deco.Compiler {
                 // Initialize with default value (0 for int/float, empty string for string)
                 switch (varType) {
                     case "int":
+                    case "bool":
                         decoFunction.McFunction.Commands.Add($"scoreboard players set {newSymbol.StorageName} {_dataPack.ID} 0");
                         break;
                     case "float":
@@ -79,8 +80,9 @@ namespace Deco.Compiler {
                 // Assign the result of the expression to the variable
                 switch (targetSymbol.Type) {
                     case "int":
-                        if (evaluatedExpression.Type != "int") {
-                            Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected int, got {evaluatedExpression.Type}.");
+                    case "bool":
+                        if (targetSymbol.Type != evaluatedExpression.Type) {
+                            Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected {targetSymbol.Type}, got {evaluatedExpression.Type}.");
                             return;
                         }
                         decoFunction.McFunction.Commands.Add($"scoreboard players operation {targetSymbol.StorageName} {_dataPack.ID} = {evaluatedExpression.StorageName} {_dataPack.ID}");
@@ -159,6 +161,7 @@ namespace Deco.Compiler {
 
                 switch (evaluatedArg.Type) {
                     case "int":
+                    case "bool":
                         currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_val int 1 run scoreboard players get {evaluatedArg.StorageName} {_dataPack.ID}");
                         currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append from storage {_dataPack.ID} tmp_val");
                         break;
@@ -175,6 +178,7 @@ namespace Deco.Compiler {
                 var storageName = parameter.StorageName;
                 switch (parameter.Type) {
                     case "int":
+                    case "bool":
                         currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_arg int 1 run scoreboard players get {storageName} {_dataPack.ID}");
                         currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_int prepend from storage {_dataPack.ID} tmp_arg");
                         break;
@@ -194,6 +198,7 @@ namespace Deco.Compiler {
 
                 switch (parameter.Type) {
                     case "int":
+                    case "bool":
                         currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set from storage {_dataPack.ID} call_stack[{i}]");
                         currentMcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} tmp_val 1");
                         break;
@@ -217,6 +222,7 @@ namespace Deco.Compiler {
                 var storageName = parameter.StorageName;
                 switch (parameter.Type) {
                     case "int":
+                    case "bool":
                         currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_arg set from storage {_dataPack.ID} stack_int[0]");
                         currentMcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} tmp_arg 1");
                         currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_int[0]");

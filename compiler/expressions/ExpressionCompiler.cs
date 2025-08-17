@@ -17,7 +17,7 @@ namespace Deco.Compiler.Expressions {
             _symbolTable = symbolTable;
         }
 
-        private string GetNextTemp() => $"tmp_expr_{_tempCounter++}";
+        public string GetNextTemp() => $"tmp_expr_{_tempCounter++}";
 
         // Main entry point
         public Symbol Evaluate(DecoParser.ExpressionContext context) {
@@ -39,6 +39,7 @@ namespace Deco.Compiler.Expressions {
         private void AssignConstantToSymbol(Symbol symbol, ConstantOperand constant) {
             switch (symbol.Type) {
                 case "int":
+                case "bool":
                     _mcFunction.Commands.Add($"scoreboard players set {symbol.StorageName} {_dataPack.ID} {constant.Value}");
                     break;
                 case "float":
@@ -56,6 +57,12 @@ namespace Deco.Compiler.Expressions {
             if (context.STRING() != null) {
                 return new ConstantOperand(context.STRING().GetText(), "string");
             }
+            if (context.TRUE() != null) {
+                return new ConstantOperand("1", "bool");
+            }
+            if (context.FALSE() != null) {
+                return new ConstantOperand("0", "bool");
+            }
             if (context.IDENTIFIER() != null) {
                 var symbol = _symbolTable.Get(context.IDENTIFIER().GetText());
                 if (symbol == null) {
@@ -68,6 +75,132 @@ namespace Deco.Compiler.Expressions {
             }
             // [TODO] functionCall
             return base.VisitPrimary(context);
+        }
+
+        public override Operand VisitOr_expr(DecoParser.Or_exprContext context) {
+            if (context.and_expr().Length == 1) {
+                return Visit(context.and_expr(0));
+            }
+
+            var left = Visit(context.and_expr(0));
+
+            for (int i = 1; i < context.and_expr().Length; i++) {
+                var right = Visit(context.and_expr(i));
+
+                if (GetOperandType(left) != "bool" || GetOperandType(right) != "bool") {
+                    Console.Error.WriteLine("Error: Operator '||' can only be applied to booleans.");
+                    return new ConstantOperand("0", "bool");
+                }
+
+                var resultStorageName = GetNextTemp();
+                var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+                var leftName = GetOperandStorageName(left, GetNextTemp());
+                var rightName = GetOperandStorageName(right, GetNextTemp());
+
+                // Set the result to false(0) first, then if any of left and right operand is true, set the result to true(1).
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"execute if score {leftName} {_dataPack.ID} matches 1 run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+                _mcFunction.Commands.Add($"execute if score {rightName} {_dataPack.ID} matches 1 run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+
+                left = new SymbolOperand(resultSymbol);
+            }
+
+            return left;
+        }
+
+        public override Operand VisitAnd_expr(DecoParser.And_exprContext context) {
+            if (context.eq_expr().Length == 1) {
+                return Visit(context.eq_expr(0));
+            }
+
+            var left = Visit(context.eq_expr(0));
+
+            for (int i = 1; i < context.eq_expr().Length; i++) {
+                var right = Visit(context.eq_expr(i));
+
+                if (GetOperandType(left) != "bool" || GetOperandType(right) != "bool") {
+                    Console.Error.WriteLine("Error: Operator '&&' can only be applied to booleans.");
+                    return new ConstantOperand("0", "bool");
+                }
+
+                left = PerformBooleanArithmetic(left, right, "*");
+            }
+
+            return left;
+        }
+
+        public override Operand VisitEq_expr(DecoParser.Eq_exprContext context) {
+            if (context.rel_expr().Length == 1) {
+                return Visit(context.rel_expr(0));
+            }
+
+            var left = Visit(context.rel_expr(0));
+            var right = Visit(context.rel_expr(1));
+            var op = context.GetChild(1).GetText();
+
+            var leftType = GetOperandType(left);
+            var rightType = GetOperandType(right);
+
+            if (leftType != rightType || (leftType != "int" && leftType != "bool")) {
+                Console.Error.WriteLine("Error: Equality operators currently only support matching integer or boolean types.");
+                return new ConstantOperand("0", "bool");
+            }
+
+            var resultStorageName = GetNextTemp();
+            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+            var leftName = GetOperandStorageName(left, GetNextTemp());
+            var rightName = GetOperandStorageName(right, GetNextTemp());
+
+            if (op == "==") {
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"execute if score {leftName} {_dataPack.ID} = {rightName} {_dataPack.ID} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+            } else {
+                // !=
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"execute unless score {leftName} {_dataPack.ID} = {rightName} {_dataPack.ID} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+            }
+
+            return new SymbolOperand(resultSymbol);
+        }
+
+        public override Operand VisitRel_expr(DecoParser.Rel_exprContext context) {
+            if (context.add_expr().Length == 1) {
+                return Visit(context.add_expr(0));
+            }
+
+            var left = Visit(context.add_expr(0));
+            var right = Visit(context.add_expr(1));
+            var op = context.GetChild(1).GetText();
+
+            if (GetOperandType(left) != "int" || GetOperandType(right) != "int") {
+                Console.Error.WriteLine("Error: Relational operators currently only support integers.");
+                return new ConstantOperand("0", "bool");
+            }
+
+            var resultStorageName = GetNextTemp();
+            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+            var leftName = GetOperandStorageName(left, GetNextTemp());
+            var rightName = GetOperandStorageName(right, GetNextTemp());
+
+            string condition;
+            bool negate = false;
+            switch (op) {
+                case ">": condition = $"> {rightName} {_dataPack.ID}"; break;
+                case "<": condition = $"< {rightName} {_dataPack.ID}"; break;
+                case ">=": condition = $"< {rightName} {_dataPack.ID}"; negate = true; break;
+                case "<=": condition = $"> {rightName} {_dataPack.ID}"; negate = true; break;
+                default: throw new Exception($"Unsupported relational operator: {op}");
+            }
+
+            if (negate) {
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+                _mcFunction.Commands.Add($"execute if score {leftName} {_dataPack.ID} {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+            } else {
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"execute if score {leftName} {_dataPack.ID} {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+            }
+
+            return new SymbolOperand(resultSymbol);
         }
 
         public override Operand VisitAdd_expr(DecoParser.Add_exprContext context) {
@@ -104,6 +237,28 @@ namespace Deco.Compiler.Expressions {
             return left;
         }
 
+        public override Operand VisitUnary_expr(DecoParser.Unary_exprContext context) {
+            if (context.primary() != null) {
+                return Visit(context.primary());
+            }
+
+            var operand = Visit(context.unary_expr());
+            if (GetOperandType(operand) != "bool") {
+                Console.Error.WriteLine("Error: Operator '!' can only be applied to booleans.");
+                return new ConstantOperand("0", "bool");
+            }
+
+            var resultStorageName = GetNextTemp();
+            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+            var operandName = GetOperandStorageName(operand, GetNextTemp());
+
+            // If the operand in `!{operand}` is true(1), set the result to false(0). The result is set to true(1) first.
+            _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+            _mcFunction.Commands.Add($"execute if score {operandName} {_dataPack.ID} matches 1 run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+
+            return new SymbolOperand(resultSymbol);
+        }
+
         private SymbolOperand PerformArithmetic(Operand left, Operand right, string operation) {
             // For now, only int is supported
             var nextTemp = GetNextTemp();
@@ -118,17 +273,39 @@ namespace Deco.Compiler.Expressions {
             return new SymbolOperand(resultSymbol);
         }
 
+        private SymbolOperand PerformBooleanArithmetic(Operand left, Operand right, string operation) {
+            var nextTemp = GetNextTemp();
+            var resultSymbol = new Symbol(nextTemp, "bool", nextTemp);
+
+            string leftName = GetOperandStorageName(left, GetNextTemp());
+            string rightName = GetOperandStorageName(right, GetNextTemp());
+
+            _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} = {leftName} {_dataPack.ID}");
+            _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} {operation}= {rightName} {_dataPack.ID}");
+
+            return new SymbolOperand(resultSymbol);
+        }
+
         private string GetOperandStorageName(Operand operand, string tempStorageName) {
             if (operand is SymbolOperand symbolOp) {
                 return symbolOp.Symbol.StorageName;
             } else if (operand is ConstantOperand constOp) {
-                if (constOp.Type != "int") {
-                    Console.Error.WriteLine($"Deco only supports operations on INT type currently.");
+                if (constOp.Type != "int" && constOp.Type != "bool") {
+                    Console.Error.WriteLine($"Deco only supports operations on INT or BOOL types currently.");
                 } else {
-                    // Assume int
                     _mcFunction.Commands.Add($"scoreboard players set {tempStorageName} {_dataPack.ID} {constOp.Value}");
                     return tempStorageName;
                 }
+            }
+            throw new NotSupportedException("Unsupported operand type");
+        }
+
+        private string GetOperandType(Operand operand) {
+            if (operand is SymbolOperand symbolOp) {
+                return symbolOp.Symbol.Type;
+            }
+            if (operand is ConstantOperand constOp) {
+                return constOp.Type;
             }
             throw new NotSupportedException("Unsupported operand type");
         }

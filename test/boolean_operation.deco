@@ -1,0 +1,31 @@
+@load
+int main() {
+    bool a;
+    bool b;
+    print("");
+    print("");
+    print("");
+    print("---test starts---");
+    a = true;
+    b = true;
+    boolean(a, b);
+    a = false;
+    b = true;
+    boolean(a, b);
+    a = true;
+    b = false;
+    boolean(a, b);
+    a = false;
+    b = false;
+    boolean(a, b);
+    print("---complex test---");
+    print(!(true || a) && a, !a || !b && true);
+}
+
+void boolean(bool a, bool b) {
+    print(a, "&&", b, "=", a && b);
+    print(a, "||", b, "=", a || b);
+    print("!", a, "=", !a);
+    print("!", b, "=", !b);
+    print("------");
+}

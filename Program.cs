@@ -1,6 +1,7 @@
 using Antlr4.Runtime;
 using Deco.Compiler;
 using Deco.Compiler.Data;
+using System.Collections;
 using System.IO;
 
 class Program
@@ -8,7 +9,8 @@ class Program
     static void Main(string[] args)
     {
         // TODO: Add argument parsing for input and output paths
-        string inputFile = "D:\\programming\\project\\deco_csharp\\test\\argument_passing.deco";
+        string[] testList = ["argument_passing", "expression_evaluation", "boolean_operation"];
+        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[2]}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
 
         // --- Stage 1: Source Code Input ---
