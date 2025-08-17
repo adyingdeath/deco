@@ -120,6 +120,102 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitExpression([NotNull] DecoParser.ExpressionContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.or_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterOr_expr([NotNull] DecoParser.Or_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.or_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitOr_expr([NotNull] DecoParser.Or_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.and_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAnd_expr([NotNull] DecoParser.And_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.and_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAnd_expr([NotNull] DecoParser.And_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.eq_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterEq_expr([NotNull] DecoParser.Eq_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.eq_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitEq_expr([NotNull] DecoParser.Eq_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.rel_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterRel_expr([NotNull] DecoParser.Rel_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.rel_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitRel_expr([NotNull] DecoParser.Rel_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.add_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAdd_expr([NotNull] DecoParser.Add_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.add_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAdd_expr([NotNull] DecoParser.Add_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.mul_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterMul_expr([NotNull] DecoParser.Mul_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.mul_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitMul_expr([NotNull] DecoParser.Mul_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.unary_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterUnary_expr([NotNull] DecoParser.Unary_exprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.unary_expr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitUnary_expr([NotNull] DecoParser.Unary_exprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.primary"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterPrimary([NotNull] DecoParser.PrimaryContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.primary"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitPrimary([NotNull] DecoParser.PrimaryContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.variableDefinition"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

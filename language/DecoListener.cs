@@ -101,6 +101,86 @@ public interface IDecoListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitExpression([NotNull] DecoParser.ExpressionContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.or_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterOr_expr([NotNull] DecoParser.Or_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.or_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitOr_expr([NotNull] DecoParser.Or_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.and_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterAnd_expr([NotNull] DecoParser.And_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.and_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitAnd_expr([NotNull] DecoParser.And_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.eq_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterEq_expr([NotNull] DecoParser.Eq_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.eq_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitEq_expr([NotNull] DecoParser.Eq_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.rel_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterRel_expr([NotNull] DecoParser.Rel_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.rel_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitRel_expr([NotNull] DecoParser.Rel_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.add_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterAdd_expr([NotNull] DecoParser.Add_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.add_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitAdd_expr([NotNull] DecoParser.Add_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.mul_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterMul_expr([NotNull] DecoParser.Mul_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.mul_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitMul_expr([NotNull] DecoParser.Mul_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.unary_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUnary_expr([NotNull] DecoParser.Unary_exprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.unary_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUnary_expr([NotNull] DecoParser.Unary_exprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.primary"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterPrimary([NotNull] DecoParser.PrimaryContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.primary"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitPrimary([NotNull] DecoParser.PrimaryContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.variableDefinition"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

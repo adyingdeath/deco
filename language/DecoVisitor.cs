@@ -74,6 +74,54 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitExpression([NotNull] DecoParser.ExpressionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.or_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitOr_expr([NotNull] DecoParser.Or_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.and_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAnd_expr([NotNull] DecoParser.And_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.eq_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitEq_expr([NotNull] DecoParser.Eq_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.rel_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitRel_expr([NotNull] DecoParser.Rel_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.add_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAdd_expr([NotNull] DecoParser.Add_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.mul_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMul_expr([NotNull] DecoParser.Mul_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.unary_expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitUnary_expr([NotNull] DecoParser.Unary_exprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.primary"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPrimary([NotNull] DecoParser.PrimaryContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.variableDefinition"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
