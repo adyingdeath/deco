@@ -5,9 +5,9 @@ namespace Deco.Compiler.Expressions
     public class ConstantOperand : Operand
     {
         public string Value { get; }
-        public SymbolType Type { get; }
+        public string Type { get; }
 
-        public ConstantOperand(string value, SymbolType type)
+        public ConstantOperand(string value, string type)
         {
             Value = value;
             Type = type;

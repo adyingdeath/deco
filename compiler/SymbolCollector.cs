@@ -4,28 +4,23 @@ using Deco.Compiler.Expressions;
 using System.Linq;
 using System;
 
-namespace Deco.Compiler
-{
+namespace Deco.Compiler {
     /// <summary>
     /// This visitor performs the first pass, walking the ANTLR parse tree to discover all
     /// function declarations, their metadata (modifiers, name), and populates the DataPack
     /// with function signatures, locations, and contexts for the second pass.
     /// </summary>
-    public class SymbolCollector : DecoBaseVisitor<object>
-    {
+    public class SymbolCollector : DecoBaseVisitor<object> {
         private readonly DataPack _dataPack;
 
-        public SymbolCollector(DataPack dataPack)
-        {
+        public SymbolCollector(DataPack dataPack) {
             _dataPack = dataPack;
         }
 
-        public override object VisitFunction([NotNull] DecoParser.FunctionContext context)
-        {
+        public override object VisitFunction([NotNull] DecoParser.FunctionContext context) {
             string functionName = context.name.Text;
 
-            if (_dataPack.Functions.DecoFunctions.ContainsKey(functionName))
-            {
+            if (_dataPack.Functions.DecoFunctions.ContainsKey(functionName)) {
                 // Optionally, log a warning here about a duplicate function definition.
                 return null;
             }
@@ -34,27 +29,21 @@ namespace Deco.Compiler
             var functionSymbolTable = new SymbolTable(); // No parent for top-level functions
 
             // 1. Discover signature
-            var signature = new FunctionSignature
-            {
+            var signature = new FunctionSignature {
                 ReturnType = context.type.Text
             };
 
             var argsContext = context.arguments();
-            if (argsContext != null)
-            {
-                foreach (var arg in argsContext.argument())
-                {
+            if (argsContext != null) {
+                foreach (var arg in argsContext.argument()) {
                     string storageName = _dataPack.Functions.ParameterIdCounter.ToString("x");
                     _dataPack.Functions.ParameterIdCounter++;
-                    
+
                     // Convert string type to SymbolType
-                    SymbolType paramType = SymbolType.Int; // Default
-                    if (Enum.TryParse(arg.type.Text, true, out SymbolType parsedType))
-                    {
-                        paramType = parsedType;
-                    }
-                    else
-                    {
+                    string paramType = "int"; // Default
+                    if (arg.type.Text == "int" || arg.type.Text == "float" || arg.type.Text == "string") {
+                        paramType = arg.type.Text;
+                    } else {
                         Console.Error.WriteLine($"Warning: Unknown parameter type '{arg.type.Text}' for parameter '{arg.name.Text}' in function '{functionName}'. Defaulting to int.");
                     }
 
@@ -85,17 +74,14 @@ namespace Deco.Compiler
             _dataPack.Functions.DecoFunctions.Add(functionName, decoFunction);
 
             // 4. Handle other modifiers
-            foreach (var modifierContext in context.modifier())
-            {
+            foreach (var modifierContext in context.modifier()) {
                 string modifierName = modifierContext.name.Text;
-                switch (modifierName)
-                {
+                switch (modifierName) {
                     case "load":
                     case "tick":
                         var tagLocation = new ResourceLocation(modifierName, "minecraft");
                         var tag = _dataPack.FindOrCreateTag(tagLocation, TagType.Function);
-                        if (!tag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
-                        {
+                        if (!tag.Values.Any(v => v.ToString() == mcFunction.Location.ToString())) {
                             tag.Values.Add(mcFunction.Location);
                         }
                         break;
@@ -108,8 +94,7 @@ namespace Deco.Compiler
                                 string tagValue = primary.STRING().GetText().Trim('"');
                                 var customTagLocation = ResourceLocation.Parse(tagValue, _dataPack.MainNamespace);
                                 var customTag = _dataPack.FindOrCreateTag(customTagLocation, TagType.Function);
-                                if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
-                                {
+                                if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString())) {
                                     customTag.Values.Add(mcFunction.Location);
                                 }
                             }
@@ -117,12 +102,10 @@ namespace Deco.Compiler
                         break;
                 }
             }
-            
+
             // 5. Handle argument system initialization
-            if (context.arguments() != null)
-            {
-                if (!_dataPack.Flags.ContainsKey("deco.argument.init"))
-                {
+            if (context.arguments() != null) {
+                if (!_dataPack.Flags.ContainsKey("deco.argument.init")) {
                     _dataPack.Flags.Add("deco.argument.init", "true");
                     _dataPack.Functions.OnLoadFunction.PrependCommands([
                         $"scoreboard objectives remove {_dataPack.ID}",

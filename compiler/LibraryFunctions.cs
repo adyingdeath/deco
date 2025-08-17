@@ -18,12 +18,12 @@ namespace Deco.Compiler {
 
             for (int i = 0; i < arguments.Length; i++) {
                 var argument = arguments[i];
-                
+
                 var evaluatedArg = expressionCompiler.Evaluate(argument);
                 JsonObject component = null;
 
                 switch (evaluatedArg.Type) {
-                    case SymbolType.Int:
+                    case "int":
                         component = new JsonObject {
                             ["score"] = new JsonObject {
                                 ["name"] = evaluatedArg.StorageName,
@@ -31,8 +31,8 @@ namespace Deco.Compiler {
                             }
                         };
                         break;
-                    case SymbolType.Float:
-                    case SymbolType.String:
+                    case "float":
+                    case "string":
                         component = new JsonObject {
                             ["nbt"] = evaluatedArg.StorageName,
                             ["storage"] = dataPack.ID

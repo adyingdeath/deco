@@ -38,11 +38,11 @@ namespace Deco.Compiler.Expressions {
 
         private void AssignConstantToSymbol(Symbol symbol, ConstantOperand constant) {
             switch (symbol.Type) {
-                case SymbolType.Int:
+                case "int":
                     _mcFunction.Commands.Add($"scoreboard players set {symbol.StorageName} {_dataPack.ID} {constant.Value}");
                     break;
-                case SymbolType.Float:
-                case SymbolType.String:
+                case "float":
+                case "string":
                     _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {symbol.StorageName} set value {constant.Value}");
                     break;
             }
@@ -51,10 +51,10 @@ namespace Deco.Compiler.Expressions {
         public override Operand VisitPrimary(DecoParser.PrimaryContext context) {
             if (context.NUMBER() != null) {
                 // [TODO] For now, assume int. Need to handle float.
-                return new ConstantOperand(context.NUMBER().GetText(), SymbolType.Int);
+                return new ConstantOperand(context.NUMBER().GetText(), "int");
             }
             if (context.STRING() != null) {
-                return new ConstantOperand(context.STRING().GetText(), SymbolType.String);
+                return new ConstantOperand(context.STRING().GetText(), "string");
             }
             if (context.IDENTIFIER() != null) {
                 var symbol = _symbolTable.Get(context.IDENTIFIER().GetText());
@@ -107,7 +107,7 @@ namespace Deco.Compiler.Expressions {
         private SymbolOperand PerformArithmetic(Operand left, Operand right, string operation) {
             // For now, only int is supported
             var nextTemp = GetNextTemp();
-            var resultSymbol = new Symbol(nextTemp, SymbolType.Int, nextTemp);
+            var resultSymbol = new Symbol(nextTemp, "int", nextTemp);
 
             string leftName = GetOperandStorageName(left, GetNextTemp());
             string rightName = GetOperandStorageName(right, GetNextTemp());
@@ -122,7 +122,7 @@ namespace Deco.Compiler.Expressions {
             if (operand is SymbolOperand symbolOp) {
                 return symbolOp.Symbol.StorageName;
             } else if (operand is ConstantOperand constOp) {
-                if (constOp.Type != SymbolType.Int) {
+                if (constOp.Type != "int") {
                     Console.Error.WriteLine($"Deco only supports operations on INT type currently.");
                 } else {
                     // Assume int
