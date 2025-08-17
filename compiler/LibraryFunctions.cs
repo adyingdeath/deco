@@ -16,10 +16,16 @@ namespace Deco.Compiler {
 
             for (int i = 0; i < arguments.Length; i++) {
                 var argument = arguments[i];
+                var primaryArgument = Util.GetPrimaryContext(argument);
                 JsonObject component = null;
 
-                if (argument.IDENTIFIER() != null) {
-                    string identifierName = argument.IDENTIFIER().GetText();
+                if (primaryArgument == null) {
+                    Console.Error.WriteLine($"Error: unsupported complex expression '{argument.GetText()}' for 'print'.");
+                    return;
+                }
+
+                if (primaryArgument.IDENTIFIER() != null) {
+                    string identifierName = primaryArgument.IDENTIFIER().GetText();
                     var containingFunctionSignature = currentDecoFunction.Signature;
 
                     ParameterInfo info = containingFunctionSignature.Parameters.Find(p => p.Name == identifierName);
@@ -49,17 +55,17 @@ namespace Deco.Compiler {
                             Console.Error.WriteLine($"Error: Unsupported type '{info.Type}' for print function identifier '{identifierName}'.");
                             return;
                     }
-                } else if (argument.STRING() != null) {
-                    string content = argument.STRING().GetText();
+                } else if (primaryArgument.STRING() != null) {
+                    string content = primaryArgument.STRING().GetText();
                     if (content.StartsWith('"') && content.EndsWith('"')) {
                         content = content[1..^1];
                     }
                     component = new JsonObject { ["text"] = content };
-                } else if (argument.NUMBER() != null) {
-                    string content = argument.NUMBER().GetText();
+                } else if (primaryArgument.NUMBER() != null) {
+                    string content = primaryArgument.NUMBER().GetText();
                     component = new JsonObject { ["text"] = content };
                 } else {
-                    Console.Error.WriteLine("Error: unsupported type for 'print'.");
+                    Console.Error.WriteLine($"Error: unsupported argument type '{argument.GetText()}' for 'print'.");
                     return;
                 }
 

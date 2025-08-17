@@ -9,5 +9,5 @@ void main_load(string a, string b, string c) {
     @`scoreboard players add CatDevil counter 1`;
     @`execute if score CatDevil counter matches 10.. run return run say done`;
     print(a, b, c);
-    main_load(b, c, "1");
+    main_load(b, c, a);
 }

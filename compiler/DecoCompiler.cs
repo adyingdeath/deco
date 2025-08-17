@@ -22,18 +22,23 @@ namespace Deco.Compiler {
         }
 
         private void ProcessStatement(DecoParser.StatementContext statement, DecoFunction decoFunction) {
-            var currentMcFunction = decoFunction.McFunction;
             if (statement.COMMAND() != null) {
                 string rawCommand = statement.COMMAND().GetText();
-                if (rawCommand.StartsWith("@`") && rawCommand.EndsWith("`")) {
-                    string command = rawCommand.Substring(2, rawCommand.Length - 3);
-                    currentMcFunction.Commands.Add(command);
+                if (rawCommand.StartsWith("@`") && rawCommand.EndsWith('`')) {
+                    string command = rawCommand[2..^1];
+                    decoFunction.McFunction.Commands.Add(command);
                 }
-            } else if (statement.expression()?.functionCall() != null) {
-                ProcessFunctionCall(statement.expression().functionCall(), decoFunction);
+            } else if (statement.expression() != null) {
+                var primaryContext = Util.GetPrimaryContext(statement.expression());
+                if (primaryContext?.functionCall() != null) {
+                    ProcessFunctionCall(primaryContext.functionCall(), decoFunction);
+                }
+                // Other expression statements are ignored for now, preserving original behavior.
             }
             // Other statement types (variable definitions, assignments, etc.) can be handled here.
         }
+        
+        
 
         private void ProcessFunctionCall(DecoParser.FunctionCallContext context, DecoFunction currentDecoFunction) {
             string functionNameToCall = context.name.Text;
@@ -68,20 +73,26 @@ namespace Deco.Compiler {
             // like `foo(b, a)` where `a` would be overwritten before being passed.
             currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack set value []");
 
-            for (int i = 0; i < arguments.Length; i++)
-            {
+            for (int i = 0; i < arguments.Length; i++) {
                 var argument = arguments[i];
                 var parameter = signature.Parameters[i];
+                var primaryArgument = Util.GetPrimaryContext(argument);
 
-                if (argument.NUMBER() != null) {
+                if (primaryArgument == null) {
+                    Console.Error.WriteLine($"Warning: Calling functions with complex expressions like '{argument.GetText()}' is not supported.");
+                    currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {{}}");
+                    continue;
+                }
+
+                if (primaryArgument.NUMBER() != null) {
                     switch (parameter.Type) {
                         case "int":
-                            currentMcFunction.Commands.Add($"scoreboard players set tmp_eval {_dataPack.ID} {argument.NUMBER().GetText()}");
+                            currentMcFunction.Commands.Add($"scoreboard players set tmp_eval {_dataPack.ID} {primaryArgument.NUMBER().GetText()}");
                             currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_val int 1 run scoreboard players get tmp_eval {_dataPack.ID}");
                             currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append from storage {_dataPack.ID} tmp_val");
                             break;
                         case "float":
-                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set value {argument.NUMBER().GetText()}f");
+                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set value {primaryArgument.NUMBER().GetText()}f");
                             currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append from storage {_dataPack.ID} tmp_val");
                             break;
                         default:
@@ -89,15 +100,15 @@ namespace Deco.Compiler {
                             currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {{}}");
                             break;
                     }
-                } else if (argument.STRING() != null) {
+                } else if (primaryArgument.STRING() != null) {
                     if (parameter.Type == "string") {
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {argument.STRING().GetText()}");
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {primaryArgument.STRING().GetText()}");
                     } else {
                         Console.Error.WriteLine($"Error: Type mismatch for parameter '{parameter.Name}'. Expected {parameter.Type}, got STRING.");
                         currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {{}}");
                     }
-                } else if (argument.IDENTIFIER() != null) {
-                    string identifierName = argument.IDENTIFIER().GetText();
+                } else if (primaryArgument.IDENTIFIER() != null) {
+                    string identifierName = primaryArgument.IDENTIFIER().GetText();
                     var passedVarInfo = currentDecoFunction.Signature.Parameters.Find(p => p.Name == identifierName);
 
                     if (passedVarInfo == null) {
@@ -122,7 +133,7 @@ namespace Deco.Compiler {
                             break;
                     }
                 } else {
-                    Console.Error.WriteLine($"Warning: Calling functions with non-literal arguments is not fully implemented yet.");
+                    Console.Error.WriteLine($"Warning: Calling functions with arguments like '{argument.GetText()}' is not fully implemented yet.");
                     currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {{}}");
                 }
             }

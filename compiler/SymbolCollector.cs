@@ -52,15 +52,17 @@ namespace Deco.Compiler
             }
 
             // 2. Determine ResourceLocation
-            ResourceLocation functionLocation;
+            ResourceLocation? functionLocation = null;
             var nameModifier = context.modifier().FirstOrDefault(m => m.name.Text == "name");
-            if (nameModifier != null && nameModifier.expression().Length > 0 && nameModifier.expression()[0].STRING() != null)
-            {
-                string nameValue = nameModifier.expression()[0].STRING().GetText().Trim('"');
-                functionLocation = ResourceLocation.Parse(nameValue, _dataPack.MainNamespace);
+            if (nameModifier != null && nameModifier.expression().Length > 0) {
+                var primary = Util.GetPrimaryContext(nameModifier.expression()[0]);
+                if (primary?.STRING() != null) {
+                    string nameValue = primary.STRING().GetText().Trim('"');
+                    functionLocation = ResourceLocation.Parse(nameValue, _dataPack.MainNamespace);
+                }
             }
-            else
-            {
+
+            if (functionLocation == null) {
                 functionLocation = new ResourceLocation(Util.GenerateRandomString(8), _dataPack.MainNamespace);
             }
 
@@ -87,14 +89,16 @@ namespace Deco.Compiler
 
                     case "tag":
                         var expressions = modifierContext.expression();
-                        if (expressions.Length > 0 && expressions[0].STRING() != null)
-                        {
-                            string tagValue = expressions[0].STRING().GetText().Trim('"');
-                            var customTagLocation = ResourceLocation.Parse(tagValue, _dataPack.MainNamespace);
-                            var customTag = _dataPack.FindOrCreateTag(customTagLocation, TagType.Function);
-                            if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
-                            {
-                                customTag.Values.Add(mcFunction.Location);
+                        if (expressions.Length > 0) {
+                            var primary = Util.GetPrimaryContext(expressions[0]);
+                            if (primary?.STRING() != null) {
+                                string tagValue = primary.STRING().GetText().Trim('"');
+                                var customTagLocation = ResourceLocation.Parse(tagValue, _dataPack.MainNamespace);
+                                var customTag = _dataPack.FindOrCreateTag(customTagLocation, TagType.Function);
+                                if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString()))
+                                {
+                                    customTag.Values.Add(mcFunction.Location);
+                                }
                             }
                         }
                         break;
