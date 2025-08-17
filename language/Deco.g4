@@ -64,6 +64,8 @@ unary_expr:
 primary:
     NUMBER
     | STRING
+    | TRUE
+    | FALSE
     | IDENTIFIER
     | functionCall
     | '(' expression ')'
@@ -88,6 +90,9 @@ return: 'return' expression ;
 COMMAND: '@' '`' ( '\\' . | ~[`\\] )* '`';
 
 STRING: '"' ( '\\"' | ~["] )* '"' ;
+
+TRUE: 'true';
+FALSE: 'false';
 
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 
