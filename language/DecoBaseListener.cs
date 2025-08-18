@@ -120,6 +120,18 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitIf_statement([NotNull] DecoParser.If_statementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.while_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterWhile_statement([NotNull] DecoParser.While_statementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.while_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitWhile_statement([NotNull] DecoParser.While_statementContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.block"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

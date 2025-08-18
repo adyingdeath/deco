@@ -23,10 +23,16 @@ class Program
         Console.WriteLine($"--- Reading Source Code from {inputFile} ---");
         string sourceCode = File.ReadAllText(inputFile);
         Console.WriteLine("-------------------");
-        
+
+        // --- Stage 1.5: Preprocessing ---
+        Console.WriteLine("--- Preprocessing Stage ---");
+        var preprocessor = new DecoPreprocessor();
+        string processedCode = preprocessor.Preprocess(sourceCode);
+        Console.WriteLine("Preprocessing complete.");
+
         // --- Stage 2: Parsing the Code ---
         Console.WriteLine("--- Parsing Stage ---");
-        ICharStream stream = CharStreams.fromString(sourceCode);
+        ICharStream stream = CharStreams.fromString(processedCode);
         DecoLexer lexer = new DecoLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         DecoParser parser = new DecoParser(tokens);

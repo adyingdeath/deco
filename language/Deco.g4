@@ -25,10 +25,15 @@ statement:
     | (assignment ';')
     | (return ';')
     | if_statement
+    | while_statement
     ;
 
 if_statement:
     'if' '(' expression ')' block ( 'else' (if_statement | block) )?
+    ;
+
+while_statement:
+    'while' '(' expression ')' block
     ;
 
 block:
@@ -106,8 +111,5 @@ FALSE: 'false';
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 
 NUMBER: [0-9]+ ('.' [0-9]+)?;
-
-LINE_COMMENT: '//' ~[\r\n]* -> skip;
-BLOCK_COMMENT: '/*' .*? '*/' -> skip;
 
 WS: [ \t\r\n]+ -> skip;

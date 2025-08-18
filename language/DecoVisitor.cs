@@ -74,6 +74,12 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitIf_statement([NotNull] DecoParser.If_statementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.while_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitWhile_statement([NotNull] DecoParser.While_statementContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.block"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
