@@ -219,20 +219,31 @@ namespace Deco.Compiler {
             }
 
             // --- Function Call Implementation ---
-            // Stage 1: Evaluate all arguments and push them to a temporary list ('call_stack').
-            // This resolves all argument values *before* any parameters are modified, fixing bugs
-            // like `foo(b, a)` where `a` would be overwritten before being passed.
-            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack set value []");
+            // Stage 1: Evaluate all arguments and push them to temporary, type-specific lists.
+            // This resolves all argument values *before* any parameters are modified.
+            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int set value []");
+            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float set value []");
+            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string set value []");
 
             for (int i = 0; i < arguments.Length; i++) {
                 var argument = arguments[i];
                 var parameter = signature.Parameters[i];
-
                 var evaluatedArg = expressionCompiler.Evaluate(argument);
 
                 if (parameter.Type != evaluatedArg.Type) {
                     Console.Error.WriteLine($"Error: Type mismatch for parameter '{parameter.Name}'. Expected {parameter.Type}, got {evaluatedArg.Type}.");
-                    currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append value {{}}"); // Append dummy value
+                    // To keep indices correct, we must append a dummy value to the correct stack.
+                    switch (parameter.Type) {
+                        case "int": case "bool":
+                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int append value 0");
+                            break;
+                        case "float":
+                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float append value 0.0f");
+                            break;
+                        case "string":
+                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string append value \"\"");
+                            break;
+                    }
                     continue;
                 }
 
@@ -240,17 +251,18 @@ namespace Deco.Compiler {
                     case "int":
                     case "bool":
                         currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_val int 1 run scoreboard players get {evaluatedArg.StorageName} {_dataPack.ID}");
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append from storage {_dataPack.ID} tmp_val");
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int append from storage {_dataPack.ID} tmp_val");
                         break;
                     case "float":
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float append from storage {_dataPack.ID} {evaluatedArg.StorageName}");
+                        break;
                     case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack append from storage {_dataPack.ID} {evaluatedArg.StorageName}");
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string append from storage {_dataPack.ID} {evaluatedArg.StorageName}");
                         break;
                 }
             }
 
             // Stage 2: Save the current values of the callee's parameters to the real stack.
-            // This allows for recursion. These values will be restored after the function returns.
             foreach (var parameter in signature.Parameters) {
                 var storageName = parameter.StorageName;
                 switch (parameter.Type) {
@@ -268,7 +280,10 @@ namespace Deco.Compiler {
                 }
             }
 
-            // Stage 3: Assign the evaluated arguments from 'call_stack' to the actual parameter storage.
+            // Stage 3: Assign the evaluated arguments from the typed call stacks to the actual parameter storage.
+            var intStackIndex = 0;
+            var floatStackIndex = 0;
+            var stringStackIndex = 0;
             for (int i = 0; i < signature.Parameters.Count; i++) {
                 var parameter = signature.Parameters[i];
                 var storageName = parameter.StorageName;
@@ -276,19 +291,20 @@ namespace Deco.Compiler {
                 switch (parameter.Type) {
                     case "int":
                     case "bool":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set from storage {_dataPack.ID} call_stack[{i}]");
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set from storage {_dataPack.ID} call_stack_int[{intStackIndex}]");
                         currentMcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} tmp_val 1");
+                        intStackIndex++;
                         break;
                     case "float":
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} call_stack_float[{floatStackIndex}]");
+                        floatStackIndex++;
+                        break;
                     case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} call_stack[{i}]");
+                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} call_stack_string[{stringStackIndex}]");
+                        stringStackIndex++;
                         break;
                 }
             }
-
-            // Cleanup temporary evaluation storage
-            //currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} call_stack");
-            //currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} tmp_val");
 
             // Stage 4: Call the function
             currentMcFunction.Commands.Add($"function {locationToCall}");

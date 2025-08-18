@@ -8,7 +8,7 @@ namespace Deco.Compiler.Expressions {
         private readonly McFunction _mcFunction;
         private readonly DataPack _dataPack;
         private readonly SymbolTable _symbolTable;
-        private int _tempCounter = 0;
+        private static int _tempCounter = 0;
 
         public ExpressionCompiler(DecoFunction function, DataPack dataPack, SymbolTable symbolTable) {
             _function = function;
@@ -62,6 +62,21 @@ namespace Deco.Compiler.Expressions {
             }
             if (context.FALSE() != null) {
                 return new ConstantOperand("0", "bool");
+            }
+            if (context.CONDITION() != null) {
+                string rawCondition = context.CONDITION().GetText();
+                // remove c` and ` and unescape
+                string condition = rawCondition[2..^1].Replace("\\`", "`");
+
+                var resultStorageName = GetNextTemp();
+                var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+
+                // Initialize to false
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                // Set to true if condition passes
+                _mcFunction.Commands.Add($"execute if {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+
+                return new SymbolOperand(resultSymbol);
             }
             if (context.IDENTIFIER() != null) {
                 var symbol = _symbolTable.Get(context.IDENTIFIER().GetText());
@@ -242,6 +257,24 @@ namespace Deco.Compiler.Expressions {
                 return Visit(context.primary());
             }
 
+            // Optimization for !c`...`
+            var conditionNode = context.unary_expr()?.primary()?.CONDITION();
+            if (conditionNode != null) {
+                string rawCondition = conditionNode.GetText();
+                string condition = rawCondition[2..^1].Replace("\\`", "`");
+
+                var resultStorageName_ = GetNextTemp();
+                var resultSymbol_ = new Symbol(resultStorageName_, "bool", resultStorageName_);
+
+                // Using 'unless' to reduce the amount of generated commands
+                // Initialize to false (0), then set to true (1) if the condition is NOT met.
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol_.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol_.StorageName} {_dataPack.ID} 1");
+
+                return new SymbolOperand(resultSymbol_);
+            }
+
+            // Fallback to a generic negation for other boolean expressions
             var operand = Visit(context.unary_expr());
             if (GetOperandType(operand) != "bool") {
                 Console.Error.WriteLine("Error: Operator '!' can only be applied to booleans.");
@@ -252,9 +285,9 @@ namespace Deco.Compiler.Expressions {
             var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
             var operandName = GetOperandStorageName(operand, GetNextTemp());
 
-            // If the operand in `!{operand}` is true(1), set the result to false(0). The result is set to true(1) first.
+            // Generic negation: result = 1 - operand
             _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
-            _mcFunction.Commands.Add($"execute if score {operandName} {_dataPack.ID} matches 1 run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+            _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} -= {operandName} {_dataPack.ID}");
 
             return new SymbolOperand(resultSymbol);
         }

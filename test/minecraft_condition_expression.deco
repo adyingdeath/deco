@@ -1,0 +1,117 @@
+@load
+int main() {
+    print("");
+    print("--- Running condition expression tests ---");
+
+    // Setup scoreboard
+    @`scoreboard objectives add deco_test dummy`;
+
+    test_simple_true_condition();
+    test_simple_false_condition();
+    test_negated_condition();
+    test_complex_conditions();
+
+    print("");
+    print("--- All condition expression tests complete ---");
+}
+
+// Helper function to print test results
+void check(string testName, bool passed) {
+    if (passed) {
+        print("[PASS] ", testName);
+    } else {
+        print("[FAIL] ", testName);
+    }
+}
+
+// Test 1: c`...` that is true
+void test_simple_true_condition() {
+    print("");
+    print("--- Testing simple true condition ---");
+    bool executed;
+    executed = false;
+    @`scoreboard players set cond_true deco_test 1`;
+
+    if (c`score cond_true deco_test matches 1`) {
+        executed = true;
+    }
+    check("if(c`...` -> true) executes", executed == true);
+}
+
+// Test 2: c`...` that is false
+void test_simple_false_condition() {
+    print("");
+    print("--- Testing simple false condition ---");
+    bool executed;
+    executed = true;
+    @`scoreboard players set cond_false deco_test 0`;
+
+    if (c`score cond_false deco_test matches 1`) {
+        print("执行了");
+        executed = false;
+    }
+    check("if(c`...` -> false) does not execute", executed == true);
+}
+
+// Test 3: Negated condition !c`...`
+void test_negated_condition() {
+    print("");
+    print("--- Testing negated condition ---");
+    bool result;
+
+    // Test !true -> should be false
+    @`scoreboard players set cond_neg_true deco_test 1`;
+    result = !c`score cond_neg_true deco_test matches 1`;
+    check("!c`(true)` is false", result == false);
+
+    // Test !false -> should be true
+    @`scoreboard players set cond_neg_false deco_test 0`;
+    result = !c`score cond_neg_false deco_test matches 1`;
+    check("!c`(false)` is true", result == true);
+}
+
+// Test 4: Complex conditions with && and ||
+void test_complex_conditions() {
+    print("");
+    print("--- Testing complex conditions ---");
+    bool executed;
+    executed = false;
+
+    @`scoreboard players set complex_A deco_test 1`;
+    @`scoreboard players set complex_B deco_test 0`;
+
+    // Test 4.1: true && c`...` (true)
+    executed = false;
+    if (true && c`score complex_A deco_test matches 1`) {
+        executed = true;
+    }
+    check("complex: true && c`(true)`", executed == true);
+
+    // Test 4.2: true && c`...` (false)
+    executed = true;
+    if (true && c`score complex_B deco_test matches 1`) {
+        executed = false;
+    }
+    check("complex: true && c`(false)`", executed == true);
+
+    // Test 4.3: false || c`...` (true)
+    executed = false;
+    if (false || c`score complex_A deco_test matches 1`) {
+        executed = true;
+    }
+    check("complex: false || c`(true)`", executed == true);
+
+    // Test 4.4: c`(true)` || c`(false)`
+    executed = false;
+    if (c`score complex_A deco_test matches 1` || c`score complex_B deco_test matches 1`) {
+        executed = true;
+    }
+    check("complex: c`(true)` || c`(false)`", executed == true);
+    
+    // Test 4.5: c`(false)` && c`(true)`
+    executed = true;
+    if (c`score complex_B deco_test matches 1` && c`score complex_A deco_test matches 1`) {
+        executed = false;
+    }
+    check("complex: c`(false)` && c`(true)`", executed == true);
+}
