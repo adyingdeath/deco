@@ -1,0 +1,80 @@
+@load
+void main() {
+    print("--- Running return statement tests ---");
+
+    // Test 1: Simple return value
+    int result1;
+    result1 = get_five();
+    check("Simple return value", result1 == 5);
+
+    // Test 2: Return value from expression
+    int result2;
+    result2 = add(10, 7);
+    check("Return value from expression", result2 == 17);
+
+    // Test 3: Return from an if block
+    check("Return from if (true)", test_return_from_if(true) == 100);
+    check("Return from if (false)", test_return_from_if(false) == 200);
+    
+    // Test 4: Return from a while loop
+    check("Return from while", find_first_multiple_of_7(10) == 14);
+
+    // Test 5: Chained function calls with returns
+    int final_result;
+    final_result = add(get_five(), 12);
+    check("Chained function calls", final_result == 17);
+    
+    // Test 6: Void return
+    void_return_test(); // Should execute without error
+    print("[PASS] Void return function call");
+
+    print("--- All return statement tests complete ---");
+}
+
+// Helper function to print test results
+void check(string testName, bool passed) {
+    if (passed) {
+        print("[PASS] ", testName);
+    } else {
+        print("[FAIL] ", testName);
+    }
+}
+
+// Test 1
+int get_five() {
+    return 5;
+}
+
+// Test 2
+int add(int a, int b) {
+    return a + b;
+}
+
+// Test 3
+int test_return_from_if(bool condition) {
+    if (condition) {
+        print("    (if branch taken)");
+        return 100;
+    }
+    print("    (else branch taken)");
+    return 200;
+}
+
+// Test 4
+int find_first_multiple_of_7(int start) {
+    int current;
+    current = start;
+    while (true) {
+        if ((current / 7) * 7 == current) {
+            return current;
+        }
+        current = current + 1;
+    }
+    return -1; // Should be unreachable
+}
+
+// Test 6
+void void_return_test() {
+    print("    (Executing void function)");
+    return;
+}

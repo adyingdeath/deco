@@ -1,6 +1,8 @@
 using Deco.Compiler.Data;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using static Deco.Compiler.CompilerConstants;
 
 namespace Deco.Compiler.Expressions {
     public class ExpressionCompiler : DecoBaseVisitor<Operand> {
@@ -28,6 +30,10 @@ namespace Deco.Compiler.Expressions {
             }
 
             if (resultOperand is ConstantOperand constantOperand) {
+                if (constantOperand.Type == "void") { // Discard void results
+                    return new Symbol("void", "void", "void");
+                }
+
                 var tempSymbol = new Symbol(GetNextTemp(), constantOperand.Type, GetNextTemp());
                 AssignConstantToSymbol(tempSymbol, constantOperand);
                 return tempSymbol;
@@ -88,8 +94,128 @@ namespace Deco.Compiler.Expressions {
             if (context.expression() != null) {
                 return Visit(context.expression());
             }
-            // [TODO] functionCall
+            if (context.functionCall() != null) {
+                return VisitFunctionCall(context.functionCall());
+            }
             return base.VisitPrimary(context);
+        }
+
+        public override Operand VisitFunctionCall(DecoParser.FunctionCallContext context) {
+            string functionNameToCall = context.name.Text;
+
+            // Handle built-in library functions first
+            if (functionNameToCall == "print") {
+                LibraryFunctions.HandlePrintFunction(context, _dataPack, _function, this);
+                return new ConstantOperand("0", "void"); // print returns void
+            }
+
+            // 1. Look up user-defined function
+            if (!_dataPack.Functions.DecoFunctions.TryGetValue(functionNameToCall, out var calledDecoFunction)) {
+                Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionNameToCall}'.");
+                return new ConstantOperand("0", "void"); // Return dummy
+            }
+            var signature = calledDecoFunction.Signature;
+            var locationToCall = calledDecoFunction.McFunction.Location;
+            var arguments = context.expression();
+
+            // 2. Check argument count
+            if (arguments.Length != signature.Parameters.Count) {
+                Console.Error.WriteLine($"Error: Function '{functionNameToCall}' expects {signature.Parameters.Count} arguments, but received {arguments.Length}.");
+                return new ConstantOperand("0", "void");
+            }
+
+            // --- Function Call Implementation ---
+
+            // Stage 1: Save the current values of the callee's parameters to the real stack.
+            foreach (var parameter in signature.Parameters) {
+                var storageName = parameter.StorageName;
+                switch (parameter.Type) {
+                    case "int":
+                    case "bool":
+                        _mcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_arg int 1 run scoreboard players get {storageName} {_dataPack.ID}");
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_int prepend from storage {_dataPack.ID} tmp_arg");
+                        break;
+                    case "float":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_float prepend from storage {_dataPack.ID} {storageName}");
+                        break;
+                    case "string":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_string prepend from storage {_dataPack.ID} {storageName}");
+                        break;
+                }
+            }
+
+            // Stage 2: Evaluate each argument and assign it directly to the parameter's storage.
+            for (int i = 0; i < arguments.Length; i++) {
+                var argument = arguments[i];
+                var parameter = signature.Parameters[i];
+                var evaluatedArg = Evaluate(argument);
+
+                if (parameter.Type != evaluatedArg.Type) {
+                    Console.Error.WriteLine($"Error: Type mismatch for parameter '{parameter.Name}' in function '{functionNameToCall}'. Expected {parameter.Type}, got {evaluatedArg.Type}.");
+                    continue; // Skip assignment on type error
+                }
+
+                switch (parameter.Type) {
+                    case "int":
+                    case "bool":
+                        _mcFunction.Commands.Add($"scoreboard players operation {parameter.StorageName} {_dataPack.ID} = {evaluatedArg.StorageName} {_dataPack.ID}");
+                        break;
+                    case "float":
+                    case "string":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {parameter.StorageName} set from storage {_dataPack.ID} {evaluatedArg.StorageName}");
+                        break;
+                }
+            }
+
+            // Stage 3: Call the function
+            _mcFunction.Commands.Add($"function {locationToCall}");
+
+            // Stage 4: Handle the return value
+            Symbol resultSymbol = null;
+            if (signature.ReturnType != "void") {
+                var resultStorageName = GetNextTemp();
+                resultSymbol = new Symbol(resultStorageName, signature.ReturnType, resultStorageName);
+
+                // Copy the global return value into our new temporary symbol
+                switch (signature.ReturnType) {
+                    case "int":
+                    case "bool":
+                        _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} = {ReturnValueInt} {_dataPack.ID}");
+                        break;
+                    case "float":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {resultSymbol.StorageName} set from storage {_dataPack.ID} {ReturnValueFloat}");
+                        break;
+                    case "string":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {resultSymbol.StorageName} set from storage {_dataPack.ID} {ReturnValueString}");
+                        break;
+                }
+            }
+
+            // Stage 5: Restore the context. Pop values from the real stack back into parameter storage.
+            for (int i = signature.Parameters.Count - 1; i >= 0; i--) {
+                var parameter = signature.Parameters[i];
+                var storageName = parameter.StorageName;
+                switch (parameter.Type) {
+                    case "int":
+                    case "bool":
+                        _mcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} stack_int[0] 1");
+                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_int[0]");
+                        break;
+                    case "float":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_float[0]");
+                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_float[0]");
+                        break;
+                    case "string":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_string[0]");
+                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_string[0]");
+                        break;
+                }
+            }
+
+            // Stage 6: Reset the return flag, so we consume the return event.
+            _mcFunction.Commands.Add($"scoreboard players set {ReturnFlagPlayer} {ReturnFlagObjective} 0");
+
+            return resultSymbol != null ? new SymbolOperand(resultSymbol) : new ConstantOperand("0", "void");
         }
 
         public override Operand VisitOr_expr(DecoParser.Or_exprContext context) {

@@ -3,6 +3,7 @@ using Deco.Compiler.Data;
 using Deco.Compiler.Expressions;
 using System.Linq;
 using System;
+using static Deco.Compiler.CompilerConstants;
 
 namespace Deco.Compiler {
     /// <summary>
@@ -102,18 +103,20 @@ namespace Deco.Compiler {
                 }
             }
 
-            // 5. Handle argument system initialization
-            if (context.arguments() != null) {
-                if (!_dataPack.Flags.ContainsKey("deco.argument.init")) {
-                    _dataPack.Flags.Add("deco.argument.init", "true");
-                    _dataPack.Functions.OnLoadFunction.PrependCommands([
-                        $"scoreboard objectives remove {_dataPack.ID}",
-                        $"scoreboard objectives add {_dataPack.ID} dummy",
-                        $"data modify storage {_dataPack.ID} stack_int set value []",
-                        $"data modify storage {_dataPack.ID} stack_float set value []",
-                        $"data modify storage {_dataPack.ID} stack_string set value []",
-                    ]);
-                }
+            // 5. Handle argument and return system initialization
+            if (!_dataPack.Flags.ContainsKey("deco.system.init")) {
+                _dataPack.Flags.Add("deco.system.init", "true");
+                _dataPack.Functions.OnLoadFunction.PrependCommands([
+                    // Argument system
+                    $"scoreboard objectives remove {_dataPack.ID}",
+                    $"scoreboard objectives add {_dataPack.ID} dummy",
+                    $"data modify storage {_dataPack.ID} stack_int set value []",
+                    $"data modify storage {_dataPack.ID} stack_float set value []",
+                    $"data modify storage {_dataPack.ID} stack_string set value []",
+                    // Return system
+                    $"scoreboard objectives add {ReturnFlagObjective} dummy",
+                    $"scoreboard players set {ReturnFlagPlayer} {ReturnFlagObjective} 0"
+                ]);
             }
 
             // Do not visit children; the second pass handles function bodies.

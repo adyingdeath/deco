@@ -1,6 +1,7 @@
 using Deco.Compiler.Data;
-using Deco.Compiler.Expressions; // New import
-using System; // For Console.Error.WriteLine
+using Deco.Compiler.Expressions;
+using System;
+using static Deco.Compiler.CompilerConstants;
 
 namespace Deco.Compiler {
     /// <summary>
@@ -98,22 +99,61 @@ namespace Deco.Compiler {
                 }
                 targetSymbol.IsInitialized = true;
             } else if (statement.expression() != null) {
-                // Evaluate the expression, but discard the result if it's not an assignment or function call
-                // For now, only function calls are explicitly handled here.
-                var primaryContext = Util.GetPrimaryContext(statement.expression());
-                if (primaryContext?.functionCall() != null) {
-                    ProcessFunctionCall(primaryContext.functionCall(), decoFunction);
-                } else {
-                    // Evaluate other expressions for side effects, if any.
-                    // For now, just evaluate and ignore the result.
-                    expressionCompiler.Evaluate(statement.expression());
-                }
+                // Evaluate the expression and discard the result.
+                // This handles standalone function calls.
+                expressionCompiler.Evaluate(statement.expression());
             } else if (statement.if_statement() != null) {
                 ProcessIfStatement(statement.if_statement(), decoFunction);
             } else if (statement.while_statement() != null) {
                 ProcessWhileStatement(statement.while_statement(), decoFunction);
+            } else if (statement.return_statement() != null) {
+                ProcessReturnStatement(statement.return_statement(), decoFunction);
             }
-            // Other statement types (return) can be handled here.
+        }
+
+        private void ProcessReturnStatement(DecoParser.Return_statementContext context, DecoFunction currentFunction) {
+            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, currentFunction.SymbolTable);
+            var signature = currentFunction.Signature;
+
+            if (context.expression() != null) {
+                if (signature.ReturnType == "void") {
+                    Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' with void return type cannot return a value.");
+                    return;
+                }
+
+                var returnValue = expressionCompiler.Evaluate(context.expression());
+
+                if (returnValue.Type != signature.ReturnType) {
+                    Console.Error.WriteLine($"Error: Return type mismatch in function '{currentFunction.Name}'. Expected '{signature.ReturnType}', got '{returnValue.Type}'.");
+                    return;
+                }
+
+                // Store the return value in the global return location
+                switch (returnValue.Type) {
+                    case "int":
+                    case "bool":
+                        currentFunction.McFunction.Commands.Add($"scoreboard players operation {ReturnValueInt} {_dataPack.ID} = {returnValue.StorageName} {_dataPack.ID}");
+                        break;
+                    case "float":
+                        currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueFloat} set from storage {_dataPack.ID} {returnValue.StorageName}");
+                        break;
+                    case "string":
+                        currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueString} set from storage {_dataPack.ID} {returnValue.StorageName}");
+                        break;
+                }
+            } else {
+                if (signature.ReturnType != "void") {
+                    Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' must return a value of type '{signature.ReturnType}'.");
+                }
+            }
+
+            // Set the flag and return to stop execution in the current McFunction
+            currentFunction.McFunction.Commands.Add($"scoreboard players set {ReturnFlagPlayer} {ReturnFlagObjective} 1");
+            currentFunction.McFunction.Commands.Add("return 1");
+        }
+
+        private void AddReturnCheck(McFunction mcFunction) {
+            mcFunction.Commands.Add($"execute if score {ReturnFlagPlayer} {ReturnFlagObjective} matches 1 run return 1");
         }
 
         private void ProcessIfStatement(DecoParser.If_statementContext context, DecoFunction currentFunction) {
@@ -148,6 +188,7 @@ namespace Deco.Compiler {
 
             var ifMcFunction = CreateFunctionForBlock(ifBodyStatements, currentFunction, parentSymbolTable);
             currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 1 run function {ifMcFunction.Location}");
+            AddReturnCheck(currentFunction.McFunction); // Check if the if-block returned
 
             if (hasElse) {
                 var randomCode = Util.GenerateRandomString(8);
@@ -168,6 +209,7 @@ namespace Deco.Compiler {
                 }
 
                 currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 0 run function {elseMcFunction.Location}");
+                AddReturnCheck(currentFunction.McFunction); // Check if the else-block returned
             }
         }
 
@@ -202,6 +244,7 @@ namespace Deco.Compiler {
                 return;
             }
             conditionMcFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 1 run function {bodyLocation}");
+            AddReturnCheck(conditionMcFunction); // Check if the body returned
 
             // 3. Compile the loop body.
             var bodyStatements = context.block().statement();
@@ -223,6 +266,7 @@ namespace Deco.Compiler {
 
             // 5. Add the initial call to the condition check function in the current function.
             currentFunction.McFunction.Commands.Add($"function {conditionLocation}");
+            AddReturnCheck(currentFunction.McFunction); // Check if the whole loop returned
         }
 
         private McFunction CreateFunctionForBlock(DecoParser.StatementContext[] statements, DecoFunction parentFunction, SymbolTable parentSymbolTable) {
@@ -244,148 +288,6 @@ namespace Deco.Compiler {
             }
 
             return mcFunction;
-        }
-
-        private void ProcessFunctionCall(DecoParser.FunctionCallContext context, DecoFunction currentDecoFunction) {
-            string functionNameToCall = context.name.Text;
-            McFunction currentMcFunction = currentDecoFunction.McFunction;
-            var expressionCompiler = new ExpressionCompiler(currentDecoFunction, _dataPack, currentDecoFunction.SymbolTable);
-
-            // Handle built-in library functions
-            if (functionNameToCall == "print") {
-                LibraryFunctions.HandlePrintFunction(context, _dataPack, currentDecoFunction, expressionCompiler); // Pass expressionCompiler
-                return; // Handled, so return
-            }
-
-            // 1. Look up function
-            if (!_dataPack.Functions.DecoFunctions.TryGetValue(functionNameToCall, out var calledDecoFunction)) {
-                // Error: calling an undefined function
-                Console.Error.WriteLine($"Error: Attempt to call undefined function '{functionNameToCall}'.");
-                return;
-            }
-            var signature = calledDecoFunction.Signature;
-            var locationToCall = calledDecoFunction.McFunction.Location;
-
-            var arguments = context.expression();
-
-            // 2. Check argument count
-            if (arguments.Length != signature.Parameters.Count) {
-                Console.Error.WriteLine($"Error: Function '{functionNameToCall}' expects {signature.Parameters.Count} arguments, but received {arguments.Length}.");
-                return;
-            }
-
-            // --- Function Call Implementation ---
-            // Stage 1: Evaluate all arguments and push them to temporary, type-specific lists.
-            // This resolves all argument values *before* any parameters are modified.
-            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int set value []");
-            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float set value []");
-            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string set value []");
-
-            for (int i = 0; i < arguments.Length; i++) {
-                var argument = arguments[i];
-                var parameter = signature.Parameters[i];
-                var evaluatedArg = expressionCompiler.Evaluate(argument);
-
-                if (parameter.Type != evaluatedArg.Type) {
-                    Console.Error.WriteLine($"Error: Type mismatch for parameter '{parameter.Name}'. Expected {parameter.Type}, got {evaluatedArg.Type}.");
-                    // To keep indices correct, we must append a dummy value to the correct stack.
-                    switch (parameter.Type) {
-                        case "int": case "bool":
-                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int append value 0");
-                            break;
-                        case "float":
-                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float append value 0.0f");
-                            break;
-                        case "string":
-                            currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string append value \"\"");
-                            break;
-                    }
-                    continue;
-                }
-
-                switch (evaluatedArg.Type) {
-                    case "int":
-                    case "bool":
-                        currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_val int 1 run scoreboard players get {evaluatedArg.StorageName} {_dataPack.ID}");
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_int append from storage {_dataPack.ID} tmp_val");
-                        break;
-                    case "float":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_float append from storage {_dataPack.ID} {evaluatedArg.StorageName}");
-                        break;
-                    case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} call_stack_string append from storage {_dataPack.ID} {evaluatedArg.StorageName}");
-                        break;
-                }
-            }
-
-            // Stage 2: Save the current values of the callee's parameters to the real stack.
-            foreach (var parameter in signature.Parameters) {
-                var storageName = parameter.StorageName;
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        currentMcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_arg int 1 run scoreboard players get {storageName} {_dataPack.ID}");
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_int prepend from storage {_dataPack.ID} tmp_arg");
-                        break;
-                    case "float":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_float prepend from storage {_dataPack.ID} {storageName}");
-                        break;
-                    case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_string prepend from storage {_dataPack.ID} {storageName}");
-                        break;
-                }
-            }
-
-            // Stage 3: Assign the evaluated arguments from the typed call stacks to the actual parameter storage.
-            var intStackIndex = 0;
-            var floatStackIndex = 0;
-            var stringStackIndex = 0;
-            for (int i = 0; i < signature.Parameters.Count; i++) {
-                var parameter = signature.Parameters[i];
-                var storageName = parameter.StorageName;
-
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_val set from storage {_dataPack.ID} call_stack_int[{intStackIndex}]");
-                        currentMcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} tmp_val 1");
-                        intStackIndex++;
-                        break;
-                    case "float":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} call_stack_float[{floatStackIndex}]");
-                        floatStackIndex++;
-                        break;
-                    case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} call_stack_string[{stringStackIndex}]");
-                        stringStackIndex++;
-                        break;
-                }
-            }
-
-            // Stage 4: Call the function
-            currentMcFunction.Commands.Add($"function {locationToCall}");
-
-            // Stage 5: Restore the context. Pop values from the real stack back into parameter storage.
-            for (int i = signature.Parameters.Count - 1; i >= 0; i--) {
-                var parameter = signature.Parameters[i];
-                var storageName = parameter.StorageName;
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} tmp_arg set from storage {_dataPack.ID} stack_int[0]");
-                        currentMcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} tmp_arg 1");
-                        currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_int[0]");
-                        break;
-                    case "float":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_float[0]");
-                        currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_float[0]");
-                        break;
-                    case "string":
-                        currentMcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_string[0]");
-                        currentMcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_string[0]");
-                        break;
-                }
-            }
         }
     }
 }

@@ -17,8 +17,9 @@ class Program
             "minecraft_condition_expression",
             "while_loop_test",
             "unary_minus_test",
+            "return_statement",
         ];
-        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[6]}.deco";
+        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[7]}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
 
         // --- Stage 1: Source Code Input ---
