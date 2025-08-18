@@ -68,6 +68,12 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitStatement([NotNull] DecoParser.StatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecoParser.return_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitReturn_statement([NotNull] DecoParser.Return_statementContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecoParser.if_statement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -157,10 +163,4 @@ public interface IDecoVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitAssignment([NotNull] DecoParser.AssignmentContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecoParser.return"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitReturn([NotNull] DecoParser.ReturnContext context);
 }

@@ -23,9 +23,13 @@ statement:
     | (expression ';')
     | (variableDefinition ';')
     | (assignment ';')
-    | (return ';')
+    | return_statement
     | if_statement
     | while_statement
+    ;
+
+return_statement:
+    'return' expression? ';'
     ;
 
 if_statement:
@@ -95,8 +99,6 @@ functionCall:
 assignment:
     IDENTIFIER '=' expression
     ;
-
-return: 'return' expression ;
 
 // --- Lexer Rules ---
 

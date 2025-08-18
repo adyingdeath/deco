@@ -91,6 +91,16 @@ public interface IDecoListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitStatement([NotNull] DecoParser.StatementContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.return_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterReturn_statement([NotNull] DecoParser.Return_statementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.return_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitReturn_statement([NotNull] DecoParser.Return_statementContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.if_statement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -240,14 +250,4 @@ public interface IDecoListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitAssignment([NotNull] DecoParser.AssignmentContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DecoParser.return"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterReturn([NotNull] DecoParser.ReturnContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DecoParser.return"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitReturn([NotNull] DecoParser.ReturnContext context);
 }
