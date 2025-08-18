@@ -76,6 +76,7 @@ primary:
     | IDENTIFIER
     | functionCall
     | '(' expression ')'
+    | CONDITION
     ;
 
 variableDefinition:
@@ -95,6 +96,7 @@ return: 'return' expression ;
 // --- Lexer Rules ---
 
 COMMAND: '@' '`' ( '\\' . | ~[`\\] )* '`';
+CONDITION: 'c' '`' ( '\\' . | ~[`\\] )* '`';
 
 STRING: '"' ( '\\"' | ~["] )* '"' ;
 
