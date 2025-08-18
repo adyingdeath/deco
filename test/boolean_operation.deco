@@ -1,31 +1,69 @@
 @load
 int main() {
-    bool a;
-    bool b;
     print("");
+    print("--- Running boolean operation tests ---");
+
+    test_and_operator();
+    test_or_operator();
+    test_not_operator();
+    test_complex_expressions();
+
     print("");
-    print("");
-    print("---test starts---");
-    a = true;
-    b = true;
-    boolean(a, b);
-    a = false;
-    b = true;
-    boolean(a, b);
-    a = true;
-    b = false;
-    boolean(a, b);
-    a = false;
-    b = false;
-    boolean(a, b);
-    print("---complex test---");
-    print(!(true || a) && a, !a || !b && true);
+    print("--- All boolean operation tests complete ---");
 }
 
-void boolean(bool a, bool b) {
-    print(a, "&&", b, "=", a && b);
-    print(a, "||", b, "=", a || b);
-    print("!", a, "=", !a);
-    print("!", b, "=", !b);
-    print("------");
+// Helper function to print test results
+void check(string testName, bool passed) {
+    if (passed) {
+        print("[PASS] ", testName);
+    } else {
+        print("[FAIL] ", testName);
+    }
+}
+
+// Test 1: AND operator (&&)
+void test_and_operator() {
+    print("");
+    print("--- Testing AND operator (&&) ---");
+    check("true && true", (true && true) == true);
+    check("true && false", (true && false) == false);
+    check("false && true", (false && true) == false);
+    check("false && false", (false && false) == false);
+}
+
+// Test 2: OR operator (||)
+void test_or_operator() {
+    print("");
+    print("--- Testing OR operator (||) ---");
+    check("true || true", (true || true) == true);
+    check("true || false", (true || false) == true);
+    check("false || true", (false || true) == true);
+    check("false || false", (false || false) == false);
+}
+
+// Test 3: NOT operator (!)
+void test_not_operator() {
+    print("");
+    print("--- Testing NOT operator (!) ---");
+    check("!true", !true == false);
+    check("!false", !false == true);
+}
+
+// Test 4: Complex boolean expressions
+void test_complex_expressions() {
+    print("");
+    print("--- Testing complex expressions ---");
+    bool a;
+    bool b;
+    a = true;
+    b = false;
+
+    check("(true && true) || false", ((true && true) || false) == true);
+    check("true && (true || false)", (true && (true || false)) == true);
+    check("!(true && false)", (!(true && false)) == true);
+    check("!true || !false", (!true || !false) == true);
+    check("a && b", (a && b) == false);
+    check("a || b", (a || b) == true);
+    check("(a && b) || (!a || b)", ((a && b) || (!a || b)) == false);
+    check("!a && b || !(a || b)", (!a && b || !(a || b)) == false);
 }
