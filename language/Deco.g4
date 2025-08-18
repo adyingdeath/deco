@@ -10,9 +10,7 @@ modifier:
 
 function:
     (modifier)*
-    type=IDENTIFIER name=IDENTIFIER '(' (arguments)? ')' '{'
-        (statement)*
-    '}';
+    type=IDENTIFIER name=IDENTIFIER '(' (arguments)? ')' block;
 
 arguments:
     argument (',' argument)*;
@@ -26,6 +24,15 @@ statement:
     | (variableDefinition ';')
     | (assignment ';')
     | (return ';')
+    | if_statement
+    ;
+
+if_statement:
+    'if' '(' expression ')' block ( 'else' (if_statement | block) )?
+    ;
+
+block:
+    '{' statement* '}'
     ;
 
 expression:
@@ -97,5 +104,8 @@ FALSE: 'false';
 IDENTIFIER: [a-zA-Z_] ( [a-zA-Z0-9_] )*;
 
 NUMBER: [0-9]+ ('.' [0-9]+)?;
+
+LINE_COMMENT: '//' ~[\r\n]* -> skip;
+BLOCK_COMMENT: '/*' .*? '*/' -> skip;
 
 WS: [ \t\r\n]+ -> skip;

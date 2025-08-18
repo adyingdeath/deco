@@ -17,7 +17,7 @@ namespace Deco.Compiler {
         public void GenerateCode() {
             foreach (var decoFunction in _dataPack.Functions.DecoFunctions.Values) {
                 // Process each statement in the function body
-                foreach (var statement in decoFunction.Context.statement()) {
+                foreach (var statement in decoFunction.Context.block().statement()) {
                     ProcessStatement(statement, decoFunction);
                 }
             }
@@ -97,7 +97,6 @@ namespace Deco.Compiler {
                         break;
                 }
                 targetSymbol.IsInitialized = true;
-
             } else if (statement.expression() != null) {
                 // Evaluate the expression, but discard the result if it's not an assignment or function call
                 // For now, only function calls are explicitly handled here.
@@ -109,8 +108,86 @@ namespace Deco.Compiler {
                     // For now, just evaluate and ignore the result.
                     expressionCompiler.Evaluate(statement.expression());
                 }
+            } else if (statement.if_statement() != null) {
+                ProcessIfStatement(statement.if_statement(), decoFunction);
             }
             // Other statement types (return) can be handled here.
+        }
+
+        private void ProcessIfStatement(DecoParser.If_statementContext context, DecoFunction currentFunction) {
+            var parentSymbolTable = currentFunction.SymbolTable;
+            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, parentSymbolTable);
+
+            // 1. Evaluate condition
+            var condition = expressionCompiler.Evaluate(context.expression());
+            if (condition.Type != "bool") {
+                Console.Error.WriteLine("Error: if statement condition must be a boolean expression.");
+                return;
+            }
+
+            var ifBlock = context.block(0);
+            var ifBodyStatements = ifBlock.statement();
+
+            var elseIfNode = context.if_statement();
+            var elseBlockNode = context.block().Length > 1 ? context.block(1) : null;
+
+            bool hasElse = elseIfNode != null || elseBlockNode != null;
+
+            // Optimization for single command with no else
+            if (ifBodyStatements.Length == 1 && !hasElse && ifBodyStatements[0].COMMAND() != null) {
+                var singleStatement = ifBodyStatements[0];
+                string rawCommand = singleStatement.COMMAND().GetText();
+                if (rawCommand.StartsWith("@`") && rawCommand.EndsWith('`')) {
+                    string command = rawCommand[2..^1];
+                    currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 1 run {command}");
+                    return;
+                }
+            }
+
+            var ifMcFunction = CreateFunctionForBlock(ifBodyStatements, currentFunction, parentSymbolTable);
+            currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 1 run function {ifMcFunction.Location}");
+
+            if (hasElse) {
+                var randomCode = Util.GenerateRandomString(8);
+                var elseMcFunction = new McFunction(new ResourceLocation(randomCode, _dataPack.MainNamespace));
+                _dataPack.Functions.McFunctions.Add(elseMcFunction);
+
+                var elseSymbolTable = new SymbolTable(parentSymbolTable);
+                var elseDecoFunction = new DecoFunction($"{currentFunction.Name}_{randomCode}", currentFunction.Signature, elseMcFunction, currentFunction.Context, elseSymbolTable);
+
+                if (elseIfNode != null) {
+                    ProcessIfStatement(elseIfNode, elseDecoFunction);
+                } else if (elseBlockNode != null) {
+                    // elseBlockNode must be non-null
+                    var elseBodyStatements = elseBlockNode.statement();
+                    foreach (var statement in elseBodyStatements) {
+                        ProcessStatement(statement, elseDecoFunction);
+                    }
+                }
+
+                currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 0 run function {elseMcFunction.Location}");
+            }
+        }
+
+        private McFunction CreateFunctionForBlock(DecoParser.StatementContext[] statements, DecoFunction parentFunction, SymbolTable parentSymbolTable) {
+            var randomCode = Util.GenerateRandomString(8);
+            var mcFunction = new McFunction(new ResourceLocation(randomCode, _dataPack.MainNamespace));
+            _dataPack.Functions.McFunctions.Add(mcFunction);
+
+            var blockSymbolTable = new SymbolTable(parentSymbolTable);
+            var blockDecoFunction = new DecoFunction(
+                $"{parentFunction.Name}_{randomCode}",
+                parentFunction.Signature,
+                mcFunction,
+                parentFunction.Context,
+                blockSymbolTable
+            );
+
+            foreach (var statement in statements) {
+                ProcessStatement(statement, blockDecoFunction);
+            }
+
+            return mcFunction;
         }
 
         private void ProcessFunctionCall(DecoParser.FunctionCallContext context, DecoFunction currentDecoFunction) {

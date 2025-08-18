@@ -7,9 +7,6 @@ using System.Linq;
 /// Provides utility methods for common file operations, including creating missing directories.
 /// </summary>
 public static class Util {
-
-    private static readonly Random _random = new Random();
-
     /// <summary>
     /// Writes multiple lines of content to the specified file.
     /// Creates the file if it doesn't exist, and automatically creates any missing parent directories.
@@ -169,10 +166,31 @@ public static class Util {
         }
     }
 
+    private static readonly Random _random = new Random();
+    private static readonly HashSet<string> _generatedStrings = new HashSet<string>();
+
+    /// <summary>
+    /// Generates a random string of a given length that is guaranteed to be unique
+    /// within the current application session.
+    /// It uses a HashSet to store and check for previously generated strings to ensure uniqueness.
+    /// </summary>
+    /// <param name="length">The desired length of the random string.</param>
+    /// <returns>A unique random string.</returns>
     public static string GenerateRandomString(int length) {
         const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        return new string(Enumerable.Repeat(chars, length)
-          .Select(s => s[_random.Next(s.Length)]).ToArray());
+
+        while (true) {
+            string candidate = new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[_random.Next(s.Length)]).ToArray());
+
+            // Attempt to add the new string to the set.
+            // .Add() returns true if the item was added,
+            // and false if the item was already present.
+            if (_generatedStrings.Add(candidate)) {
+                return candidate;
+            }
+            // If the string was already in the set, the loop continues and generates a new one.
+        }
     }
     
     public static DecoParser.PrimaryContext GetPrimaryContext(DecoParser.ExpressionContext expression) {
