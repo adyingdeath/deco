@@ -253,43 +253,81 @@ namespace Deco.Compiler.Expressions {
         }
 
         public override Operand VisitUnary_expr(DecoParser.Unary_exprContext context) {
+            // Base case: `primary`
             if (context.primary() != null) {
                 return Visit(context.primary());
             }
 
-            // Optimization for !c`...`
-            var conditionNode = context.unary_expr()?.primary()?.CONDITION();
-            if (conditionNode != null) {
-                string rawCondition = conditionNode.GetText();
-                string condition = rawCondition[2..^1].Replace("\\`", "`");
+            // It's a unary operation. Get the operator token.
+            string op = context.GetChild(0).GetText();
+            var expr = context.unary_expr();
 
-                var resultStorageName_ = GetNextTemp();
-                var resultSymbol_ = new Symbol(resultStorageName_, "bool", resultStorageName_);
+            if (op == "!") {
+                // LOGICAL NOT
 
-                // Using 'unless' to reduce the amount of generated commands
-                // Initialize to false (0), then set to true (1) if the condition is NOT met.
-                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol_.StorageName} {_dataPack.ID} 0");
-                _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol_.StorageName} {_dataPack.ID} 1");
+                // Optimization for !c`...`
+                var conditionNode = expr?.primary()?.CONDITION();
+                if (conditionNode != null) {
+                    string rawCondition = conditionNode.GetText();
+                    string condition = rawCondition[2..^1].Replace("\\`", "`");
 
-                return new SymbolOperand(resultSymbol_);
+                    var resultStorageName = GetNextTemp();
+                    var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+
+                    _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                    _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
+
+                    return new SymbolOperand(resultSymbol);
+                }
+
+                // Fallback for other boolean expressions
+                var operand = Visit(expr);
+                if (GetOperandType(operand) != "bool") {
+                    Console.Error.WriteLine("Error: Operator '!' can only be applied to booleans.");
+                    return new ConstantOperand("0", "bool");
+                }
+
+                var resultStorageName2 = GetNextTemp();
+                var resultSymbol2 = new Symbol(resultStorageName2, "bool", resultStorageName2);
+                var operandName = GetOperandStorageName(operand, GetNextTemp());
+
+                // Generic negation: result = 1 - operand
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol2.StorageName} {_dataPack.ID} 1");
+                _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol2.StorageName} {_dataPack.ID} -= {operandName} {_dataPack.ID}");
+
+                return new SymbolOperand(resultSymbol2);
+            } else if (op == "-") {
+                // UNARY MINUS
+                var operand = Visit(expr);
+
+                // Constant folding for literals
+                if (operand is ConstantOperand constOp) {
+                    if (constOp.Type == "int") {
+                        if (int.TryParse(constOp.Value, out int val)) {
+                            return new ConstantOperand((-val).ToString(), "int");
+                        }
+                    }
+                    // Note: No constant folding for float yet.
+                }
+
+                if (GetOperandType(operand) != "int") {
+                    Console.Error.WriteLine("Error: Unary operator '-' can only be applied to integers.");
+                    return new ConstantOperand("0", "int");
+                }
+
+                var resultStorageName = GetNextTemp();
+                var resultSymbol = new Symbol(resultStorageName, "int", resultStorageName);
+                var operandName = GetOperandStorageName(operand, GetNextTemp());
+
+                // result = 0 - operand
+                _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
+                _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} -= {operandName} {_dataPack.ID}");
+
+                return new SymbolOperand(resultSymbol);
             }
 
-            // Fallback to a generic negation for other boolean expressions
-            var operand = Visit(context.unary_expr());
-            if (GetOperandType(operand) != "bool") {
-                Console.Error.WriteLine("Error: Operator '!' can only be applied to booleans.");
-                return new ConstantOperand("0", "bool");
-            }
-
-            var resultStorageName = GetNextTemp();
-            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
-            var operandName = GetOperandStorageName(operand, GetNextTemp());
-
-            // Generic negation: result = 1 - operand
-            _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
-            _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} -= {operandName} {_dataPack.ID}");
-
-            return new SymbolOperand(resultSymbol);
+            // Should not be reached
+            throw new InvalidOperationException($"Unsupported unary operator: {op}");
         }
 
         private SymbolOperand PerformArithmetic(Operand left, Operand right, string operation) {

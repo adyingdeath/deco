@@ -16,8 +16,9 @@ class Program
             "if_statement",
             "minecraft_condition_expression",
             "while_loop_test",
+            "unary_minus_test",
         ];
-        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[2]}.deco";
+        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[6]}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
 
         // --- Stage 1: Source Code Input ---
@@ -30,8 +31,6 @@ class Program
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(sourceCode);
         Console.WriteLine("Preprocessing complete.");
-
-        Console.WriteLine(processedCode);
 
         // --- Stage 2: Parsing the Code ---
         Console.WriteLine("--- Parsing Stage ---");

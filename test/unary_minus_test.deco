@@ -1,0 +1,90 @@
+@load
+int main() {
+    print("");
+    print("--- Running unary minus tests ---");
+
+    test_negative_literals();
+    test_unary_minus_on_variable();
+    test_double_unary_minus();
+    test_unary_minus_in_expression();
+
+    print("");
+    print("--- All unary minus tests complete ---");
+}
+
+// Helper function to print test results
+void check(string testName, bool passed) {
+    if (passed) {
+        print("[PASS] ", testName);
+    } else {
+        print("[FAIL] ", testName);
+    }
+}
+
+// Test 1: Assigning negative literals
+void test_negative_literals() {
+    print("");
+    print("--- Testing negative literals ---");
+    int a;
+    a = -10;
+    check("a = -10", a == -10);
+
+    int b;
+    b = 5;
+    check("b = 5", b == 5);
+}
+
+// Test 2: Unary minus on a variable
+void test_unary_minus_on_variable() {
+    print("");
+    print("--- Testing unary minus on variable ---");
+    int a;
+    a = 15;
+    int b;
+    b = -a;
+    check("b = -a (where a=15)", b == -15);
+
+    int c;
+    c = -5;
+    int d;
+    d = -c;
+    check("d = -c (where c=-5)", d == 5);
+}
+
+// Test 3: Double unary minus
+void test_double_unary_minus() {
+    print("");
+    print("--- Testing double unary minus ---");
+    int a;
+    a = 20;
+    int b;
+    b = --a;
+    check("b = --a (where a=20)", b == 20);
+
+    int c;
+    c = -25;
+    int d;
+    d = --c;
+    check("d = --c (where c=-25)", d == -25);
+}
+
+// Test 4: Unary minus within expressions
+void test_unary_minus_in_expression() {
+    print("");
+    print("--- Testing unary minus in expression ---");
+    int a;
+    a = 100 + -20;
+    check("a = 100 + -20", a == 80);
+
+    int b;
+    b = a * -2;
+    check("b = a * -2 (where a=80)", b == -160);
+
+    int c;
+    c = b / -10;
+    check("c = b / -10 (where b=-160)", c == 16);
+
+    int d;
+    d = c - -4;
+    check("d = c - -4 (where c=16)", d == 20);
+}

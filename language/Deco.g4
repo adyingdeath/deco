@@ -74,6 +74,7 @@ mul_expr:
 
 unary_expr:
     '!' unary_expr
+    | '-' unary_expr
     | primary
     ;
 
