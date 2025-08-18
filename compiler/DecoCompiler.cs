@@ -110,6 +110,8 @@ namespace Deco.Compiler {
                 }
             } else if (statement.if_statement() != null) {
                 ProcessIfStatement(statement.if_statement(), decoFunction);
+            } else if (statement.while_statement() != null) {
+                ProcessWhileStatement(statement.while_statement(), decoFunction);
             }
             // Other statement types (return) can be handled here.
         }
@@ -167,6 +169,60 @@ namespace Deco.Compiler {
 
                 currentFunction.McFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 0 run function {elseMcFunction.Location}");
             }
+        }
+
+        private void ProcessWhileStatement(DecoParser.While_statementContext context, DecoFunction currentFunction) {
+            var parentSymbolTable = currentFunction.SymbolTable;
+
+            // 1. Create two functions: one for the condition, one for the body.
+            var conditionRandomCode = Util.GenerateRandomString(8);
+            var conditionLocation = new ResourceLocation($"while_cond_{conditionRandomCode}", _dataPack.MainNamespace);
+            var conditionMcFunction = new McFunction(conditionLocation);
+            _dataPack.Functions.McFunctions.Add(conditionMcFunction);
+
+            var bodyRandomCode = Util.GenerateRandomString(8);
+            var bodyLocation = new ResourceLocation($"while_body_{bodyRandomCode}", _dataPack.MainNamespace);
+            var bodyMcFunction = new McFunction(bodyLocation);
+            _dataPack.Functions.McFunctions.Add(bodyMcFunction);
+
+            // Create a DecoFunction for the condition part to use the ExpressionCompiler
+            var conditionDecoFunction = new DecoFunction(
+                $"{currentFunction.Name}_while_cond_{conditionRandomCode}",
+                currentFunction.Signature,
+                conditionMcFunction,
+                currentFunction.Context,
+                parentSymbolTable
+            );
+            var expressionCompiler = new ExpressionCompiler(conditionDecoFunction, _dataPack, parentSymbolTable);
+
+            // 2. Compile the condition check.
+            var condition = expressionCompiler.Evaluate(context.expression());
+            if (condition.Type != "bool") {
+                Console.Error.WriteLine("Error: while statement condition must be a boolean expression.");
+                return;
+            }
+            conditionMcFunction.Commands.Add($"execute if score {condition.StorageName} {_dataPack.ID} matches 1 run function {bodyLocation}");
+
+            // 3. Compile the loop body.
+            var bodyStatements = context.block().statement();
+            var bodySymbolTable = new SymbolTable(parentSymbolTable);
+            var bodyDecoFunction = new DecoFunction(
+                $"{currentFunction.Name}_while_body_{bodyRandomCode}",
+                currentFunction.Signature,
+                bodyMcFunction,
+                currentFunction.Context,
+                bodySymbolTable
+            );
+
+            foreach (var statement in bodyStatements) {
+                ProcessStatement(statement, bodyDecoFunction);
+            }
+
+            // 4. Add the loop-back command to the body function.
+            bodyMcFunction.Commands.Add($"function {conditionLocation}");
+
+            // 5. Add the initial call to the condition check function in the current function.
+            currentFunction.McFunction.Commands.Add($"function {conditionLocation}");
         }
 
         private McFunction CreateFunctionForBlock(DecoParser.StatementContext[] statements, DecoFunction parentFunction, SymbolTable parentSymbolTable) {

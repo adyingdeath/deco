@@ -1,0 +1,65 @@
+@load
+int main() {
+    print("");
+    print("--- Running while loop tests ---");
+
+    test_simple_while();
+    test_zero_iteration_while();
+    test_while_with_if();
+
+    print("");
+    print("--- All while loop tests complete ---");
+}
+
+// Helper function to print test results
+void check(string testName, bool passed) {
+    if (passed) {
+        print("[PASS] ", testName);
+    } else {
+        print("[FAIL] ", testName);
+    }
+}
+
+// Test 1: A simple while loop that counts from 0 to 4
+void test_simple_while() {
+    print("");
+    print("--- Testing simple while ---");
+    int i;
+    i = 0;
+    while (i < 5) {
+        i = i + 1;
+    }
+    check("simple while loop (0 to 4)", i == 5);
+}
+
+// Test 2: A while loop whose condition is initially false
+void test_zero_iteration_while() {
+    print("");
+    print("--- Testing zero-iteration while ---");
+    int i;
+    i = 10;
+    while (i < 10) {
+        i = 99; // This should not be executed
+    }
+    check("zero-iteration while loop", i == 10);
+}
+
+// Test 3: A while loop with other statements inside
+void test_while_with_if() {
+    print("");
+    print("--- Testing while with if inside ---");
+    int counter;
+    int even_count;
+    counter = 0;
+    even_count = 0;
+
+    while (counter <= 10) {
+        // Check for evenness using integer division properties
+        if ((counter / 2) * 2 == counter) {
+            even_count = even_count + 1;
+        }
+        counter = counter + 1;
+    }
+    // 0, 2, 4, 6, 8, 10 are even. That's 6 numbers.
+    check("while with if (count even numbers)", even_count == 6);
+}
