@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Deco.Compiler.CompilerConstants;
+using Deco.Compiler.Library;
 
 namespace Deco.Compiler.Expressions {
     public class ExpressionCompiler : DecoBaseVisitor<Operand> {
@@ -12,11 +13,25 @@ namespace Deco.Compiler.Expressions {
         private readonly SymbolTable _symbolTable;
         private static int _tempCounter = 0;
 
+        private readonly Dictionary<string, LibraryFunction> _libraryFunctions;
+
         public ExpressionCompiler(DecoFunction function, DataPack dataPack, SymbolTable symbolTable) {
             _function = function;
             _mcFunction = function.McFunction;
             _dataPack = dataPack;
             _symbolTable = symbolTable;
+
+            _libraryFunctions = new Dictionary<string, LibraryFunction>();
+            RegisterLibraryFunction([
+                new PrintFunction(),
+            ]);
+        }
+
+        private void RegisterLibraryFunction(LibraryFunction[] functions)
+        {
+            foreach(var func in functions) {
+                _libraryFunctions.Add(func.Name, func);
+            }
         }
 
         public string GetNextTemp() => $"tmp_expr_{_tempCounter++}";
@@ -104,9 +119,8 @@ namespace Deco.Compiler.Expressions {
             string functionNameToCall = context.name.Text;
 
             // Handle built-in library functions first
-            if (functionNameToCall == "print") {
-                LibraryFunctions.HandlePrintFunction(context, _dataPack, _function, this);
-                return new ConstantOperand("0", "void"); // print returns void
+            if (_libraryFunctions.TryGetValue(functionNameToCall, out var libraryFunction)) {
+                return libraryFunction.Execute(context, _dataPack, _function, this);
             }
 
             // 1. Look up user-defined function

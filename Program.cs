@@ -41,7 +41,7 @@ class Program {
             "unary_minus_test",
             "return_statement",
         ];
-        string testFileName = testList[7];
+        string testFileName = testList[4];
         string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testFileName}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
 

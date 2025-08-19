@@ -1,28 +1,44 @@
 using Deco.Compiler.Data;
-using Deco.Compiler.Expressions; // New import
+using Deco.Compiler.Expressions;
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
-using System; // For Console.Error.WriteLine
 
-namespace Deco.Compiler {
-    public static class LibraryFunctions {
-        public static void HandlePrintFunction(DecoParser.FunctionCallContext context, DataPack dataPack, DecoFunction currentDecoFunction, ExpressionCompiler expressionCompiler) {
+namespace Deco.Compiler.Library
+{
+    public class PrintFunction : LibraryFunction
+    {
+        public override string Name => "print";
+        public override string ReturnType => "void";
+        public override List<ParameterInfo> Parameters => new List<ParameterInfo>(); // Print can take any number of arguments, so this will be empty for now. We'll handle argument count check in Execute.
+
+        public override Operand Execute(
+            DecoParser.FunctionCallContext context,
+            DataPack dataPack,
+            DecoFunction currentDecoFunction,
+            ExpressionCompiler expressionCompiler
+        )
+        {
             var arguments = context.expression();
             var currentMcFunction = currentDecoFunction.McFunction;
 
-            if (arguments.Length == 0) {
+            if (arguments.Length == 0)
+            {
                 Console.Error.WriteLine("Error: Function 'print' expects at least 1 argument.");
-                return;
+                return new ConstantOperand("0", "void");
             }
 
             var jsonArray = new JsonArray();
 
-            for (int i = 0; i < arguments.Length; i++) {
+            for (int i = 0; i < arguments.Length; i++)
+            {
                 var argument = arguments[i];
 
                 var evaluatedArg = expressionCompiler.Evaluate(argument);
                 JsonObject component = null;
 
-                switch (evaluatedArg.Type) {
+                switch (evaluatedArg.Type)
+                {
                     case "bool":
                         string tempStringStorage = expressionCompiler.GetNextTemp();
                         currentMcFunction.Commands.Add($"data modify storage {dataPack.ID} {tempStringStorage} set value \"false\"");
@@ -49,20 +65,23 @@ namespace Deco.Compiler {
                         break;
                     default:
                         Console.Error.WriteLine($"Error: Unsupported type '{evaluatedArg.Type}' for print function argument.");
-                        return;
+                        return new ConstantOperand("0", "void");
                 }
 
-                if (component != null) {
+                if (component != null)
+                {
                     jsonArray.Add(component);
                 }
 
-                if (i < arguments.Length - 1) {
+                if (i < arguments.Length - 1)
+                {
                     jsonArray.Add(new JsonObject { ["text"] = "  " });
                 }
             }
 
             string finalJson = jsonArray.ToJsonString();
             currentMcFunction.Commands.Add($"tellraw @a {finalJson}");
+            return new ConstantOperand("0", "void");
         }
     }
 }
