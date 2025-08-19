@@ -1,14 +1,36 @@
 using Antlr4.Runtime;
 using Deco.Compiler;
 using Deco.Compiler.Data;
-using System.Collections;
 using System.IO;
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        // TODO: Add argument parsing for input and output paths
+class Program {
+    static void Main(string[] args) {
+        if (args.Length == 0) {
+            // No arguments, run test code
+            RunTest();
+        } else if (args.Length == 2) {
+            string inputPath = args[0];
+            string outputDirectory = args[1];
+
+            if (File.Exists(inputPath)) {
+                string dataPackName = Path.GetFileNameWithoutExtension(inputPath);
+                string dataPackNamespace = dataPackName; // Use file name as namespace by default
+                CompileFile(inputPath, outputDirectory, dataPackName, dataPackNamespace);
+            } else if (Directory.Exists(inputPath)) {
+                // [TODO] Handle directory input
+                Console.WriteLine("Directory input is not yet supported.");
+            } else {
+                Console.WriteLine($"Error: Input path '{inputPath}' not found.");
+            }
+        } else {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("  deco_csharp <input_file> <output_directory>");
+            Console.WriteLine("  deco_csharp (runs tests)");
+        }
+    }
+
+    static void RunTest() {
+        Console.WriteLine("--- Running in Test Mode ---");
         string[] testList = [
             "argument_passing",
             "expression_evaluation",
@@ -19,8 +41,17 @@ class Program
             "unary_minus_test",
             "return_statement",
         ];
-        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testList[7]}.deco";
+        string testFileName = testList[7];
+        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testFileName}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
+
+        CompileFile(inputFile, outputDirectory, testFileName, testFileName);
+    }
+
+    static void CompileFile(string inputFile, string outputDirectory, string dataPackName, string dataPackNamespace) {
+        Console.WriteLine($"--- Compiling {inputFile} ---");
+        Console.WriteLine($"Output directory: {outputDirectory}");
+        Console.WriteLine($"Datapack name/namespace: {dataPackName}");
 
         // --- Stage 1: Source Code Input ---
         Console.WriteLine($"--- Reading Source Code from {inputFile} ---");
@@ -44,13 +75,13 @@ class Program
 
         // --- Stage 3: Visiting the Parse Tree to Populate Data Model ---
         Console.WriteLine("--- Visitor Stage ---");
-        var dataPack = new DataPack("ukx34rhy", outputDirectory, "deco");
-        
+        var dataPack = new DataPack("ukx34rhy", dataPackName, dataPackNamespace);
+
         // Pass 1: Discover all function signatures
         var discoveryVisitor = new SymbolCollector(dataPack);
         discoveryVisitor.Visit(tree);
         Console.WriteLine($"Discovery pass finished. Found {dataPack.Functions.DecoFunctions.Count} function signatures.");
-        
+
         // Pass 2: Visit the parse tree to generate code
         var codeVisitor = new DecoCompiler(dataPack);
         codeVisitor.GenerateCode();
@@ -58,9 +89,10 @@ class Program
 
         // --- Stage 4: Writing the Data Pack to Files ---
         Console.WriteLine("--- Writing Output ---");
-        var writer = new PackWriter(dataPack);
+        var writer = new PackWriter(dataPack, outputDirectory);
         writer.Write();
-        
+
         Console.WriteLine("--- Compilation Finished ---");
     }
 }
+

@@ -9,16 +9,16 @@ namespace Deco.Compiler.Data
     public class DataPack
     {
         public string ID { get; }
-        public string Name { get; }
+        public string PackName { get; }
         public string MainNamespace { get; }
         public FunctionCollection Functions { get; }
         public List<Tag> Tags { get; } = new List<Tag>();
         public Dictionary<string, string> Flags { get; } = new Dictionary<string, string>();
 
-        public DataPack(string id, string name, string mainNamespace)
+        public DataPack(string id, string packName, string mainNamespace)
         {
             ID = id;
-            Name = name;
+            PackName = packName;
             MainNamespace = mainNamespace;
 
             // Create the special OnLoad function and initialize the function collection with it

@@ -12,14 +12,17 @@ namespace Deco.Compiler
     public class PackWriter
     {
         private readonly DataPack _dataPack;
+        private readonly string _outputDirectory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PackWriter"/> class.
         /// </summary>
         /// <param name="dataPack">The data pack model to be written to disk.</param>
-        public PackWriter(DataPack dataPack)
+        /// <param name="outputDirectory">The directory to write the pack to.</param>
+        public PackWriter(DataPack dataPack, string outputDirectory)
         {
             _dataPack = dataPack;
+            _outputDirectory = outputDirectory;
         }
 
         /// <summary>
@@ -29,7 +32,7 @@ namespace Deco.Compiler
         public void Write()
         {
             // Get the root path for the datapack and ensure the directory is clean
-            string rootPath = _dataPack.Name;
+            string rootPath = Path.Combine(_outputDirectory, _dataPack.PackName);
             if (Directory.Exists(rootPath))
             {
                 Directory.Delete(rootPath, true);
