@@ -64,3 +64,4 @@ project.nuget.cache
 *.GlobalUsings.g.cs
 
 .gemini/
+temp.md
