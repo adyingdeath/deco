@@ -1,8 +1,10 @@
 using Antlr4.Runtime.Misc;
 using Deco.Compiler.Data;
 using Deco.Compiler.Expressions;
+using Deco.Compiler.Modifiers;
 using System.Linq;
 using System;
+using System.Collections.Generic;
 using static Deco.Compiler.CompilerConstants;
 
 namespace Deco.Compiler {
@@ -13,9 +15,23 @@ namespace Deco.Compiler {
     /// </summary>
     public class SymbolCollector : DecoBaseVisitor<object> {
         private readonly DataPack _dataPack;
+        private readonly Dictionary<string, FunctionModifier> _functionModifiers;
 
         public SymbolCollector(DataPack dataPack) {
             _dataPack = dataPack;
+
+            _functionModifiers = new Dictionary<string, FunctionModifier>();
+            RegisterFunctionModifier([
+                new LoadModifier(),
+                new TickModifier(),
+                new TagModifier(),
+            ]);
+        }
+
+        private void RegisterFunctionModifier(FunctionModifier[] modifiers) {
+            foreach (var modifier in modifiers) {
+                _functionModifiers.Add(modifier.Name, modifier);
+            }
         }
 
         public override object VisitFunction([NotNull] DecoParser.FunctionContext context) {
@@ -55,9 +71,9 @@ namespace Deco.Compiler {
 
             // 2. Determine ResourceLocation
             ResourceLocation? functionLocation = null;
-            var nameModifier = context.modifier().FirstOrDefault(m => m.name.Text == "name");
-            if (nameModifier != null && nameModifier.expression().Length > 0) {
-                var primary = Util.GetPrimaryContext(nameModifier.expression()[0]);
+            var nameModifierContext = context.modifier().FirstOrDefault(m => m.name.Text == "name");
+            if (nameModifierContext != null && nameModifierContext.expression().Length > 0) {
+                var primary = Util.GetPrimaryContext(nameModifierContext.expression()[0]);
                 if (primary?.STRING() != null) {
                     string nameValue = primary.STRING().GetText().Trim('"');
                     functionLocation = ResourceLocation.Parse(nameValue, _dataPack.MainNamespace);
@@ -76,30 +92,8 @@ namespace Deco.Compiler {
             // 4. Handle other modifiers
             foreach (var modifierContext in context.modifier()) {
                 string modifierName = modifierContext.name.Text;
-                switch (modifierName) {
-                    case "load":
-                    case "tick":
-                        var tagLocation = new ResourceLocation(modifierName, "minecraft");
-                        var tag = _dataPack.FindOrCreateTag(tagLocation, TagType.Function);
-                        if (!tag.Values.Any(v => v.ToString() == mcFunction.Location.ToString())) {
-                            tag.Values.Add(mcFunction.Location);
-                        }
-                        break;
-
-                    case "tag":
-                        var expressions = modifierContext.expression();
-                        if (expressions.Length > 0) {
-                            var primary = Util.GetPrimaryContext(expressions[0]);
-                            if (primary?.STRING() != null) {
-                                string tagValue = primary.STRING().GetText().Trim('"');
-                                var customTagLocation = ResourceLocation.Parse(tagValue, _dataPack.MainNamespace);
-                                var customTag = _dataPack.FindOrCreateTag(customTagLocation, TagType.Function);
-                                if (!customTag.Values.Any(v => v.ToString() == mcFunction.Location.ToString())) {
-                                    customTag.Values.Add(mcFunction.Location);
-                                }
-                            }
-                        }
-                        break;
+                if (_functionModifiers.TryGetValue(modifierName, out var modifier)) {
+                    modifier.Apply(modifierContext, _dataPack, mcFunction);
                 }
             }
 
