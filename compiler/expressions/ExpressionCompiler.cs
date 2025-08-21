@@ -14,7 +14,6 @@ namespace Deco.Compiler.Expressions {
         private static int _tempCounter = 0;
 
         private readonly Dictionary<string, LibraryFunction> _libraryFunctions;
-
         public ExpressionCompiler(DecoFunction function, DataPack dataPack, SymbolTable symbolTable) {
             _function = function;
             _mcFunction = function.McFunction;
@@ -27,9 +26,8 @@ namespace Deco.Compiler.Expressions {
             ]);
         }
 
-        private void RegisterLibraryFunction(LibraryFunction[] functions)
-        {
-            foreach(var func in functions) {
+        private void RegisterLibraryFunction(LibraryFunction[] functions) {
+            foreach (var func in functions) {
                 _libraryFunctions.Add(func.Name, func);
             }
         }
@@ -69,6 +67,8 @@ namespace Deco.Compiler.Expressions {
                     break;
             }
         }
+
+
 
         public override Operand VisitPrimary(DecoParser.PrimaryContext context) {
             if (context.NUMBER() != null) {
