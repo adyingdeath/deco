@@ -23,6 +23,7 @@ namespace Deco.Compiler.Expressions {
             _libraryFunctions = new Dictionary<string, LibraryFunction>();
             RegisterLibraryFunction([
                 new PrintFunction(),
+                new FunctionFunction(),
             ]);
         }
 
