@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Deco.Compiler.Data
-{
+namespace Deco.Compiler.Data {
     /// <summary>
     /// Represents the entire Minecraft data pack to be generated.
     /// </summary>
-    public class DataPack
-    {
+    public class DataPack {
         public string ID { get; }
         public string PackName { get; }
         public string MainNamespace { get; }
@@ -15,8 +13,7 @@ namespace Deco.Compiler.Data
         public List<Tag> Tags { get; } = new List<Tag>();
         public Dictionary<string, string> Flags { get; } = new Dictionary<string, string>();
 
-        public DataPack(string id, string packName, string mainNamespace)
-        {
+        public DataPack(string id, string packName, string mainNamespace) {
             ID = id;
             PackName = packName;
             MainNamespace = mainNamespace;
@@ -31,8 +28,7 @@ namespace Deco.Compiler.Data
             Tags.Add(loadTag);
         }
 
-        public Tag FindOrCreateTag(ResourceLocation location, TagType type)
-        {
+        public Tag FindOrCreateTag(ResourceLocation location, TagType type) {
             var existing = Tags.FirstOrDefault(t => t.Location.ToString() == location.ToString() && t.Type == type);
             if (existing != null) return existing;
 

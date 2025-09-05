@@ -1,13 +1,9 @@
 using Deco.Compiler.Data;
 using Deco.Compiler.Expressions;
-using System;
-using System.Collections.Generic;
 using System.Text.Json.Nodes;
 
-namespace Deco.Compiler.Library
-{
-    public class PrintFunction : LibraryFunction
-    {
+namespace Deco.Compiler.Library {
+    public class PrintFunction : LibraryFunction {
         public override string Name => "print";
         public override string ReturnType => "void";
         public override List<ParameterInfo> Parameters => new List<ParameterInfo>(); // Print can take any number of arguments, so this will be empty for now. We'll handle argument count check in Execute.
@@ -17,28 +13,24 @@ namespace Deco.Compiler.Library
             DataPack dataPack,
             DecoFunction currentDecoFunction,
             ExpressionCompiler expressionCompiler
-        )
-        {
+        ) {
             var arguments = context.expression();
             var currentMcFunction = currentDecoFunction.McFunction;
 
-            if (arguments.Length == 0)
-            {
+            if (arguments.Length == 0) {
                 Console.Error.WriteLine("Error: Function 'print' expects at least 1 argument.");
                 return new ConstantOperand("0", "void");
             }
 
             var jsonArray = new JsonArray();
 
-            for (int i = 0; i < arguments.Length; i++)
-            {
+            for (int i = 0; i < arguments.Length; i++) {
                 var argument = arguments[i];
 
                 var evaluatedArg = expressionCompiler.Evaluate(argument);
                 JsonObject component = null;
 
-                switch (evaluatedArg.Type)
-                {
+                switch (evaluatedArg.Type) {
                     case "bool":
                         string tempStringStorage = expressionCompiler.GetNextTemp();
                         currentMcFunction.Commands.Add($"data modify storage {dataPack.ID} {tempStringStorage} set value \"false\"");
@@ -68,13 +60,11 @@ namespace Deco.Compiler.Library
                         return new ConstantOperand("0", "void");
                 }
 
-                if (component != null)
-                {
+                if (component != null) {
                     jsonArray.Add(component);
                 }
 
-                if (i < arguments.Length - 1)
-                {
+                if (i < arguments.Length - 1) {
                     jsonArray.Add(new JsonObject { ["text"] = "  " });
                 }
             }

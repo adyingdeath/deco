@@ -192,7 +192,7 @@ public static class Util {
             // If the string was already in the set, the loop continues and generates a new one.
         }
     }
-    
+
     public static DecoParser.PrimaryContext GetPrimaryContext(DecoParser.ExpressionContext expression) {
         if (expression == null) return null;
 

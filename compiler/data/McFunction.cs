@@ -1,17 +1,14 @@
 using System.Collections.Generic;
 
-namespace Deco.Compiler.Data
-{
+namespace Deco.Compiler.Data {
     /// <summary>
     /// Represents a single Minecraft function.
     /// </summary>
-    public class McFunction
-    {
+    public class McFunction {
         public ResourceLocation Location { get; }
         public List<string> Commands { get; } = new List<string>();
 
-        public McFunction(ResourceLocation location)
-        {
+        public McFunction(ResourceLocation location) {
             Location = location;
         }
 
@@ -19,8 +16,7 @@ namespace Deco.Compiler.Data
         /// Prepend commands to command list.
         /// </summary>
         /// <param name="commands">Commands to prepend.</param>
-        public void PrependCommands(string[] commands)
-        {
+        public void PrependCommands(string[] commands) {
             Commands.InsertRange(0, commands);
         }
 
@@ -28,8 +24,7 @@ namespace Deco.Compiler.Data
         /// append commands to command list.
         /// </summary>
         /// <param name="commands">Commands to append.</param>
-        public void AppendCommands(string[] commands)
-        {
+        public void AppendCommands(string[] commands) {
             Commands.AddRange(commands);
         }
     }

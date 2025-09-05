@@ -65,3 +65,4 @@ project.nuget.cache
 
 .gemini/
 temp.md
+.promptignore

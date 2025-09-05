@@ -1,7 +1,5 @@
-namespace Deco.Compiler
-{
-    public static class CompilerConstants
-    {
+namespace Deco.Compiler {
+    public static class CompilerConstants {
         public const string ReturnFlagObjective = "deco_return_flag";
         public const string ReturnFlagPlayer = "#RETURN";
         public const string ReturnValueInt = "#RETURN_INT";

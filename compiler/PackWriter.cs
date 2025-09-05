@@ -3,14 +3,12 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 
-namespace Deco.Compiler
-{
+namespace Deco.Compiler {
     /// <summary>
     /// Handles writing the DataPack structure to the file system.
     /// This includes generating .mcfunction files for functions and .json files for tags.
     /// </summary>
-    public class PackWriter
-    {
+    public class PackWriter {
         private readonly DataPack _dataPack;
         private readonly string _outputDirectory;
 
@@ -19,8 +17,7 @@ namespace Deco.Compiler
         /// </summary>
         /// <param name="dataPack">The data pack model to be written to disk.</param>
         /// <param name="outputDirectory">The directory to write the pack to.</param>
-        public PackWriter(DataPack dataPack, string outputDirectory)
-        {
+        public PackWriter(DataPack dataPack, string outputDirectory) {
             _dataPack = dataPack;
             _outputDirectory = outputDirectory;
         }
@@ -29,22 +26,18 @@ namespace Deco.Compiler
         /// Writes the entire data pack to the file system, including all functions and tags.
         /// It creates the necessary directory structure.
         /// </summary>
-        public void Write()
-        {
+        public void Write() {
             // Get the root path for the datapack and ensure the directory is clean
             string rootPath = Path.Combine(_outputDirectory, _dataPack.PackName);
-            if (Directory.Exists(rootPath))
-            {
+            if (Directory.Exists(rootPath)) {
                 Directory.Delete(rootPath, true);
             }
             Directory.CreateDirectory(rootPath);
 
             // Create pack.mcmeta
             string mcmetaPath = Path.Combine(rootPath, "pack.mcmeta");
-            var mcmetaContent = new
-            {
-                pack = new
-                {
+            var mcmetaContent = new {
+                pack = new {
                     pack_format = 48,
                     description = "A bridging pratice datapack."
                 }
@@ -63,10 +56,8 @@ namespace Deco.Compiler
         /// Writes all the functions from the data pack to their corresponding .mcfunction files.
         /// </summary>
         /// <param name="rootPath">The root directory of the data pack.</param>
-        private void WriteFunctions(string rootPath)
-        {
-            foreach (var function in _dataPack.Functions.McFunctions)
-            {
+        private void WriteFunctions(string rootPath) {
+            foreach (var function in _dataPack.Functions.McFunctions) {
                 string functionDirectory = Path.Combine(rootPath, "data", function.Location.Namespace, "function");
                 Directory.CreateDirectory(functionDirectory); // Ensure directory exists
                 string filePath = Path.Combine(functionDirectory, $"{function.Location.Path}.mcfunction");
@@ -80,10 +71,8 @@ namespace Deco.Compiler
         /// Writes all the tags from the data pack to their corresponding .json files.
         /// </summary>
         /// <param name="rootPath">The root directory of the data pack.</param>
-        private void WriteTags(string rootPath)
-        {
-            foreach (var tag in _dataPack.Tags)
-            {
+        private void WriteTags(string rootPath) {
+            foreach (var tag in _dataPack.Tags) {
                 // Determine the directory name based on the tag type (e.g., "functions", "blocks")
                 string tagTypeDirectoryName = tag.Type.ToString().ToLowerInvariant();
 
