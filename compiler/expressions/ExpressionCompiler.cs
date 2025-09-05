@@ -160,6 +160,9 @@ namespace Deco.Compiler.Expressions {
             }
 
             // Stage 2: Evaluate each argument and assign it directly to the parameter's storage.
+            // Evaluate arguments and store them in temporary storages to prevent aliasing issues
+            var tempStorages = new List<string>();
+            var validParameters = new List<ParameterInfo>();
             for (int i = 0; i < argumentsExpressions.Length; i++) {
                 var argument = argumentsExpressions[i];
                 var parameter = signature.Parameters[i];
@@ -170,14 +173,36 @@ namespace Deco.Compiler.Expressions {
                     continue; // Skip assignment on type error
                 }
 
+                var tempStorage = GetNextTemp();
+                tempStorages.Add(tempStorage);
+                validParameters.Add(parameter);
+
+                // Copy evaluated argument to temporary storage
                 switch (parameter.Type) {
                     case "int":
                     case "bool":
-                        _mcFunction.Commands.Add($"scoreboard players operation {parameter.StorageName} {_dataPack.ID} = {evaluatedArg.StorageName} {_dataPack.ID}");
+                        _mcFunction.Commands.Add($"scoreboard players operation {tempStorage} {_dataPack.ID} = {evaluatedArg.StorageName} {_dataPack.ID}");
                         break;
                     case "float":
                     case "string":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {parameter.StorageName} set from storage {_dataPack.ID} {evaluatedArg.StorageName}");
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {tempStorage} set from storage {_dataPack.ID} {evaluatedArg.StorageName}");
+                        break;
+                }
+            }
+
+            // Assign temporary storages to parameters
+            for (int i = 0; i < tempStorages.Count; i++) {
+                var parameter = validParameters[i];
+                var temp = tempStorages[i];
+
+                switch (parameter.Type) {
+                    case "int":
+                    case "bool":
+                        _mcFunction.Commands.Add($"scoreboard players operation {parameter.StorageName} {_dataPack.ID} = {temp} {_dataPack.ID}");
+                        break;
+                    case "float":
+                    case "string":
+                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {parameter.StorageName} set from storage {_dataPack.ID} {temp}");
                         break;
                 }
             }
