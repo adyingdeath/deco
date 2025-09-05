@@ -187,12 +187,12 @@ namespace Deco.Compiler.Expressions {
 
             // Stage 4: Handle the return value
             Symbol resultSymbol = null;
-            if (signature.ReturnType != "void") {
+            if (signature.ReturnType.Name != "void") {
                 var resultStorageName = GetNextTemp();
-                resultSymbol = new Symbol(resultStorageName, signature.ReturnType, resultStorageName);
+                resultSymbol = new Symbol(resultStorageName, signature.ReturnType.Name, resultStorageName);
 
                 // Copy the global return value into our new temporary symbol
-                switch (signature.ReturnType) {
+                switch (signature.ReturnType.Name) {
                     case "int":
                     case "bool":
                         _mcFunction.Commands.Add($"scoreboard players operation {resultSymbol.StorageName} {_dataPack.ID} = {ReturnValueInt} {_dataPack.ID}");

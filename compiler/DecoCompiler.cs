@@ -172,15 +172,15 @@ namespace Deco.Compiler {
             var signature = currentFunction.Signature;
 
             if (context.expression() != null) {
-                if (signature.ReturnType == "void") {
+                if (signature.ReturnType.Name == "void") {
                     Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' with void return type cannot return a value.");
                     return;
                 }
 
                 var returnValue = expressionCompiler.Evaluate(context.expression());
 
-                if (returnValue.Type != signature.ReturnType) {
-                    Console.Error.WriteLine($"Error: Return type mismatch in function '{currentFunction.Name}'. Expected '{signature.ReturnType}', got '{returnValue.Type}'.");
+                if (returnValue.Type != signature.ReturnType.Name) {
+                    Console.Error.WriteLine($"Error: Return type mismatch in function '{currentFunction.Name}'. Expected '{signature.ReturnType.Name}', got '{returnValue.Type}'.");
                     return;
                 }
 
@@ -198,7 +198,7 @@ namespace Deco.Compiler {
                         break;
                 }
             } else {
-                if (signature.ReturnType != "void") {
+                if (signature.ReturnType.Name != "void") {
                     Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' must return a value of type '{signature.ReturnType}'.");
                 }
             }

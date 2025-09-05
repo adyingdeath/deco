@@ -2,10 +2,9 @@ using Antlr4.Runtime.Misc;
 using Deco.Compiler.Data;
 using Deco.Compiler.Expressions;
 using Deco.Compiler.Modifiers;
-using System.Linq;
-using System;
-using System.Collections.Generic;
 using static Deco.Compiler.CompilerConstants;
+using Deco.Compiler.Library;
+using Deco.Compiler.Core;
 
 namespace Deco.Compiler {
     /// <summary>
@@ -16,6 +15,7 @@ namespace Deco.Compiler {
     public class SymbolCollector : DecoBaseVisitor<object> {
         private readonly DataPack _dataPack;
         private readonly Dictionary<string, FunctionModifier> _functionModifiers;
+        private readonly LibraryRegistry _typeRegistry;
 
         public SymbolCollector(DataPack dataPack) {
             _dataPack = dataPack;
@@ -26,6 +26,11 @@ namespace Deco.Compiler {
                 new TickModifier(),
                 new TagModifier(),
             ]);
+
+            // Initialize type registry for symbol collection phase
+            _typeRegistry = new LibraryRegistry();
+            var coreLibrary = new CoreLibrary();
+            coreLibrary.Register(_typeRegistry);
         }
 
         private void RegisterFunctionModifier(FunctionModifier[] modifiers) {
@@ -47,7 +52,7 @@ namespace Deco.Compiler {
 
             // 1. Discover signature
             var signature = new FunctionSignature {
-                ReturnType = context.type.Text
+                ReturnType = _typeRegistry.GetType(context.type.Text) ?? _typeRegistry.GetType("void")
             };
 
             var argsContext = context.arguments();

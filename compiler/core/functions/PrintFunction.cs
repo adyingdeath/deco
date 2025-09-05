@@ -8,10 +8,9 @@ namespace Deco.Compiler.Core.Functions {
     public class PrintFunction : IDecoFunction {
         public string Name => "print";
 
-        public FunctionSignature Signature => new ExtendedFunctionSignature {
+        public FunctionSignature Signature => new FunctionSignature {
             ReturnType = new VoidType(),
-            IsVariadic = true
-        }.ToLegacySignature();
+        };
 
         public Operand Execute(LibContext context, List<Operand> arguments) {
             if (arguments.Count == 0) {

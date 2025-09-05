@@ -22,21 +22,4 @@ namespace Deco.Compiler.Library.Functions {
         /// <returns>An operand representing the return value. Can be a void/dummy operand.</returns>
         Operand Execute(LibContext context, List<Operand> arguments);
     }
-
-    /// <summary>
-    /// Extended function signature for the new library system
-    /// </summary>
-    public class ExtendedFunctionSignature {
-        public IDecoType ReturnType { get; set; }
-        public List<ParameterInfo> Parameters { get; } = new List<ParameterInfo>();
-        public bool IsVariadic { get; set; }
-
-        // Helper method to convert to string-based signature for compatibility
-        public FunctionSignature ToLegacySignature() {
-            var sig = new FunctionSignature();
-            sig.ReturnType = ReturnType.Name;
-            sig.Parameters.AddRange(Parameters);
-            return sig;
-        }
-    }
 }
