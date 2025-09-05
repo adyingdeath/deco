@@ -24,6 +24,7 @@ namespace Deco.Compiler.Core {
 
         private void RegisterFunctions(LibraryRegistry registry) {
             registry.AddFunction(new Functions.PrintFunction());
+            registry.AddFunction(new Functions.FunctionFunction());
         }
     }
 }

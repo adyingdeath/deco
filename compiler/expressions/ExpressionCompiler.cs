@@ -1,7 +1,4 @@
 using Deco.Compiler.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Deco.Compiler.CompilerConstants;
 using Deco.Compiler.Library;
 
@@ -11,26 +8,15 @@ namespace Deco.Compiler.Expressions {
         private readonly McFunction _mcFunction;
         private readonly DataPack _dataPack;
         private readonly SymbolTable _symbolTable;
+        private readonly LibraryRegistry _registry;
         private static int _tempCounter = 0;
 
-        private readonly Dictionary<string, LibraryFunction> _libraryFunctions;
-        public ExpressionCompiler(DecoFunction function, DataPack dataPack, SymbolTable symbolTable) {
+        public ExpressionCompiler(DecoFunction function, DataPack dataPack, SymbolTable symbolTable, LibraryRegistry registry) {
             _function = function;
             _mcFunction = function.McFunction;
             _dataPack = dataPack;
             _symbolTable = symbolTable;
-
-            _libraryFunctions = new Dictionary<string, LibraryFunction>();
-            RegisterLibraryFunction([
-                new PrintFunction(),
-                new FunctionFunction(),
-            ]);
-        }
-
-        private void RegisterLibraryFunction(LibraryFunction[] functions) {
-            foreach (var func in functions) {
-                _libraryFunctions.Add(func.Name, func);
-            }
+            _registry = registry;
         }
 
         public string GetNextTemp() => $"tmp_expr_{_tempCounter++}";
@@ -120,8 +106,22 @@ namespace Deco.Compiler.Expressions {
             string functionNameToCall = context.name.Text;
 
             // Handle built-in library functions first
-            if (_libraryFunctions.TryGetValue(functionNameToCall, out var libraryFunction)) {
-                return libraryFunction.Execute(context, _dataPack, _function, this);
+            var libraryFunction = _registry.GetFunction(functionNameToCall);
+            if (libraryFunction != null) {
+                // Evaluate arguments first
+                var arguments = new List<Operand>();
+                foreach (var argExpr in context.expression()) {
+                    var evaluatedArg = Evaluate(argExpr);
+                    // [TODO] Should specifically handle arguments that are a single identifier.
+                    arguments.Add(new SymbolOperand(evaluatedArg));
+                }
+
+                // Create LibContext
+                var libContext = new Deco.Compiler.Library.Types.LibContext(_mcFunction, _dataPack, _symbolTable);
+
+                // Execute the function
+                var resultOperand = libraryFunction.Execute(libContext, arguments);
+                return resultOperand;
             }
 
             // 1. Look up user-defined function
@@ -131,11 +131,11 @@ namespace Deco.Compiler.Expressions {
             }
             var signature = calledDecoFunction.Signature;
             var locationToCall = calledDecoFunction.McFunction.Location;
-            var arguments = context.expression();
+            var argumentsExpressions = context.expression();
 
             // 2. Check argument count
-            if (arguments.Length != signature.Parameters.Count) {
-                Console.Error.WriteLine($"Error: Function '{functionNameToCall}' expects {signature.Parameters.Count} arguments, but received {arguments.Length}.");
+            if (argumentsExpressions.Length != signature.Parameters.Count) {
+                Console.Error.WriteLine($"Error: Function '{functionNameToCall}' expects {signature.Parameters.Count} arguments, but received {argumentsExpressions.Length}.");
                 return new ConstantOperand("0", "void");
             }
 
@@ -160,8 +160,8 @@ namespace Deco.Compiler.Expressions {
             }
 
             // Stage 2: Evaluate each argument and assign it directly to the parameter's storage.
-            for (int i = 0; i < arguments.Length; i++) {
-                var argument = arguments[i];
+            for (int i = 0; i < argumentsExpressions.Length; i++) {
+                var argument = argumentsExpressions[i];
                 var parameter = signature.Parameters[i];
                 var evaluatedArg = Evaluate(argument);
 

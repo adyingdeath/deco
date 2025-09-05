@@ -81,7 +81,7 @@ namespace Deco.Compiler {
         }
 
         private void ProcessStatement(DecoParser.StatementContext statement, DecoFunction decoFunction) {
-            var expressionCompiler = new ExpressionCompiler(decoFunction, _dataPack, decoFunction.SymbolTable);
+            var expressionCompiler = new ExpressionCompiler(decoFunction, _dataPack, decoFunction.SymbolTable, _registry);
 
             if (statement.COMMAND() != null) {
                 string rawCommand = statement.COMMAND().GetText();
@@ -168,7 +168,7 @@ namespace Deco.Compiler {
         }
 
         private void ProcessReturnStatement(DecoParser.Return_statementContext context, DecoFunction currentFunction) {
-            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, currentFunction.SymbolTable);
+            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, currentFunction.SymbolTable, _registry);
             var signature = currentFunction.Signature;
 
             if (context.expression() != null) {
@@ -214,7 +214,7 @@ namespace Deco.Compiler {
 
         private void ProcessIfStatement(DecoParser.If_statementContext context, DecoFunction currentFunction) {
             var parentSymbolTable = currentFunction.SymbolTable;
-            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, parentSymbolTable);
+            var expressionCompiler = new ExpressionCompiler(currentFunction, _dataPack, parentSymbolTable, _registry);
 
             // 1. Evaluate condition
             var condition = expressionCompiler.Evaluate(context.expression());
@@ -291,7 +291,7 @@ namespace Deco.Compiler {
                 currentFunction.Context,
                 parentSymbolTable
             );
-            var expressionCompiler = new ExpressionCompiler(conditionDecoFunction, _dataPack, parentSymbolTable);
+            var expressionCompiler = new ExpressionCompiler(conditionDecoFunction, _dataPack, parentSymbolTable, _registry);
 
             // 2. Compile the condition check.
             var condition = expressionCompiler.Evaluate(context.expression());
