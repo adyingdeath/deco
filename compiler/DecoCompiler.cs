@@ -1,18 +1,74 @@
 using Deco.Compiler.Data;
 using Deco.Compiler.Expressions;
-using System;
+using Deco.Compiler.Library;
+using Deco.Compiler.Library.Types;
+using Deco.Compiler.Library.Functions;
 using static Deco.Compiler.CompilerConstants;
+using Deco.Compiler.Core;
 
 namespace Deco.Compiler {
     /// <summary>
-    /// This visitor performs the second pass. It iterates through the functions discovered
-    /// in the first pass and generates the Minecraft commands for each statement in their bodies.
+    /// Main Deco Compiler with full library system support.
+    /// This replaces the old compiler with extensible type and function systems.
     /// </summary>
     public class DecoCompiler {
         private readonly DataPack _dataPack;
+        private readonly LibraryRegistry _registry = new LibraryRegistry();
+        private readonly List<IDecoLibrary> _loadedLibraries = new List<IDecoLibrary>();
+
+        public LibraryRegistry Registry => _registry;
 
         public DecoCompiler(DataPack dataPack) {
             _dataPack = dataPack;
+        }
+
+        /// <summary>
+        /// Initialize the library system by loading all built-in types and functions
+        /// </summary>
+        public void InitializeLibrarySystem() {
+            LoadLibraries();
+        }
+
+        private void LoadLibraries() {
+            // Load core library with built-in types and functions
+            var coreLibrary = new CoreLibrary();
+            coreLibrary.Register(_registry);
+            _loadedLibraries.Add(coreLibrary);
+
+            // [TODO]: Add support for loading external libraries from DLL files
+            // This would involve scanning a directory and using reflection to load IDecoLibrary implementations
+        }
+
+        /// <summary>
+        /// Get type from library registry
+        /// </summary>
+        public IDecoType GetLibraryType(string name) {
+            return _registry.GetType(name);
+        }
+
+        /// <summary>
+        /// Get function from library registry
+        /// </summary>
+        public IDecoFunction GetLibraryFunction(string name) {
+            return _registry.GetFunction(name);
+        }
+
+        /// <summary>
+        /// Get a variable instance with the specified type
+        /// </summary>
+        public Variable CreateVariable(string typeName, string storageName) {
+            var type = GetLibraryType(typeName);
+            if (type == null) {
+                throw new ArgumentException($"Unknown type: {typeName}");
+            }
+            return new Variable(type, storageName);
+        }
+
+        /// <summary>
+        /// Create a library codegen context for the current function
+        /// </summary>
+        public LibContext CreateLibraryContext(McFunction currentFunction, SymbolTable symbolTable) {
+            return new LibContext(currentFunction, _dataPack, symbolTable);
         }
 
         public void GenerateCode() {

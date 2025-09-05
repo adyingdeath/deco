@@ -24,8 +24,8 @@ class Program {
             }
         } else {
             Console.WriteLine("Usage:");
-            Console.WriteLine("  deco_csharp <input_file> <output_directory>");
-            Console.WriteLine("  deco_csharp (runs tests)");
+            Console.WriteLine("  deco <input_file> <output_directory>");
+            Console.WriteLine("  deco (runs tests)");
         }
     }
 
@@ -41,11 +41,11 @@ class Program {
             "unary_minus_test",
             "return_statement",
         ];
-        string testFileName = testList[4];
-        string inputFile = $"D:\\programming\\project\\deco_csharp\\test\\{testFileName}.deco";
-        string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\bridge";
+        string testFileName = testList[0];
+        string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
+        string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks";
 
-        CompileFile(inputFile, outputDirectory, testFileName, testFileName);
+        CompileFile(inputFile, outputDirectory, "test", testFileName);
     }
 
     static void CompileFile(string inputFile, string outputDirectory, string dataPackName, string dataPackNamespace) {
@@ -82,8 +82,12 @@ class Program {
         discoveryVisitor.Visit(tree);
         Console.WriteLine($"Discovery pass finished. Found {dataPack.Functions.DecoFunctions.Count} function signatures.");
 
-        // Pass 2: Visit the parse tree to generate code
+        // Pass 2: Visit the parse tree to generate code with library system
+        Console.WriteLine("--- Initializing Library System ---");
         var codeVisitor = new DecoCompiler(dataPack);
+        codeVisitor.InitializeLibrarySystem(); // Initialize library system in the compiler
+        Console.WriteLine($"Library system loaded. Available types: {codeVisitor.Registry.GetAllTypes().Count()}, functions: {codeVisitor.Registry.GetAllFunctions().Count()}");
+
         codeVisitor.GenerateCode();
         Console.WriteLine($"Visitor finished. Found {dataPack.Functions.McFunctions.Count} functions and {dataPack.Tags.Count} tags.");
 
@@ -95,4 +99,3 @@ class Program {
         Console.WriteLine("--- Compilation Finished ---");
     }
 }
-
