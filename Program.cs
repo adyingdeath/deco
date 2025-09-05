@@ -40,12 +40,14 @@ class Program {
             "while_loop_test",
             "unary_minus_test",
             "return_statement",
+
+            "deco_core_lib\\function_test",
         ];
-        string testFileName = testList[0];
+        string testFileName = testList[8];
         string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks";
 
-        CompileFile(inputFile, outputDirectory, "test", testFileName);
+        CompileFile(inputFile, outputDirectory, "test", "test");
     }
 
     static void CompileFile(string inputFile, string outputDirectory, string dataPackName, string dataPackNamespace) {

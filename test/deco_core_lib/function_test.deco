@@ -1,0 +1,8 @@
+@load
+int main() {
+    function(some_function);
+}
+
+void some_function() {
+    print("I am here.");
+}
