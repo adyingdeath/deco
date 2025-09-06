@@ -44,6 +44,13 @@ namespace Deco.Compiler.Expressions {
         }
 
         private void AssignConstantToSymbol(Symbol symbol, ConstantOperand constant) {
+            var libContext = new LibContext(_mcFunction, _dataPack, _symbolTable);
+            var targetVariable = new Variable(symbol.Type, symbol.StorageName);
+
+            // For constants, we need to initialize the variable first, then set the constant value
+            symbol.Type.Initialize(libContext, targetVariable);
+
+            // For simple constants, directly set the value
             if (symbol.Type.Equals(CoreTypeSingleton.Int) || symbol.Type.Equals(CoreTypeSingleton.Bool)) {
                 _mcFunction.Commands.Add($"scoreboard players set {symbol.StorageName} {_dataPack.ID} {constant.Value}");
             } else if (symbol.Type.Equals(CoreTypeSingleton.Float) || symbol.Type.Equals(CoreTypeSingleton.String)) {
@@ -73,7 +80,7 @@ namespace Deco.Compiler.Expressions {
                 string condition = rawCondition[2..^1].Replace("\\`", "`");
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, new BoolType(), resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, _registry.GetType("bool"), resultStorageName);
 
                 // Initialize to false
                 _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
@@ -250,7 +257,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, _registry.GetType("bool"), resultStorageName);
                 var leftName = GetOperandStorageName(left, GetNextTemp());
                 var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -304,7 +311,7 @@ namespace Deco.Compiler.Expressions {
             }
 
             var resultStorageName = GetNextTemp();
-            var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
+            var resultSymbol = new Symbol(resultStorageName, _registry.GetType("bool"), resultStorageName);
             var leftName = GetOperandStorageName(left, GetNextTemp());
             var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -335,7 +342,7 @@ namespace Deco.Compiler.Expressions {
             }
 
             var resultStorageName = GetNextTemp();
-            var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
+            var resultSymbol = new Symbol(resultStorageName, _registry.GetType("bool"), resultStorageName);
             var leftName = GetOperandStorageName(left, GetNextTemp());
             var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -414,7 +421,7 @@ namespace Deco.Compiler.Expressions {
                     string condition = rawCondition[2..^1].Replace("\\`", "`");
 
                     var resultStorageName = GetNextTemp();
-                    var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
+                    var resultSymbol = new Symbol(resultStorageName, _registry.GetType("bool"), resultStorageName);
 
                     _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
                     _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
@@ -430,7 +437,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName2 = GetNextTemp();
-                var resultSymbol2 = new Symbol(resultStorageName2, CoreTypeSingleton.Bool, resultStorageName2);
+                var resultSymbol2 = new Symbol(resultStorageName2, _registry.GetType("bool"), resultStorageName2);
                 var operandName = GetOperandStorageName(operand, GetNextTemp());
 
                 // Generic negation: result = 1 - operand
@@ -458,7 +465,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Int, resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, _registry.GetType("int"), resultStorageName);
                 var operandName = GetOperandStorageName(operand, GetNextTemp());
 
                 // result = 0 - operand
@@ -475,7 +482,7 @@ namespace Deco.Compiler.Expressions {
         private SymbolOperand PerformArithmetic(Operand left, Operand right, string operation) {
             // For now, only int is supported
             var nextTemp = GetNextTemp();
-            var resultSymbol = new Symbol(nextTemp, CoreTypeSingleton.Int, nextTemp);
+            var resultSymbol = new Symbol(nextTemp, _registry.GetType("int"), nextTemp);
 
             string leftName = GetOperandStorageName(left, GetNextTemp());
             string rightName = GetOperandStorageName(right, GetNextTemp());
@@ -488,7 +495,7 @@ namespace Deco.Compiler.Expressions {
 
         private SymbolOperand PerformBooleanArithmetic(Operand left, Operand right, string operation) {
             var nextTemp = GetNextTemp();
-            var resultSymbol = new Symbol(nextTemp, CoreTypeSingleton.Bool, nextTemp);
+            var resultSymbol = new Symbol(nextTemp, _registry.GetType("bool"), nextTemp);
 
             string leftName = GetOperandStorageName(left, GetNextTemp());
             string rightName = GetOperandStorageName(right, GetNextTemp());
