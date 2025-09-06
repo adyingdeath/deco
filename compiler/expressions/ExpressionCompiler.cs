@@ -1,6 +1,7 @@
 using Deco.Compiler.Data;
 using static Deco.Compiler.CompilerConstants;
 using Deco.Compiler.Library;
+using Deco.Compiler.Library.Types;
 
 namespace Deco.Compiler.Expressions {
     public class ExpressionCompiler : DecoBaseVisitor<Operand> {
@@ -31,10 +32,10 @@ namespace Deco.Compiler.Expressions {
 
             if (resultOperand is ConstantOperand constantOperand) {
                 if (constantOperand.Type == "void") { // Discard void results
-                    return new Symbol("void", "void", "void");
+                    return new Symbol("void", _registry.GetType("void"), "void");
                 }
 
-                var tempSymbol = new Symbol(GetNextTemp(), constantOperand.Type, GetNextTemp());
+                var tempSymbol = new Symbol(GetNextTemp(), _registry.GetType(constantOperand.Type), GetNextTemp());
                 AssignConstantToSymbol(tempSymbol, constantOperand);
                 return tempSymbol;
             }
@@ -43,15 +44,10 @@ namespace Deco.Compiler.Expressions {
         }
 
         private void AssignConstantToSymbol(Symbol symbol, ConstantOperand constant) {
-            switch (symbol.Type) {
-                case "int":
-                case "bool":
-                    _mcFunction.Commands.Add($"scoreboard players set {symbol.StorageName} {_dataPack.ID} {constant.Value}");
-                    break;
-                case "float":
-                case "string":
-                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {symbol.StorageName} set value {constant.Value}");
-                    break;
+            if (symbol.Type.Equals(CoreTypeSingleton.Int) || symbol.Type.Equals(CoreTypeSingleton.Bool)) {
+                _mcFunction.Commands.Add($"scoreboard players set {symbol.StorageName} {_dataPack.ID} {constant.Value}");
+            } else if (symbol.Type.Equals(CoreTypeSingleton.Float) || symbol.Type.Equals(CoreTypeSingleton.String)) {
+                _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {symbol.StorageName} set value {constant.Value}");
             }
         }
 
@@ -77,7 +73,7 @@ namespace Deco.Compiler.Expressions {
                 string condition = rawCondition[2..^1].Replace("\\`", "`");
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, new BoolType(), resultStorageName);
 
                 // Initialize to false
                 _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
@@ -89,7 +85,7 @@ namespace Deco.Compiler.Expressions {
             if (context.IDENTIFIER() != null) {
                 var symbol = _symbolTable.Get(context.IDENTIFIER().GetText());
                 if (symbol == null) {
-                    throw new Exception($"Unknown identifier: {context.IDENTIFIER().GetText()}");
+                    Console.Error.WriteLine($"Unknown identifier: {context.IDENTIFIER().GetText()}");
                 }
                 return new SymbolOperand(symbol);
             }
@@ -144,18 +140,13 @@ namespace Deco.Compiler.Expressions {
             // Stage 1: Save the current values of the callee's parameters to the real stack.
             foreach (var parameter in signature.Parameters) {
                 var storageName = parameter.StorageName;
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        _mcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_arg int 1 run scoreboard players get {storageName} {_dataPack.ID}");
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_int prepend from storage {_dataPack.ID} tmp_arg");
-                        break;
-                    case "float":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_float prepend from storage {_dataPack.ID} {storageName}");
-                        break;
-                    case "string":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_string prepend from storage {_dataPack.ID} {storageName}");
-                        break;
+                if (parameter.Type.Equals(CoreTypeSingleton.Int) || parameter.Type.Equals(CoreTypeSingleton.Bool)) {
+                    _mcFunction.Commands.Add($"execute store result storage {_dataPack.ID} tmp_arg int 1 run scoreboard players get {storageName} {_dataPack.ID}");
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_int prepend from storage {_dataPack.ID} tmp_arg");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.Float)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_float prepend from storage {_dataPack.ID} {storageName}");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.String)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} stack_string prepend from storage {_dataPack.ID} {storageName}");
                 }
             }
 
@@ -168,7 +159,7 @@ namespace Deco.Compiler.Expressions {
                 var parameter = signature.Parameters[i];
                 var evaluatedArg = Evaluate(argument);
 
-                if (parameter.Type != evaluatedArg.Type) {
+                if (!parameter.Type.Equals(evaluatedArg.Type)) {
                     Console.Error.WriteLine($"Error: Type mismatch for parameter '{parameter.Name}' in function '{functionNameToCall}'. Expected {parameter.Type}, got {evaluatedArg.Type}.");
                     continue; // Skip assignment on type error
                 }
@@ -178,15 +169,10 @@ namespace Deco.Compiler.Expressions {
                 validParameters.Add(parameter);
 
                 // Copy evaluated argument to temporary storage
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        _mcFunction.Commands.Add($"scoreboard players operation {tempStorage} {_dataPack.ID} = {evaluatedArg.StorageName} {_dataPack.ID}");
-                        break;
-                    case "float":
-                    case "string":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {tempStorage} set from storage {_dataPack.ID} {evaluatedArg.StorageName}");
-                        break;
+                if (parameter.Type.Equals(CoreTypeSingleton.Int) || parameter.Type.Equals(CoreTypeSingleton.Bool)) {
+                    _mcFunction.Commands.Add($"scoreboard players operation {tempStorage} {_dataPack.ID} = {evaluatedArg.StorageName} {_dataPack.ID}");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.Float) || parameter.Type.Equals(CoreTypeSingleton.String)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {tempStorage} set from storage {_dataPack.ID} {evaluatedArg.StorageName}");
                 }
             }
 
@@ -195,15 +181,10 @@ namespace Deco.Compiler.Expressions {
                 var parameter = validParameters[i];
                 var temp = tempStorages[i];
 
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        _mcFunction.Commands.Add($"scoreboard players operation {parameter.StorageName} {_dataPack.ID} = {temp} {_dataPack.ID}");
-                        break;
-                    case "float":
-                    case "string":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {parameter.StorageName} set from storage {_dataPack.ID} {temp}");
-                        break;
+                if (parameter.Type.Equals(CoreTypeSingleton.Int) || parameter.Type.Equals(CoreTypeSingleton.Bool)) {
+                    _mcFunction.Commands.Add($"scoreboard players operation {parameter.StorageName} {_dataPack.ID} = {temp} {_dataPack.ID}");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.Float) || parameter.Type.Equals(CoreTypeSingleton.String)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {parameter.StorageName} set from storage {_dataPack.ID} {temp}");
                 }
             }
 
@@ -214,7 +195,7 @@ namespace Deco.Compiler.Expressions {
             Symbol resultSymbol = null;
             if (signature.ReturnType.Name != "void") {
                 var resultStorageName = GetNextTemp();
-                resultSymbol = new Symbol(resultStorageName, signature.ReturnType.Name, resultStorageName);
+                resultSymbol = new Symbol(resultStorageName, signature.ReturnType, resultStorageName);
 
                 // Copy the global return value into our new temporary symbol
                 switch (signature.ReturnType.Name) {
@@ -235,20 +216,15 @@ namespace Deco.Compiler.Expressions {
             for (int i = signature.Parameters.Count - 1; i >= 0; i--) {
                 var parameter = signature.Parameters[i];
                 var storageName = parameter.StorageName;
-                switch (parameter.Type) {
-                    case "int":
-                    case "bool":
-                        _mcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} stack_int[0] 1");
-                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_int[0]");
-                        break;
-                    case "float":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_float[0]");
-                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_float[0]");
-                        break;
-                    case "string":
-                        _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_string[0]");
-                        _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_string[0]");
-                        break;
+                if (parameter.Type.Equals(CoreTypeSingleton.Int) || parameter.Type.Equals(CoreTypeSingleton.Bool)) {
+                    _mcFunction.Commands.Add($"execute store result score {storageName} {_dataPack.ID} run data get storage {_dataPack.ID} stack_int[0] 1");
+                    _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_int[0]");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.Float)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_float[0]");
+                    _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_float[0]");
+                } else if (parameter.Type.Equals(CoreTypeSingleton.String)) {
+                    _mcFunction.Commands.Add($"data modify storage {_dataPack.ID} {storageName} set from storage {_dataPack.ID} stack_string[0]");
+                    _mcFunction.Commands.Add($"data remove storage {_dataPack.ID} stack_string[0]");
                 }
             }
 
@@ -274,7 +250,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
                 var leftName = GetOperandStorageName(left, GetNextTemp());
                 var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -328,7 +304,7 @@ namespace Deco.Compiler.Expressions {
             }
 
             var resultStorageName = GetNextTemp();
-            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+            var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
             var leftName = GetOperandStorageName(left, GetNextTemp());
             var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -359,7 +335,7 @@ namespace Deco.Compiler.Expressions {
             }
 
             var resultStorageName = GetNextTemp();
-            var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+            var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
             var leftName = GetOperandStorageName(left, GetNextTemp());
             var rightName = GetOperandStorageName(right, GetNextTemp());
 
@@ -438,7 +414,7 @@ namespace Deco.Compiler.Expressions {
                     string condition = rawCondition[2..^1].Replace("\\`", "`");
 
                     var resultStorageName = GetNextTemp();
-                    var resultSymbol = new Symbol(resultStorageName, "bool", resultStorageName);
+                    var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Bool, resultStorageName);
 
                     _mcFunction.Commands.Add($"scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 0");
                     _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
@@ -454,7 +430,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName2 = GetNextTemp();
-                var resultSymbol2 = new Symbol(resultStorageName2, "bool", resultStorageName2);
+                var resultSymbol2 = new Symbol(resultStorageName2, CoreTypeSingleton.Bool, resultStorageName2);
                 var operandName = GetOperandStorageName(operand, GetNextTemp());
 
                 // Generic negation: result = 1 - operand
@@ -482,7 +458,7 @@ namespace Deco.Compiler.Expressions {
                 }
 
                 var resultStorageName = GetNextTemp();
-                var resultSymbol = new Symbol(resultStorageName, "int", resultStorageName);
+                var resultSymbol = new Symbol(resultStorageName, CoreTypeSingleton.Int, resultStorageName);
                 var operandName = GetOperandStorageName(operand, GetNextTemp());
 
                 // result = 0 - operand
@@ -499,7 +475,7 @@ namespace Deco.Compiler.Expressions {
         private SymbolOperand PerformArithmetic(Operand left, Operand right, string operation) {
             // For now, only int is supported
             var nextTemp = GetNextTemp();
-            var resultSymbol = new Symbol(nextTemp, "int", nextTemp);
+            var resultSymbol = new Symbol(nextTemp, CoreTypeSingleton.Int, nextTemp);
 
             string leftName = GetOperandStorageName(left, GetNextTemp());
             string rightName = GetOperandStorageName(right, GetNextTemp());
@@ -512,7 +488,7 @@ namespace Deco.Compiler.Expressions {
 
         private SymbolOperand PerformBooleanArithmetic(Operand left, Operand right, string operation) {
             var nextTemp = GetNextTemp();
-            var resultSymbol = new Symbol(nextTemp, "bool", nextTemp);
+            var resultSymbol = new Symbol(nextTemp, CoreTypeSingleton.Bool, nextTemp);
 
             string leftName = GetOperandStorageName(left, GetNextTemp());
             string rightName = GetOperandStorageName(right, GetNextTemp());
@@ -539,7 +515,7 @@ namespace Deco.Compiler.Expressions {
 
         private string GetOperandType(Operand operand) {
             if (operand is SymbolOperand symbolOp) {
-                return symbolOp.Symbol.Type;
+                return symbolOp.Symbol.Type.Name;
             }
             if (operand is ConstantOperand constOp) {
                 return constOp.Type;

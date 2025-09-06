@@ -94,10 +94,9 @@ namespace Deco.Compiler {
                 string varName = varDef.name.Text;
                 string varTypeString = varDef.type.Text;
 
-                string varType = "int"; // Default
-                if (varTypeString == "int" || varTypeString == "float" || varTypeString == "string" || varTypeString == "bool") {
-                    varType = varTypeString;
-                } else {
+                IDecoType varType = GetLibraryType(varTypeString);
+                if (varType == null) {
+                    varType = GetLibraryType("int");
                     Console.Error.WriteLine($"Warning: Unknown variable type '{varTypeString}' for variable '{varName}'. Defaulting to int.");
                 }
 
@@ -109,18 +108,14 @@ namespace Deco.Compiler {
                 if (!decoFunction.SymbolTable.Add(newSymbol)) {
                     Console.Error.WriteLine($"Error: Variable '{varName}' already defined in function '{decoFunction.Name}'.");
                 }
+
                 // Initialize with default value (0 for int/float, empty string for string)
-                switch (varType) {
-                    case "int":
-                    case "bool":
-                        decoFunction.McFunction.Commands.Add($"scoreboard players set {newSymbol.StorageName} {_dataPack.ID} 0");
-                        break;
-                    case "float":
-                        decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value 0.0f");
-                        break;
-                    case "string":
-                        decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value \"\"");
-                        break;
+                if (varType.Equals(CoreTypeSingleton.Int) || varType.Equals(CoreTypeSingleton.Bool)) {
+                    decoFunction.McFunction.Commands.Add($"scoreboard players set {newSymbol.StorageName} {_dataPack.ID} 0");
+                } else if (varType.Equals(CoreTypeSingleton.Float)) {
+                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value 0.0f");
+                } else if (varType.Equals(CoreTypeSingleton.String)) {
+                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value \"\"");
                 }
             } else if (statement.assignment() != null) {
                 var assignment = statement.assignment();
@@ -135,23 +130,15 @@ namespace Deco.Compiler {
                 var evaluatedExpression = expressionCompiler.Evaluate(assignment.expression());
 
                 // Assign the result of the expression to the variable
-                switch (targetSymbol.Type) {
-                    case "int":
-                    case "bool":
-                        if (targetSymbol.Type != evaluatedExpression.Type) {
-                            Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected {targetSymbol.Type}, got {evaluatedExpression.Type}.");
-                            return;
-                        }
-                        decoFunction.McFunction.Commands.Add($"scoreboard players operation {targetSymbol.StorageName} {_dataPack.ID} = {evaluatedExpression.StorageName} {_dataPack.ID}");
-                        break;
-                    case "float":
-                    case "string":
-                        if (targetSymbol.Type != evaluatedExpression.Type) {
-                            Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected {targetSymbol.Type}, got {evaluatedExpression.Type}.");
-                            return;
-                        }
-                        decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {targetSymbol.StorageName} set from storage {_dataPack.ID} {evaluatedExpression.StorageName}");
-                        break;
+                if (!targetSymbol.Type.Equals(evaluatedExpression.Type)) {
+                    Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected {targetSymbol.Type.Name}, got {evaluatedExpression.Type.Name}.");
+                    return;
+                }
+
+                if (targetSymbol.Type.Equals(CoreTypeSingleton.Int) || targetSymbol.Type.Equals(CoreTypeSingleton.Bool)) {
+                    decoFunction.McFunction.Commands.Add($"scoreboard players operation {targetSymbol.StorageName} {_dataPack.ID} = {evaluatedExpression.StorageName} {_dataPack.ID}");
+                } else if (targetSymbol.Type.Equals(CoreTypeSingleton.Float) || targetSymbol.Type.Equals(CoreTypeSingleton.String)) {
+                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {targetSymbol.StorageName} set from storage {_dataPack.ID} {evaluatedExpression.StorageName}");
                 }
                 targetSymbol.IsInitialized = true;
             } else if (statement.expression() != null) {
@@ -172,34 +159,29 @@ namespace Deco.Compiler {
             var signature = currentFunction.Signature;
 
             if (context.expression() != null) {
-                if (signature.ReturnType.Name == "void") {
+                if (signature.ReturnType.Equals(CoreTypeSingleton.Void)) {
                     Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' with void return type cannot return a value.");
                     return;
                 }
 
                 var returnValue = expressionCompiler.Evaluate(context.expression());
 
-                if (returnValue.Type != signature.ReturnType.Name) {
-                    Console.Error.WriteLine($"Error: Return type mismatch in function '{currentFunction.Name}'. Expected '{signature.ReturnType.Name}', got '{returnValue.Type}'.");
+                if (!returnValue.Type.Equals(signature.ReturnType)) {
+                    Console.Error.WriteLine($"Error: Return type mismatch in function '{currentFunction.Name}'. Expected '{signature.ReturnType.Name}', got '{returnValue.Type.Name}'.");
                     return;
                 }
 
                 // Store the return value in the global return location
-                switch (returnValue.Type) {
-                    case "int":
-                    case "bool":
-                        currentFunction.McFunction.Commands.Add($"scoreboard players operation {ReturnValueInt} {_dataPack.ID} = {returnValue.StorageName} {_dataPack.ID}");
-                        break;
-                    case "float":
-                        currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueFloat} set from storage {_dataPack.ID} {returnValue.StorageName}");
-                        break;
-                    case "string":
-                        currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueString} set from storage {_dataPack.ID} {returnValue.StorageName}");
-                        break;
+                if (returnValue.Type.Equals(CoreTypeSingleton.Int) || returnValue.Type.Equals(CoreTypeSingleton.Bool)) {
+                    currentFunction.McFunction.Commands.Add($"scoreboard players operation {ReturnValueInt} {_dataPack.ID} = {returnValue.StorageName} {_dataPack.ID}");
+                } else if (returnValue.Type.Equals(CoreTypeSingleton.Float)) {
+                    currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueFloat} set from storage {_dataPack.ID} {returnValue.StorageName}");
+                } else if (returnValue.Type.Equals(CoreTypeSingleton.String)) {
+                    currentFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {ReturnValueString} set from storage {_dataPack.ID} {returnValue.StorageName}");
                 }
             } else {
-                if (signature.ReturnType.Name != "void") {
-                    Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' must return a value of type '{signature.ReturnType}'.");
+                if (!signature.ReturnType.Equals(CoreTypeSingleton.Void)) {
+                    Console.Error.WriteLine($"Error: Function '{currentFunction.Name}' must return a value of type '{signature.ReturnType.Name}'.");
                 }
             }
 
@@ -218,7 +200,7 @@ namespace Deco.Compiler {
 
             // 1. Evaluate condition
             var condition = expressionCompiler.Evaluate(context.expression());
-            if (condition.Type != "bool") {
+            if (!condition.Type.Equals(CoreTypeSingleton.Bool)) {
                 Console.Error.WriteLine("Error: if statement condition must be a boolean expression.");
                 return;
             }
@@ -295,7 +277,7 @@ namespace Deco.Compiler {
 
             // 2. Compile the condition check.
             var condition = expressionCompiler.Evaluate(context.expression());
-            if (condition.Type != "bool") {
+            if (!condition.Type.Equals(CoreTypeSingleton.Bool)) {
                 Console.Error.WriteLine("Error: while statement condition must be a boolean expression.");
                 return;
             }

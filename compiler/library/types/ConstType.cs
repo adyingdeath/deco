@@ -10,6 +10,7 @@ namespace Deco.Compiler.Library.Types {
             BaseType = baseType;
         }
 
+        public string Package => "deco.core";
         public string Name => $"Const<{BaseType.Name}>";
 
         public void Assign(LibContext context, Variable target, Variable source) {

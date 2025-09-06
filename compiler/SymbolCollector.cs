@@ -4,6 +4,7 @@ using Deco.Compiler.Expressions;
 using Deco.Compiler.Modifiers;
 using static Deco.Compiler.CompilerConstants;
 using Deco.Compiler.Library;
+using Deco.Compiler.Library.Types;
 using Deco.Compiler.Core;
 
 namespace Deco.Compiler {
@@ -16,6 +17,9 @@ namespace Deco.Compiler {
         private readonly DataPack _dataPack;
         private readonly Dictionary<string, FunctionModifier> _functionModifiers;
         private readonly LibraryRegistry _typeRegistry;
+        private readonly SymbolTable _globalSymbolTable;
+
+        public SymbolTable GlobalSymbolTable => _globalSymbolTable;
 
         public SymbolCollector(DataPack dataPack) {
             _dataPack = dataPack;
@@ -31,6 +35,8 @@ namespace Deco.Compiler {
             _typeRegistry = new LibraryRegistry();
             var coreLibrary = new CoreLibrary();
             coreLibrary.Register(_typeRegistry);
+
+            _globalSymbolTable = new SymbolTable();
         }
 
         private void RegisterFunctionModifier(FunctionModifier[] modifiers) {
@@ -61,9 +67,10 @@ namespace Deco.Compiler {
                     string storageName = _dataPack.Functions.ParameterIdCounter.ToString("x");
                     _dataPack.Functions.ParameterIdCounter++;
 
-                    string paramType = "int"; // Default
-                    if (arg.type.Text == "int" || arg.type.Text == "float" || arg.type.Text == "string" || arg.type.Text == "bool") {
-                        paramType = arg.type.Text;
+                    IDecoType paramType = _typeRegistry.GetType("int"); // Default
+                    var parsedType = _typeRegistry.GetType(arg.type.Text);
+                    if (parsedType != null) {
+                        paramType = parsedType;
                     } else {
                         Console.Error.WriteLine($"Warning: Unknown parameter type '{arg.type.Text}' for parameter '{arg.name.Text}' in function '{functionName}'. Defaulting to int.");
                     }
@@ -93,6 +100,12 @@ namespace Deco.Compiler {
             var mcFunction = _dataPack.Functions.FindOrCreateMcFunction(functionLocation);
             var decoFunction = new DecoFunction(functionName, signature, mcFunction, context, functionSymbolTable);
             _dataPack.Functions.DecoFunctions.Add(functionName, decoFunction);
+
+            // Add function symbol to global symbol table
+            var functionSymbol = new Symbol(functionName, new FunctionType(), functionName);
+            if (!_globalSymbolTable.Add(functionSymbol)) {
+                Console.Error.WriteLine($"Error: Function '{functionName}' already exists in global symbol table.");
+            }
 
             // 4. Handle other modifiers
             foreach (var modifierContext in context.modifier()) {

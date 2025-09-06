@@ -5,9 +5,20 @@ namespace Deco.Compiler.Library.Types {
     /// </summary>
     public interface IDecoType {
         /// <summary>
+        /// Which packages is this type defined in. Used to compare if two types are the same
+        /// </summary>
+        string Package { get; }
+        /// <summary>
         /// The name of the type as used in Deco code (e.g., "int", "Player").
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// Compare if two types are the same.
+        /// </summary>
+        public bool Equals(IDecoType type) {
+            return Package == type.Package && Name == type.Name;
+        }
 
         /// <summary>
         /// Generates the commands to assign one variable of this type to another.

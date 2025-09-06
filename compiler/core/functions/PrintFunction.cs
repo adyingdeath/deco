@@ -75,7 +75,7 @@ namespace Deco.Compiler.Core.Functions {
             if (operand is ConstantOperand constantOp) {
                 return constantOp.Type;
             } else if (operand is SymbolOperand symbolOp) {
-                return symbolOp.Symbol.Type;
+                return symbolOp.Symbol.Type.Name;
             }
             throw new System.NotSupportedException($"Unsupported operand type: {operand.GetType()}");
         }
