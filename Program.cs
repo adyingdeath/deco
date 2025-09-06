@@ -43,7 +43,7 @@ class Program {
 
             "deco_core_lib\\function_test",
         ];
-        string testFileName = testList[8];
+        string testFileName = testList[1];
         string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks";
 

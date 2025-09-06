@@ -109,14 +109,11 @@ namespace Deco.Compiler {
                     Console.Error.WriteLine($"Error: Variable '{varName}' already defined in function '{decoFunction.Name}'.");
                 }
 
-                // Initialize with default value (0 for int/float, empty string for string)
-                if (varType.Equals(CoreTypeSingleton.Int) || varType.Equals(CoreTypeSingleton.Bool)) {
-                    decoFunction.McFunction.Commands.Add($"scoreboard players set {newSymbol.StorageName} {_dataPack.ID} 0");
-                } else if (varType.Equals(CoreTypeSingleton.Float)) {
-                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value 0.0f");
-                } else if (varType.Equals(CoreTypeSingleton.String)) {
-                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {newSymbol.StorageName} set value \"\"");
-                }
+                // Initialize variable using type's Initialize method
+                var libContext = CreateLibraryContext(decoFunction.McFunction, decoFunction.SymbolTable);
+                var newVariable = new Variable(varType, storageName);
+                varType.Initialize(libContext, newVariable);
+                newSymbol.IsInitialized = true;
             } else if (statement.assignment() != null) {
                 var assignment = statement.assignment();
                 string varName = assignment.IDENTIFIER().GetText();
@@ -129,17 +126,18 @@ namespace Deco.Compiler {
 
                 var evaluatedExpression = expressionCompiler.Evaluate(assignment.expression());
 
-                // Assign the result of the expression to the variable
+                // Type check
                 if (!targetSymbol.Type.Equals(evaluatedExpression.Type)) {
                     Console.Error.WriteLine($"Error: Type mismatch for assignment to '{varName}'. Expected {targetSymbol.Type.Name}, got {evaluatedExpression.Type.Name}.");
                     return;
                 }
 
-                if (targetSymbol.Type.Equals(CoreTypeSingleton.Int) || targetSymbol.Type.Equals(CoreTypeSingleton.Bool)) {
-                    decoFunction.McFunction.Commands.Add($"scoreboard players operation {targetSymbol.StorageName} {_dataPack.ID} = {evaluatedExpression.StorageName} {_dataPack.ID}");
-                } else if (targetSymbol.Type.Equals(CoreTypeSingleton.Float) || targetSymbol.Type.Equals(CoreTypeSingleton.String)) {
-                    decoFunction.McFunction.Commands.Add($"data modify storage {_dataPack.ID} {targetSymbol.StorageName} set from storage {_dataPack.ID} {evaluatedExpression.StorageName}");
-                }
+                // Use type's Assign method through the library system
+                var libContext = CreateLibraryContext(decoFunction.McFunction, decoFunction.SymbolTable);
+                var targetVariable = new Variable(targetSymbol.Type, targetSymbol.StorageName);
+                var sourceVariable = new Variable(evaluatedExpression.Type, evaluatedExpression.StorageName);
+
+                targetSymbol.Type.Assign(libContext, targetVariable, sourceVariable);
                 targetSymbol.IsInitialized = true;
             } else if (statement.expression() != null) {
                 // Evaluate the expression and discard the result.
