@@ -99,15 +99,15 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.expression() != null) {
             // Expression statement
-            var expression = Visit(context.expression()) as ExpressionNode;
-            if (expression != null) {
-                var expressionStmt = new ExpressionStatementNode(
-                    expression,
-                    context.Start.Line,
-                    context.Start.Column
-                );
-                return expressionStmt;
-            }
+            var expression =
+                Visit(context.expression()) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression statement must contain a valid expression.");
+
+            return new ExpressionStatementNode(
+                expression,
+                context.Start.Line,
+                context.Start.Column
+            );
         }
 
         if (context.variableDefinition() != null) {
@@ -170,16 +170,12 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitWhile_statement(DecoParser.While_statementContext context) {
-        var condition = Visit(context.expression()) as ExpressionNode;
-        if (condition == null) {
-            throw new InvalidOperationException("While statement must have a condition");
-        }
-
-        var body = Visit(context.block()) as BlockNode;
-        if (body == null) {
-            throw new InvalidOperationException("While statement must have a body");
-        }
-
+        var condition =
+            Visit(context.expression()) as ExpressionNode
+            ?? throw new InvalidOperationException("While statement must have a condition");
+        var body =
+            Visit(context.block()) as BlockNode
+            ?? throw new InvalidOperationException("While statement must have a body");
         return new WhileNode(condition, body, context.Start.Line, context.Start.Column);
     }
 
@@ -333,9 +329,10 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.expression() != null) {
             foreach (var expr in context.expression()) {
-                if (Visit(expr) is ExpressionNode expression) {
-                    arguments.Add(expression);
-                }
+                ExpressionNode expression =
+                    (ExpressionNode)Visit(expr)
+                    ?? throw new InvalidOperationException("Invalid expression");
+                arguments.Add(expression);
             }
         }
 
@@ -495,7 +492,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             var op = context.op.Text switch {
                 "!" => UnaryOperator.LogicalNot,
                 "-" => UnaryOperator.Negate,
-                _ => throw new NotImplementedException()
+                _ => throw new InvalidOperationException($"Unknown unary operator: {context.op.Text}")
             };
             var expr =
                 Visit(context.unary_expr()) as ExpressionNode

@@ -32,7 +32,7 @@ public class BaseAstVisitor<T> : IAstVisitor<T> {
     }
 
     public virtual T VisitExpressionStatement(ExpressionStatementNode node) {
-        return default!;
+        return Visit(node.Expression);
     }
 
     public virtual T VisitCommand(CommandNode node) {

@@ -4,6 +4,6 @@ public class ExpressionStatementNode(ExpressionNode expression, int line = 0, in
     public ExpressionNode Expression { get; } = expression;
 
     public override T Accept<T>(IAstVisitor<T> visitor) {
-        return default!;
+        return visitor.VisitExpressionStatement(this);
     }
 }
