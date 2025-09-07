@@ -1,4 +1,5 @@
 using Antlr4.Runtime;
+using Deco.Ast;
 using Deco.Compiler;
 using Deco.Compiler.Data;
 using System.IO;
@@ -30,6 +31,23 @@ class Program {
     }
 
     static void RunTest() {
+        string sourceCode = File.ReadAllText($"D:\\programming\\project\\deco\\test\\minecraft_condition_expression.deco");
+
+        var preprocessor = new DecoPreprocessor();
+        string processedCode = preprocessor.Preprocess(sourceCode);
+
+        ICharStream stream = CharStreams.fromString(processedCode);
+        DecoLexer lexer = new DecoLexer(stream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        DecoParser parser = new DecoParser(tokens);
+        var tree = parser.program();
+
+        var astBuilder = new AstBuilder();
+        var ast = astBuilder.Visit(tree);
+
+
+        return;
+
         Console.WriteLine("--- Running in Test Mode ---");
         string[] testList = [
             "argument_passing",
