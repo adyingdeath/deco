@@ -76,6 +76,20 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
         return new WhileNode(newCondition, newBody, node.Line, node.Column);
     }
 
+    public virtual AstNode VisitFor(ForNode node) {
+        var newInit =
+            node.Initialization == null ?
+            null :
+            (StatementNode)Visit(node.Initialization);
+        var newCondition = (ExpressionNode)Visit(node.Condition);
+        var newIter =
+            node.Iteration == null ?
+            null :
+            (StatementNode)Visit(node.Iteration);
+        var newBody = (BlockNode)Visit(node.Body);
+        return new ForNode(newInit, newCondition, newIter, newBody, node.Line, node.Column);
+    }
+
     public virtual AstNode VisitBlock(BlockNode node) {
         var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
         return new BlockNode(newStatements, node.Line, node.Column);

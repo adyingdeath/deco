@@ -19,6 +19,7 @@ public interface IAstVisitor<T> {
     T VisitReturn(ReturnNode node);
     T VisitIf(IfNode node);
     T VisitWhile(WhileNode node);
+    T VisitFor(ForNode node);
     T VisitBlock(BlockNode node);
     T VisitBinaryOp(BinaryOpNode node);
     T VisitUnaryOp(UnaryOpNode node);

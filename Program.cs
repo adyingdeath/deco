@@ -37,7 +37,8 @@ class Program {
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
 void main() {
-    if (true == true) {
+    for (int a = 0;a < 5;a = a + 1 + 2) {
+        print(1);
     }
 }
         ");
@@ -51,7 +52,9 @@ void main() {
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
 
-        var new_ast = new ConstantFoldingPass().Visit(ast);
+        var constant_folding_ast = new ConstantFoldingPass().Visit(ast);
+
+        var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
 
         return;
 

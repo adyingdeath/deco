@@ -144,6 +144,30 @@ public partial class DecoBaseListener : IDecoListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitWhile_statement([NotNull] DecoParser.While_statementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.for_inner_expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFor_inner_expression([NotNull] DecoParser.For_inner_expressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.for_inner_expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFor_inner_expression([NotNull] DecoParser.For_inner_expressionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DecoParser.for_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFor_statement([NotNull] DecoParser.For_statementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DecoParser.for_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFor_statement([NotNull] DecoParser.For_statementContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DecoParser.block"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

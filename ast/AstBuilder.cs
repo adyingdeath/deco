@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
 namespace Deco.Ast;
@@ -79,14 +77,17 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitStatement(DecoParser.StatementContext context) {
-        // Statement can be:
-        // 1. COMMAND ';'
-        // 2. expression ';'
-        // 3. variableDefinition ';'
-        // 4. assignment ';'
-        // 5. return_statement
-        // 6. if_statement
-        // 7. while_statement
+        /* 
+        Statement can be:
+        1. COMMAND ';'
+        2. expression ';'
+        3. variableDefinition ';'
+        4. assignment ';'
+        5. return_statement
+        6. if_statement
+        7. while_statement
+        8. for_statement
+        */
 
         if (context.COMMAND() != null) {
             // COMMAND statement
@@ -128,6 +129,10 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.while_statement() != null) {
             return VisitWhile_statement(context.while_statement());
+        }
+
+        if (context.for_statement() != null) {
+            return VisitFor_statement(context.for_statement());
         }
 
         throw new InvalidOperationException("Unknown statement type");
@@ -177,6 +182,42 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             Visit(context.block()) as BlockNode
             ?? throw new InvalidOperationException("While statement must have a body");
         return new WhileNode(condition, body, context.Start.Line, context.Start.Column);
+    }
+
+    public override AstNode VisitFor_statement(DecoParser.For_statementContext context) {
+        var condition =
+            Visit(context.cond) as ExpressionNode
+            ?? throw new InvalidOperationException("For statement must have a condition");
+        StatementNode? init = null;
+        if (context.init != null) {
+            if (context.init.expression() != null) {
+                var expr = (ExpressionNode)Visit(context.init.expression());
+                init = new ExpressionStatementNode(expr, context.Start.Line, context.Start.Column);
+            }
+            if (context.init.variableDefinition() != null) {
+                init = (VariableDefinitionNode)Visit(context.init.variableDefinition());
+            }
+            if (context.init.assignment() != null) {
+                init = (AssignmentNode)Visit(context.init.assignment());
+            }
+        }
+        StatementNode? iter = null;
+        if (context.iter != null) {
+            if (context.iter.expression() != null) {
+                var expr = (ExpressionNode)Visit(context.iter.expression());
+                iter = new ExpressionStatementNode(expr, context.Start.Line, context.Start.Column);
+            }
+            if (context.iter.variableDefinition() != null) {
+                iter = (VariableDefinitionNode)Visit(context.iter.variableDefinition());
+            }
+            if (context.iter.assignment() != null) {
+                iter = (AssignmentNode)Visit(context.iter.assignment());
+            }
+        }
+        var body =
+            Visit(context.block()) as BlockNode
+            ?? throw new InvalidOperationException("For statement must have a body");
+        return new ForNode(init, condition, iter, body, context.Start.Line, context.Start.Column);
     }
 
     public override AstNode VisitBlock(DecoParser.BlockContext context) {
@@ -394,6 +435,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         return new VariableDefinitionNode(
             context.type.Text,
             context.name.Text,
+            (ExpressionNode)Visit(context.expression()),
             context.Start.Line,
             context.Start.Column
         );

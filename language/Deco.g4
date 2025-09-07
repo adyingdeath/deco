@@ -23,13 +23,15 @@ statement:
     | (expression ';')
     | (variableDefinition ';')
     | (assignment ';')
-    | return_statement
+    | (return_statement ';')
+    | block
     | if_statement
     | while_statement
+    | for_statement
     ;
 
 return_statement:
-    'return' expression? ';'
+    'return' expression?
     ;
 
 if_statement:
@@ -38,6 +40,16 @@ if_statement:
 
 while_statement:
     'while' '(' expression ')' block
+    ;
+
+for_inner_expression:
+    expression
+    | variableDefinition
+    | assignment
+    ;
+
+for_statement:
+    'for' '(' init=for_inner_expression? ';' cond=expression ';' iter=for_inner_expression? ')' block
     ;
 
 block:
@@ -89,7 +101,7 @@ primary:
     ;
 
 variableDefinition:
-    type=IDENTIFIER name=IDENTIFIER
+    type=IDENTIFIER name=IDENTIFIER ('=' expression)?
     ;
 
 functionCall:
