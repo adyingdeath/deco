@@ -21,6 +21,7 @@ public interface IAstVisitor<T> {
     T VisitWhile(WhileNode node);
     T VisitFor(ForNode node);
     T VisitBlock(BlockNode node);
+    T VisitFakeBlock(FakeBlockNode node);
     T VisitBinaryOp(BinaryOpNode node);
     T VisitUnaryOp(UnaryOpNode node);
     T VisitLiteral(LiteralNode node);

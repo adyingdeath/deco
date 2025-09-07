@@ -90,9 +90,37 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
         return new ForNode(newInit, newCondition, newIter, newBody, node.Line, node.Column);
     }
 
+    /// <summary>
+    /// <para>
+    /// The special operation here handles FakeBlockNodes. In its own Visit 
+    /// method, a FakeBlockNode is processed like a regular BlockNode. However, 
+    /// when processing the statements within a block here, if a StatementNode 
+    /// is a FakeBlockNode, it gets flattened. That means the inner statements 
+    /// of the FakeBlockNode are lifted into the current block's statements, and
+    /// the FakeBlockNode itself is removed. This is primarily to facilitate the
+    /// conversion from for-loops to while-loops.
+    /// </para>
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
     public virtual AstNode VisitBlock(BlockNode node) {
-        var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
+        var newStatements = new List<StatementNode>();
+        foreach (var statement in node.Statements) {
+            var visitedStatement = (StatementNode)Visit(statement);
+            if (visitedStatement is FakeBlockNode fakeBlockNode) {
+                // If the Node is FakeBlockNode, flaten it
+                newStatements.AddRange(fakeBlockNode.Statements);
+            } else {
+                newStatements.Add(visitedStatement);
+            }
+        }
         return new BlockNode(newStatements, node.Line, node.Column);
+    }
+
+    // Treated like normal BlockNode
+    public virtual AstNode VisitFakeBlock(FakeBlockNode node) {
+        var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
+        return new FakeBlockNode(newStatements, node.Line, node.Column);
     }
 
     public virtual AstNode VisitBinaryOp(BinaryOpNode node) {
