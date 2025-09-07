@@ -553,16 +553,6 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             return Visit(context.expression());
         }
 
-        if (context.CONDITION() != null) {
-            // Handle condition literals if needed
-            return new LiteralNode(
-                LiteralType.String,
-                context.CONDITION().GetText(),
-                context.Start.Line,
-                context.Start.Column
-            );
-        }
-
         throw new InvalidOperationException("Unknown primary expression type");
     }
 }

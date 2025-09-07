@@ -1,5 +1,5 @@
 // This file ignores if it can work properly, only to test if AstBuilder can build the right AST.
-func test() {
+void test() {
     if (a == 1) {
         print();
     } else if (a == 2) {
@@ -10,7 +10,7 @@ func test() {
         } else {
             c = 5;
         }
-    } else (c == 1 * 2 || d + 1 == 4) {
+    } else {
         print("a");
     }
 }
