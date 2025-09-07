@@ -193,11 +193,9 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             if (context.init.expression() != null) {
                 var expr = (ExpressionNode)Visit(context.init.expression());
                 init = new ExpressionStatementNode(expr, context.Start.Line, context.Start.Column);
-            }
-            if (context.init.variableDefinition() != null) {
+            } else if (context.init.variableDefinition() != null) {
                 init = (VariableDefinitionNode)Visit(context.init.variableDefinition());
-            }
-            if (context.init.assignment() != null) {
+            } else if (context.init.assignment() != null) {
                 init = (AssignmentNode)Visit(context.init.assignment());
             }
         }
@@ -206,11 +204,9 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             if (context.iter.expression() != null) {
                 var expr = (ExpressionNode)Visit(context.iter.expression());
                 iter = new ExpressionStatementNode(expr, context.Start.Line, context.Start.Column);
-            }
-            if (context.iter.variableDefinition() != null) {
+            } else if (context.iter.variableDefinition() != null) {
                 iter = (VariableDefinitionNode)Visit(context.iter.variableDefinition());
-            }
-            if (context.iter.assignment() != null) {
+            } else if (context.iter.assignment() != null) {
                 iter = (AssignmentNode)Visit(context.iter.assignment());
             }
         }
@@ -432,10 +428,15 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitVariableDefinition(DecoParser.VariableDefinitionContext context) {
+        ExpressionNode? initExpr = null;
+        if (context.expression() != null) {
+            initExpr = (ExpressionNode)Visit(context.expression());
+        }
+
         return new VariableDefinitionNode(
             context.type.Text,
             context.name.Text,
-            (ExpressionNode)Visit(context.expression()),
+            initExpr,
             context.Start.Line,
             context.Start.Column
         );
