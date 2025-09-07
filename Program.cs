@@ -37,7 +37,7 @@ class Program {
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
 void main() {
-    for (int a = 0;a < 5;a = a + 1 + 2) {
+    for (int a = 3 + 4;a < 5;a = a + 1 + 2) {
         print(1);
     }
 }

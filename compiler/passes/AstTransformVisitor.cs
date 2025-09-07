@@ -44,7 +44,14 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     }
 
     public virtual AstNode VisitVariableDefinition(VariableDefinitionNode node) {
-        return node; // No children to transform
+        ExpressionNode? newInit = null;
+        if (node.InitialValue != null) {
+            newInit = (ExpressionNode)Visit(node.InitialValue);
+        }
+        return new VariableDefinitionNode(
+            node.Type, node.Name, newInit,
+            node.Line, node.Column
+        );
     }
 
     public virtual AstNode VisitAssignment(AssignmentNode node) {
