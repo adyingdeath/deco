@@ -93,7 +93,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             return new CommandNode(
                 context.COMMAND().GetText(),
                 context.Start.Line,
-                context.Stop.Column
+                context.Start.Column
             );
         }
 

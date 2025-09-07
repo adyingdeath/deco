@@ -12,6 +12,7 @@ public interface IAstVisitor<T> {
     T VisitFunction(FunctionNode node);
     T VisitModifier(ModifierNode node);
     T VisitArgument(ArgumentNode node);
+    T VisitExpressionStatement(ExpressionStatementNode node);
     T VisitCommand(CommandNode node);
     T VisitVariableDefinition(VariableDefinitionNode node);
     T VisitAssignment(AssignmentNode node);
