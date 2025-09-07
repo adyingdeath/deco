@@ -31,7 +31,7 @@ class Program {
     }
 
     static void RunTest() {
-        string sourceCode = File.ReadAllText($"D:\\programming\\project\\deco\\test\\minecraft_condition_expression.deco");
+        string sourceCode = File.ReadAllText($"D:\\programming\\project\\deco\\test\\ast_builder_test\\nested_if.deco");
 
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(sourceCode);

@@ -501,7 +501,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         if (context.NUMBER() != null) {
             return new LiteralNode(
                 LiteralType.Number,
-                double.Parse(context.NUMBER().GetText()),
+                context.NUMBER().GetText(),
                 context.Start.Line,
                 context.Start.Column
             );
@@ -510,7 +510,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         if (context.STRING() != null) {
             var text = context.STRING().GetText();
             // Remove quotes
-            text = text.Substring(1, text.Length - 2);
+            text = text[1..^1];
             return new LiteralNode(
                 LiteralType.String,
                 text,
@@ -522,7 +522,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         if (context.TRUE() != null) {
             return new LiteralNode(
                 LiteralType.Boolean,
-                true,
+                "true",
                 context.Start.Line,
                 context.Start.Column
             );
@@ -531,7 +531,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         if (context.FALSE() != null) {
             return new LiteralNode(
                 LiteralType.Boolean,
-                false,
+                "false",
                 context.Start.Line,
                 context.Start.Column
             );

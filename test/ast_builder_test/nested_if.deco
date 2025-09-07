@@ -1,0 +1,16 @@
+// This file ignores if it can work properly, only to test if AstBuilder can build the right AST.
+func test() {
+    if (a == 1) {
+        print();
+    } else if (a == 2) {
+        a = 3;
+    } else if (b == 3 && 1 + 1 == 2) {
+        if (c == 3 && true) {
+            b = 4;
+        } else {
+            c = 5;
+        }
+    } else (c == 1 * 2 || d + 1 == 4) {
+        print("a");
+    }
+}
