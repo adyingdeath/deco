@@ -74,7 +74,7 @@ namespace Deco.Compiler.Expressions {
             if (context.FALSE() != null) {
                 return new ConstantOperand("0", "bool");
             }
-            if (context.CONDITION() != null) {
+            /* if (context.CONDITION() != null) {
                 string rawCondition = context.CONDITION().GetText();
                 // remove c` and ` and unescape
                 string condition = rawCondition[2..^1].Replace("\\`", "`");
@@ -88,7 +88,7 @@ namespace Deco.Compiler.Expressions {
                 _mcFunction.Commands.Add($"execute if {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
 
                 return new SymbolOperand(resultSymbol);
-            }
+            } */
             if (context.IDENTIFIER() != null) {
                 var symbol = _symbolTable.Get(context.IDENTIFIER().GetText());
                 if (symbol == null) {
@@ -415,8 +415,7 @@ namespace Deco.Compiler.Expressions {
                 // LOGICAL NOT
 
                 // Optimization for !c`...`
-                var conditionNode = expr?.primary()?.CONDITION();
-                if (conditionNode != null) {
+                /* if (conditionNode != null) {
                     string rawCondition = conditionNode.GetText();
                     string condition = rawCondition[2..^1].Replace("\\`", "`");
 
@@ -427,7 +426,7 @@ namespace Deco.Compiler.Expressions {
                     _mcFunction.Commands.Add($"execute unless {condition} run scoreboard players set {resultSymbol.StorageName} {_dataPack.ID} 1");
 
                     return new SymbolOperand(resultSymbol);
-                }
+                } */
 
                 // Fallback for other boolean expressions
                 var operand = Visit(expr);

@@ -157,7 +157,11 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             var ifElseStatement =
                 VisitIf_statement(context.if_statement()) as StatementNode
                 ?? throw new InvalidOperationException("Else if statement is invalid");
-            elseBlock = new BlockNode([ifElseStatement]);
+            elseBlock = new BlockNode(
+                [ifElseStatement],
+                context.if_statement().Start.Line,
+                context.if_statement().Start.Column
+            );
         } else if (context.block().Length > 1) {
             elseBlock = Visit(context.block(1)) as BlockNode;
         }

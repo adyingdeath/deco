@@ -34,7 +34,12 @@ class Program {
         string sourceCode = File.ReadAllText($"D:\\programming\\project\\deco\\test\\ast_builder_test\\nested_if.deco");
 
         var preprocessor = new DecoPreprocessor();
-        string processedCode = preprocessor.Preprocess(sourceCode);
+        string processedCode = preprocessor.Preprocess(@"
+void main() {
+    if (a == b == c) {
+    }
+}
+        ");
 
         ICharStream stream = CharStreams.fromString(processedCode);
         DecoLexer lexer = new DecoLexer(stream);
