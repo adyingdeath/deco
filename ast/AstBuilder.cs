@@ -197,27 +197,21 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitOr_expr(DecoParser.Or_exprContext context) {
-        var expressions = new List<ExpressionNode>();
+        // Start with the leftmost expression
+        var result =
+            Visit(context.and_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
 
-        foreach (var andExpr in context.and_expr()) {
-            var expr = Visit(andExpr) as ExpressionNode;
-            if (expr != null) {
-                expressions.Add(expr);
-            }
-        }
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.and_expr().Length; i++) {
+            var right =
+                Visit(context.and_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
 
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build chained binary operations
-        var result = expressions[0];
-        for (int i = 1; i < expressions.Count; i++) {
             result = new BinaryOpNode(
                 result,
                 BinaryOperator.LogicalOr,
-                expressions[i],
+                right,
                 context.Start.Line,
                 context.Start.Column
             );
@@ -227,27 +221,21 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitAnd_expr(DecoParser.And_exprContext context) {
-        var expressions = new List<ExpressionNode>();
+        // Start with the leftmost expression
+        var result =
+            Visit(context.eq_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
 
-        foreach (var eqExpr in context.eq_expr()) {
-            var expr = Visit(eqExpr) as ExpressionNode;
-            if (expr != null) {
-                expressions.Add(expr);
-            }
-        }
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.eq_expr().Length; i++) {
+            var right =
+                Visit(context.eq_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
 
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build chained binary operations
-        var result = expressions[0];
-        for (int i = 1; i < expressions.Count; i++) {
             result = new BinaryOpNode(
                 result,
                 BinaryOperator.LogicalAnd,
-                expressions[i],
+                right,
                 context.Start.Line,
                 context.Start.Column
             );
@@ -257,49 +245,149 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitEq_expr(DecoParser.Eq_exprContext context) {
-        var expressions = new List<ExpressionNode>();
-        var operators = new List<BinaryOperator>();
+        // Start with the leftmost expression
+        var result =
+            Visit(context.rel_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
 
-        if (Visit(context.rel_expr(0)) is not ExpressionNode expr0) {
-            throw new InvalidOperationException("Eq expression must have a valid expression");
-        }
-        expressions.Add(expr0);
-
-        for (int i = 0; i < context.rel_expr().Length - 1; i++) {
-            // Get the operator token at position i*2 + 1 (between expressions)
-            var opToken = (TerminalNodeImpl)context.GetChild(i * 2 + 1);
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.rel_expr().Length; i++) {
+            // Get the operator
+            var opToken = (TerminalNodeImpl)context.GetChild(i * 2 - 1);
             var op = opToken.Symbol.Text switch {
                 "==" => BinaryOperator.Equal,
                 "!=" => BinaryOperator.NotEqual,
                 _ => throw new InvalidOperationException($"Unknown equality operator: {opToken.Symbol.Text}")
             };
-            operators.Add(op);
 
-            if (Visit(context.rel_expr(i + 1)) is ExpressionNode expr) {
-                expressions.Add(expr);
-            } else {
-                throw new InvalidOperationException("Eq expression must have a valid expression");
-            }
-        }
+            var right =
+                Visit(context.rel_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
 
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build binary operations
-        var result = expressions[0];
-        for (int i = 0; i < operators.Count; i++) {
             result = new BinaryOpNode(
                 result,
-                operators[i],
-                expressions[i + 1],
+                op,
+                right,
                 context.Start.Line,
                 context.Start.Column
             );
         }
 
         return result;
+    }
+
+    public override AstNode VisitRel_expr(DecoParser.Rel_exprContext context) {
+        // Start with the leftmost expression
+        var result =
+            Visit(context.add_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
+
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.add_expr().Length; i++) {
+            // Get the operator
+            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 - 1);
+            BinaryOperator op = opNode.Symbol.Text switch {
+                ">=" => BinaryOperator.GreaterThanOrEqual,
+                "<=" => BinaryOperator.LessThanOrEqual,
+                ">" => BinaryOperator.GreaterThan,
+                "<" => BinaryOperator.LessThan,
+                _ => throw new InvalidOperationException($"Unknown relational operator: {opNode.Symbol.Text}")
+            };
+
+            var right =
+                Visit(context.add_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
+
+            result = new BinaryOpNode(
+                result,
+                op,
+                right,
+                context.Start.Line,
+                context.Start.Column
+            );
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitAdd_expr(DecoParser.Add_exprContext context) {
+        // Start with the leftmost expression
+        var result =
+            Visit(context.mul_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
+
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.mul_expr().Length; i++) {
+            // Get the operator
+            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 - 1);
+            BinaryOperator op = opNode.Symbol.Text switch {
+                "+" => BinaryOperator.Add,
+                "-" => BinaryOperator.Subtract,
+                _ => throw new InvalidOperationException($"Unknown additive operator: {opNode.Symbol.Text}")
+            };
+
+            var right =
+                Visit(context.mul_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
+
+            result = new BinaryOpNode(
+                result,
+                op,
+                right,
+                context.Start.Line,
+                context.Start.Column
+            );
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitMul_expr(DecoParser.Mul_exprContext context) {
+        // Start with the leftmost expression
+        var result =
+            Visit(context.unary_expr(0)) as ExpressionNode
+            ?? throw new InvalidOperationException("Expression cannot be null");
+
+        // Iteratively build the left-associative binary operation tree
+        for (int i = 1; i < context.unary_expr().Length; i++) {
+            // Get the operator between the (i-1)th and ith expression
+            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 - 1);
+            BinaryOperator op = opNode.Symbol.Text switch {
+                "*" => BinaryOperator.Multiply,
+                "/" => BinaryOperator.Divide,
+                _ => throw new InvalidOperationException($"Unknown multiplicative operator: {opNode.Symbol.Text}")
+            };
+
+            var right =
+                Visit(context.unary_expr(i)) as ExpressionNode
+                ?? throw new InvalidOperationException("Expression cannot be null");
+
+            result = new BinaryOpNode(
+                result,
+                op,
+                right,
+                context.Start.Line,
+                context.Start.Column
+            );
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitUnary_expr(DecoParser.Unary_exprContext context) {
+        if (context.primary() != null) {
+            return Visit(context.primary());
+        } else {
+            var op = context.op.Text switch {
+                "!" => UnaryOperator.LogicalNot,
+                "-" => UnaryOperator.Negate,
+                _ => throw new InvalidOperationException($"Unknown unary operator: {context.op.Text}")
+            };
+            var expr =
+                Visit(context.unary_expr()) as ExpressionNode
+                ?? throw new InvalidOperationException("Unary expression must have a valid operand");
+            return new UnaryOpNode(op, expr, context.Start.Line, context.Start.Column);
+        }
     }
 
     public override AstNode VisitVariableDefinition(DecoParser.VariableDefinitionContext context) {
@@ -342,163 +430,6 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             context.Start.Line,
             context.Start.Column
         );
-    }
-
-    // Expression visiting - need to extend with all expression types
-    public override AstNode VisitRel_expr(DecoParser.Rel_exprContext context) {
-        var expressions = new List<ExpressionNode>();
-        var operators = new List<BinaryOperator>();
-
-        if (Visit(context.add_expr(0)) is not ExpressionNode expr0) {
-            throw new InvalidOperationException("Rel expression must have a valid expression");
-        }
-        expressions.Add(expr0);
-
-        for (int i = 0; i < context.add_expr().Length - 1; i++) {
-            // Get the operator token at position i*2 + 1 (between expressions)
-            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 + 1);
-            BinaryOperator op = opNode.Symbol.Text switch {
-                ">=" => BinaryOperator.GreaterThanOrEqual,
-                "<=" => BinaryOperator.LessThanOrEqual,
-                ">" => BinaryOperator.GreaterThan,
-                "<" => BinaryOperator.LessThan,
-                _ => throw new InvalidOperationException($"Unknown relational operator: {opNode.Symbol.Text}")
-            };
-            operators.Add(op);
-
-            if (Visit(context.add_expr(i + 1)) is ExpressionNode expr) {
-                expressions.Add(expr);
-            } else {
-                throw new InvalidOperationException("Rel expression must have a valid expression");
-            }
-        }
-
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build binary operations from left to right
-        var result = expressions[0];
-        for (int i = 0; i < operators.Count; i++) {
-            result = new BinaryOpNode(
-                result,
-                operators[i],
-                expressions[i + 1],
-                context.Start.Line,
-                context.Start.Column
-            );
-        }
-
-        return result;
-    }
-
-    public override AstNode VisitAdd_expr(DecoParser.Add_exprContext context) {
-        var expressions = new List<ExpressionNode>();
-        var operators = new List<BinaryOperator>();
-
-        if (Visit(context.mul_expr(0)) is not ExpressionNode expr0) {
-            throw new InvalidOperationException("Add expression must have a valid expression");
-        }
-        expressions.Add(expr0);
-
-        for (int i = 0; i < context.mul_expr().Length - 1; i++) {
-            // Get the operator token at position i*2 + 1 (between expressions)
-            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 + 1);
-            BinaryOperator op = opNode.Symbol.Text switch {
-                "+" => BinaryOperator.Add,
-                "-" => BinaryOperator.Subtract,
-                _ => throw new InvalidOperationException($"Unknown additive operator: {opNode.Symbol.Text}")
-            };
-            operators.Add(op);
-
-            if (Visit(context.mul_expr(i + 1)) is ExpressionNode expr) {
-                expressions.Add(expr);
-            } else {
-                throw new InvalidOperationException("Add expression must have a valid expression");
-            }
-        }
-
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build binary operations from left to right
-        var result = expressions[0];
-        for (int i = 0; i < operators.Count; i++) {
-            result = new BinaryOpNode(
-                result,
-                operators[i],
-                expressions[i + 1],
-                context.Start.Line,
-                context.Start.Column
-            );
-        }
-
-        return result;
-    }
-
-    public override AstNode VisitMul_expr(DecoParser.Mul_exprContext context) {
-        var expressions = new List<ExpressionNode>();
-        var operators = new List<BinaryOperator>();
-
-        if (Visit(context.unary_expr(0)) is not ExpressionNode expr0) {
-            throw new InvalidOperationException("Mul expression must have a valid expression");
-        }
-        expressions.Add(expr0);
-
-        for (int i = 0; i < context.unary_expr().Length - 1; i++) {
-            // Get the operator token at position i*2 + 1 (between expressions)
-            var opNode = (TerminalNodeImpl)context.GetChild(i * 2 + 1);
-            BinaryOperator op = opNode.Symbol.Text switch {
-                "*" => BinaryOperator.Multiply,
-                "/" => BinaryOperator.Divide,
-                _ => throw new InvalidOperationException($"Unknown multiplicative operator: {opNode.Symbol.Text}")
-            };
-            operators.Add(op);
-
-            if (Visit(context.unary_expr(i + 1)) is ExpressionNode expr) {
-                expressions.Add(expr);
-            } else {
-                throw new InvalidOperationException("Mul expression must have a valid expression");
-            }
-        }
-
-        // If there's only one expression, return it directly
-        if (expressions.Count == 1) {
-            return expressions[0];
-        }
-
-        // Build binary operations from left to right
-        var result = expressions[0];
-        for (int i = 0; i < operators.Count; i++) {
-            result = new BinaryOpNode(
-                result,
-                operators[i],
-                expressions[i + 1],
-                context.Start.Line,
-                context.Start.Column
-            );
-        }
-
-        return result;
-    }
-
-    public override AstNode VisitUnary_expr(DecoParser.Unary_exprContext context) {
-        if (context.primary() != null) {
-            return Visit(context.primary());
-        } else {
-            var op = context.op.Text switch {
-                "!" => UnaryOperator.LogicalNot,
-                "-" => UnaryOperator.Negate,
-                _ => throw new InvalidOperationException($"Unknown unary operator: {context.op.Text}")
-            };
-            var expr =
-                Visit(context.unary_expr()) as ExpressionNode
-                ?? throw new InvalidOperationException("Unary expression must have a valid operand");
-            return new UnaryOpNode(op, expr, context.Start.Line, context.Start.Column);
-        }
     }
 
     public override AstNode VisitPrimary(DecoParser.PrimaryContext context) {
