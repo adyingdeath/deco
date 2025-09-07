@@ -73,8 +73,8 @@ mul_expr:
     ;
 
 unary_expr:
-    '!' unary_expr
-    | '-' unary_expr
+    op='!' right=unary_expr
+    | op='-' right=unary_expr
     | primary
     ;
 

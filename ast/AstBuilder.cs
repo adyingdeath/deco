@@ -489,15 +489,18 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitUnary_expr(DecoParser.Unary_exprContext context) {
-        if (context.GetChild(0) is TerminalNodeImpl opNode && (opNode.Symbol.Text == "!" || opNode.Symbol.Text == "-")) {
-            var op = opNode.Symbol.Text == "!" ? UnaryOperator.LogicalNot : UnaryOperator.Negate;
-            var expr = Visit(context.unary_expr()) as ExpressionNode;
-            if (expr == null) {
-                throw new InvalidOperationException("Unary expression must have a valid operand");
-            }
-            return new UnaryOpNode(op, expr, context.Start.Line, context.Start.Column);
-        } else {
+        if (context.primary() != null) {
             return Visit(context.primary());
+        } else {
+            var op = context.op.Text switch {
+                "!" => UnaryOperator.LogicalNot,
+                "-" => UnaryOperator.Negate,
+                _ => throw new NotImplementedException()
+            };
+            var expr =
+                Visit(context.unary_expr()) as ExpressionNode
+                ?? throw new InvalidOperationException("Unary expression must have a valid operand");
+            return new UnaryOpNode(op, expr, context.Start.Line, context.Start.Column);
         }
     }
 

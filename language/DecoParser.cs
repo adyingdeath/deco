@@ -1389,6 +1389,8 @@ public partial class DecoParser : Parser {
 	}
 
 	public partial class Unary_exprContext : ParserRuleContext {
+		public IToken op;
+		public Unary_exprContext right;
 		[System.Diagnostics.DebuggerNonUserCode] public Unary_exprContext unary_expr() {
 			return GetRuleContext<Unary_exprContext>(0);
 		}
@@ -1430,18 +1432,18 @@ public partial class DecoParser : Parser {
 				EnterOuterAlt(_localctx, 1);
 				{
 				State = 193;
-				Match(T__23);
+				_localctx.op = Match(T__23);
 				State = 194;
-				unary_expr();
+				_localctx.right = unary_expr();
 				}
 				break;
 			case T__20:
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 195;
-				Match(T__20);
+				_localctx.op = Match(T__20);
 				State = 196;
-				unary_expr();
+				_localctx.right = unary_expr();
 				}
 				break;
 			case T__1:
