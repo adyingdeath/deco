@@ -2,6 +2,7 @@ using Antlr4.Runtime;
 using Deco.Ast;
 using Deco.Compiler;
 using Deco.Compiler.Data;
+using Deco.Compiler.Passes;
 using System.IO;
 
 class Program {
@@ -36,7 +37,7 @@ class Program {
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
 void main() {
-    if (a == b == c) {
+    if (true == true) {
     }
 }
         ");
@@ -50,6 +51,7 @@ void main() {
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
 
+        var new_ast = new ConstantFoldingPass().Visit(ast);
 
         return;
 
