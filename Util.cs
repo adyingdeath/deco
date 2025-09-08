@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+namespace Deco;
 
 /// <summary>
 /// Provides utility methods for common file operations, including creating missing directories.
@@ -219,5 +216,61 @@ public static class Util {
         if (unaryExpr.primary() == null) return null;
 
         return unaryExpr.primary();
+    }
+}
+
+public static class Base36Counter {
+    private static readonly char[] _chars = "0123456789abcdefghijklmnopqrstuvwxyz".ToCharArray();
+    private static readonly char[] _buffer = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
+    private static int _startIndex = 15; // Start Index of valid digit
+
+    /// <summary>
+    /// Gets the next base-36 string. (Without leading zeros)
+    /// </summary>
+    /// <returns>The next base-36 string.</returns>
+    /// <exception cref="OverflowException">Thrown when the 36-base counter has reached its maximum value.</exception>
+    public static string Next() {
+        // Increment from the last digit
+        for (int i = 15; i >= 0; i--) {
+            char c = _buffer[i];
+            int value;
+
+            // Fast char to value conversion
+            if (c <= '9')
+                value = c - '0';
+            else
+                value = c - 'a' + 10;
+
+            // Attempt to increment by 1
+            value++;
+
+            if (value < 36) {
+                // No carry-over needed
+                _buffer[i] = _chars[value];
+
+                // Update the start index of the valid digits
+                if (i < _startIndex)
+                    _startIndex = i;
+
+                // Return the string without leading zeros
+                return new string(_buffer, _startIndex, 16 - _startIndex);
+            }
+
+            // Carry-over needed, current digit resets to '0'
+            _buffer[i] = '0';
+        }
+
+        // If execution reaches here, the counter is full (all 16 digits are maxed out)
+        throw new OverflowException("36-base counter has overflowed.");
+    }
+
+    /// <summary>
+    /// Resets the counter to its initial state ("0").
+    /// </summary>
+    public static void Reset() {
+        for (int i = 0; i < 16; i++) {
+            _buffer[i] = '0';
+        }
+        _startIndex = 15;
     }
 }
