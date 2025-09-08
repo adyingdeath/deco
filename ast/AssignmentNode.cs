@@ -7,4 +7,13 @@ public class AssignmentNode(string variable, ExpressionNode expression, int line
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitAssignment(this);
     }
+
+    public override AssignmentNode Clone() {
+        return new AssignmentNode(
+            Variable,
+            Expression,
+            Line,
+            Column
+        );
+    }
 }

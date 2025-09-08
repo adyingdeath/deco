@@ -6,4 +6,12 @@ public class IdentifierNode(string name, int line = 0, int column = 0) : Express
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitIdentifier(this);
     }
+
+    public override IdentifierNode Clone() {
+        return new IdentifierNode(
+            Name,
+            Line,
+            Column
+        );
+    }
 }

@@ -6,4 +6,12 @@ public class CommandNode(string command, int line = 0, int column = 0) : Stateme
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitCommand(this);
     }
+
+    public override CommandNode Clone() {
+        return new CommandNode(
+            Command,
+            Line,
+            Column
+        );
+    }
 }

@@ -28,4 +28,14 @@ public class BinaryOpNode(ExpressionNode left, BinaryOperator op, ExpressionNode
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitBinaryOp(this);
     }
+
+    public override BinaryOpNode Clone() {
+        return new BinaryOpNode(
+            Left,
+            Operator,
+            Right,
+            Line,
+            Column
+        );
+    }
 }

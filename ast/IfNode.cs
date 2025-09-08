@@ -8,4 +8,14 @@ public class IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode? el
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitIf(this);
     }
+
+    public override IfNode Clone() {
+        return new IfNode(
+            Condition.Clone(),
+            ThenBlock.Clone(),
+            ElseBlock != null ? ElseBlock.Clone() : null,
+            Line,
+            Column
+        );
+    }
 }

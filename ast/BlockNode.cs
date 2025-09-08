@@ -6,6 +6,14 @@ public class BlockNode(List<StatementNode>? statements = null, int line = 0, int
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitBlock(this);
     }
+
+    public override BlockNode Clone() {
+        return new BlockNode(
+            Statements.Select(s => (StatementNode)s.Clone()).ToList(),
+            Line,
+            Column
+        );
+    }
 }
 
 // <summary>
@@ -16,5 +24,13 @@ public class FakeBlockNode(List<StatementNode>? statements = null, int line = 0,
 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFakeBlock(this);
+    }
+
+    public override FakeBlockNode Clone() {
+        return new FakeBlockNode(
+            Statements.Select(s => (StatementNode)s.Clone()).ToList(),
+            Line,
+            Column
+        );
     }
 }

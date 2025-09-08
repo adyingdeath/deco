@@ -8,4 +8,12 @@ public class ProgramNode(List<FunctionNode> functions, int line = 0, int column 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitProgram(this);
     }
+
+    public override ProgramNode Clone() {
+        return new ProgramNode(
+            Functions.Select(f => f.Clone()).ToList(),
+            Line,
+            Column
+        );
+    }
 }

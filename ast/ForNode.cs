@@ -14,4 +14,15 @@ public class ForNode(
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFor(this);
     }
+
+    public override ForNode Clone() {
+        return new ForNode(
+            Initialization != null ? (StatementNode)Initialization.Clone() : null,
+            Condition.Clone(),
+            Iteration != null ? (StatementNode)Iteration.Clone() : null,
+            Body.Clone(),
+            Line,
+            Column
+        );
+    }
 }

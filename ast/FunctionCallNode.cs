@@ -9,4 +9,13 @@ public class FunctionCallNode(string name, List<ExpressionNode>? arguments = nul
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFunctionCall(this);
     }
+
+    public override FunctionCallNode Clone() {
+        return new FunctionCallNode(
+            Name,
+            Arguments.Select(a => a.Clone()).ToList(),
+            Line,
+            Column
+        );
+    }
 }

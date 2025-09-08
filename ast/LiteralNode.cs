@@ -14,4 +14,13 @@ public class LiteralNode(LiteralType type, string value, int line = 0, int colum
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitLiteral(this);
     }
+
+    public override LiteralNode Clone() {
+        return new LiteralNode(
+            Type,
+            Value,
+            Line,
+            Column
+        );
+    }
 }

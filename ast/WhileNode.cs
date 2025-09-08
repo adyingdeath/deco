@@ -7,4 +7,13 @@ public class WhileNode(ExpressionNode condition, BlockNode body, int line = 0, i
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitWhile(this);
     }
+
+    public override WhileNode Clone() {
+        return new WhileNode(
+            Condition.Clone(),
+            Body.Clone(),
+            Line,
+            Column
+        );
+    }
 }

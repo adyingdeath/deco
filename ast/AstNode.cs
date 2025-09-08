@@ -5,6 +5,7 @@ public abstract class AstNode(int line = 0, int column = 0) {
     public int Column { get; set; } = column;
 
     public abstract T Accept<T>(IAstVisitor<T> visitor);
+    public abstract AstNode Clone();
 }
 
 public interface IAstVisitor<T> {

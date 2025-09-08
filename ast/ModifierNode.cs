@@ -9,4 +9,13 @@ public class ModifierNode(string name, List<ExpressionNode>? parameters = null, 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitModifier(this);
     }
+
+    public override ModifierNode Clone() {
+        return new ModifierNode(
+            Name,
+            [.. Parameters.Select(p => p.Clone())],
+            Line,
+            Column
+        );
+    }
 }

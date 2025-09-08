@@ -12,4 +12,13 @@ public class UnaryOpNode(UnaryOperator op, ExpressionNode operand, int line = 0,
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitUnaryOp(this);
     }
+
+    public override UnaryOpNode Clone() {
+        return new UnaryOpNode(
+            Operator,
+            Operand.Clone(),
+            Line,
+            Column
+        );
+    }
 }

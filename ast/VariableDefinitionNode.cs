@@ -8,4 +8,14 @@ public class VariableDefinitionNode(string type, string name, ExpressionNode? in
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitVariableDefinition(this);
     }
+
+    public override VariableDefinitionNode Clone() {
+        return new VariableDefinitionNode(
+            Type,
+            Name,
+            InitialValue != null ? InitialValue.Clone() : null,
+            Line,
+            Column
+        );
+    }
 }

@@ -11,13 +11,19 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
 
         if (!(newLeft is IdentifierNode || newLeft is LiteralNode)) {
             var tempName = Base36Counter.Next();
-            CurrentStatements.Add(new VariableDefinitionNode("auto", tempName, newLeft));
+            CurrentStatements.Add(new VariableDefinitionNode(
+                "[temp]", tempName, newLeft,
+                node.Line, node.Column
+            ));
             newLeft = new IdentifierNode(tempName);
         }
 
         if (!(newRight is IdentifierNode || newRight is LiteralNode)) {
             var tempName = Base36Counter.Next();
-            CurrentStatements.Add(new VariableDefinitionNode("auto", tempName, newRight));
+            CurrentStatements.Add(new VariableDefinitionNode(
+                "[temp]", tempName, newRight,
+                node.Line, node.Column
+            ));
             newRight = new IdentifierNode(tempName);
         }
 

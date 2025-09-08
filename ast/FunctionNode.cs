@@ -20,4 +20,16 @@ public class FunctionNode(
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFunction(this);
     }
+
+    public override FunctionNode Clone() {
+        return new FunctionNode(
+            Modifiers.Select(m => m.Clone()).ToList(),
+            ReturnType,
+            Name,
+            Arguments.Select(a => a.Clone()).ToList(),
+            Body.Clone(),
+            Line,
+            Column
+        );
+    }
 }

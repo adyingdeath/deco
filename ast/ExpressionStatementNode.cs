@@ -6,4 +6,12 @@ public class ExpressionStatementNode(ExpressionNode expression, int line = 0, in
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitExpressionStatement(this);
     }
+
+    public override ExpressionStatementNode Clone() {
+        return new ExpressionStatementNode(
+            Expression.Clone(),
+            Line,
+            Column
+        );
+    }
 }

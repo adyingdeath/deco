@@ -6,4 +6,12 @@ public class ReturnNode(ExpressionNode? expression = null, int line = 0, int col
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitReturn(this);
     }
+
+    public override ReturnNode Clone() {
+        return new ReturnNode(
+            Expression?.Clone() != null ? Expression.Clone() : null,
+            Line,
+            Column
+        );
+    }
 }
