@@ -38,7 +38,7 @@ class Program {
         string processedCode = preprocessor.Preprocess(@"
 void main() {
     for (int a = 3 + 4;a < 5;a = a + 1 + 2) {
-        print(1);
+        print(a + b + c);
     }
 }
         ");
@@ -55,6 +55,8 @@ void main() {
         var constant_folding_ast = new ConstantFoldingPass().Visit(ast);
 
         var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
+
+        var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
         return;
 
