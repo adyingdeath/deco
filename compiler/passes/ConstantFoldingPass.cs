@@ -9,6 +9,12 @@ namespace Deco.Compiler.Passes;
 /// Supports arithmetic, comparison, logical operations, and string concatenation.
 /// </summary>
 public class ConstantFoldingPass : AstTransformVisitor {
+    // [TODO] We still need to handle this type of constant folding:
+    // (a op b) op c
+    // and
+    // (a op b) op (c op d)
+    // and
+    // a op (b op c)
     public override AstNode VisitBinaryOp(BinaryOpNode node) {
         // First, transform the children. This allows nested constant folding
         var newLeft = (ExpressionNode)Visit(node.Left);
