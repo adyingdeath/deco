@@ -4,7 +4,7 @@ grammar Deco;
 
 program: (
     function
-    | variableDefinition
+    | (variableDefinition ';')
     )* EOF;
 
 modifier:
