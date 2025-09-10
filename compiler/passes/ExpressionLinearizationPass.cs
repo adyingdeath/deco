@@ -3,7 +3,7 @@ using Deco.Ast;
 namespace Deco.Compiler.Passes;
 
 public class ExpressionLinearizationPass : AstTransformVisitor {
-    private List<StatementNode> CurrentStatements = new();
+    private readonly List<StatementNode> CurrentStatements = [];
 
     public override AstNode VisitBinaryOp(BinaryOpNode node) {
         var newLeft = (ExpressionNode)Visit(node.Left);
@@ -11,13 +11,17 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
 
         if (!(newLeft is IdentifierNode || newLeft is LiteralNode)) {
             var tempName = Base36Counter.Next();
-            CurrentStatements.Add(new VariableDefinitionNode("auto", tempName, newLeft));
+            CurrentStatements.Add(
+                new VariableDefinitionNode("[temp]", tempName, newLeft)
+            );
             newLeft = new IdentifierNode(tempName);
         }
 
         if (!(newRight is IdentifierNode || newRight is LiteralNode)) {
             var tempName = Base36Counter.Next();
-            CurrentStatements.Add(new VariableDefinitionNode("auto", tempName, newRight));
+            CurrentStatements.Add(
+                new VariableDefinitionNode("[temp]", tempName, newRight)
+            );
             newRight = new IdentifierNode(tempName);
         }
 
@@ -30,7 +34,10 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
         if (node.InitialValue != null) {
             newInit = (ExpressionNode)Visit(node.InitialValue);
         }
-        var definition = new VariableDefinitionNode(node.Type, node.Name, newInit, node.Line, node.Column);
+        var definition = new VariableDefinitionNode(
+            node.Type, node.Name, newInit,
+            node.Line, node.Column
+        );
         if (CurrentStatements.Count > 0) {
             var newStatements = CurrentStatements.Append(definition).ToList();
             return new FakeBlockNode(newStatements, node.Line, node.Column);

@@ -13,8 +13,9 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     }
 
     public virtual AstNode VisitProgram(ProgramNode node) {
+        var newVarDefs = node.VariableDefinitions.Select(v => (VariableDefinitionNode)Visit(v)).ToList();
         var newFunctions = node.Functions.Select(f => (FunctionNode)Visit(f)).ToList();
-        return new ProgramNode(newFunctions, node.Line, node.Column);
+        return new ProgramNode(newVarDefs, newFunctions, node.Line, node.Column);
     }
 
     public virtual AstNode VisitFunction(FunctionNode node) {

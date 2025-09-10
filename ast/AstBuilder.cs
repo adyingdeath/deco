@@ -4,16 +4,22 @@ namespace Deco.Ast;
 
 public class AstBuilder : DecoBaseVisitor<AstNode> {
     public override AstNode VisitProgram(DecoParser.ProgramContext context) {
+        var varDefs = new List<VariableDefinitionNode>();
         var functions = new List<FunctionNode>();
 
+        foreach (var varDefContext in context.variableDefinition()) {
+            if (VisitVariableDefinition(varDefContext) is VariableDefinitionNode varDef) {
+                varDefs.Add(varDef);
+            }
+        }
+    
         foreach (var functionContext in context.function()) {
-            var function = VisitFunction(functionContext) as FunctionNode;
-            if (function != null) {
+            if (VisitFunction(functionContext) is FunctionNode function) {
                 functions.Add(function);
             }
         }
 
-        return new ProgramNode(functions, context.Start.Line, context.Start.Column);
+        return new ProgramNode(varDefs, functions, context.Start.Line, context.Start.Column);
     }
 
     public override AstNode VisitModifier(DecoParser.ModifierContext context) {

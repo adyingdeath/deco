@@ -2,7 +2,10 @@ grammar Deco;
 
 // --- Parser Rules ---
 
-program: (function)* EOF;
+program: (
+    function
+    | variableDefinition
+    )* EOF;
 
 modifier:
     '@' name=IDENTIFIER ('(' (expression (',' expression)*)? ')')?
