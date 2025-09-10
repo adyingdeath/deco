@@ -51,7 +51,7 @@ namespace Deco.Compiler {
             return WrapMinecraftCommands(withoutComments);
         }
 
-        private string StripComments(string code) {
+        private static string StripComments(string code) {
             if (string.IsNullOrEmpty(code)) {
                 return string.Empty;
             }
@@ -182,25 +182,43 @@ namespace Deco.Compiler {
         /// <summary>
         /// Checks if the character at the given index is the start of a bare Minecraft command.
         /// A command must be a whole word and not be part of another identifier (e.g., `myObject.say` should not match).
+        /// It must also appear at the start of a line, or be preceded only by whitespace characters (space, tab).
         /// </summary>
-        private bool IsBareCommandAt(string code, int index, out string matchedKeyword) {
+        /// <param name="code">The full code string to analyze.</param>
+        /// <param name="index">The starting index in the code string to check for a command.</param>
+        /// <param name="matchedKeyword">Outputs the matched keyword if a command is found, otherwise null.</param>
+        /// <returns>True if a bare command is found at the given index, false otherwise.</returns>
+        public bool IsBareCommandAt(string code, int index, out string matchedKeyword) {
             matchedKeyword = null;
 
-            // A command must be preceded by whitespace, a delimiter, or be at the start of the code.
-            if (index > 0) {
-                char prevChar = code[index - 1];
-                if (!char.IsWhiteSpace(prevChar) && prevChar != '{' && prevChar != '}' && prevChar != '(' && prevChar != ')' && prevChar != ';') {
+            // Check preceding characters: scan backwards to the start of the line or string.
+            // All characters in this path must be whitespace (space or tab).
+            // If a non-whitespace, non-newline character is found, it's not a bare command.
+            int scanIndex = index - 1;
+            while (scanIndex >= 0) {
+                char prevChar = code[scanIndex];
+                if (prevChar == '\n' || prevChar == '\r') {
+                    // Reached the beginning of the line with only valid preceding whitespace, or string start.
+                    break;
+                }
+                if (!char.IsWhiteSpace(prevChar)) {
+                    // Found a non-whitespace, non-newline character (e.g., 't' in 'int test').
                     return false;
                 }
+                scanIndex--;
             }
 
+            // Iterate through all possible command keywords.
             foreach (var keyword in _commandKeywords) {
+                // Ensure the keyword fits within the string bounds and matches (case-insensitive).
                 if (index + keyword.Length <= code.Length &&
                     string.Compare(code, index, keyword, 0, keyword.Length, StringComparison.OrdinalIgnoreCase) == 0) {
+
                     // Ensure it's a whole word by checking the character that follows.
-                    if (index + keyword.Length == code.Length ||
-                        char.IsWhiteSpace(code[index + keyword.Length]) ||
-                        code[index + keyword.Length] == ';') {
+                    // It must be at the end of the string, followed by whitespace, or a semicolon.
+                    if (index + keyword.Length == code.Length ||         // Keyword is at the end of the string
+                        char.IsWhiteSpace(code[index + keyword.Length]) || // Keyword is followed by whitespace
+                        code[index + keyword.Length] == ';') {             // Keyword is followed by a semicolon
                         matchedKeyword = keyword;
                         return true;
                     }
