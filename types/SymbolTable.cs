@@ -69,39 +69,39 @@ public class Scope(string name, Scope? parent = null) {
 /// This class is used to enter and leave scope chain. PushScope and PopScope
 /// should be used in pair. The PushScope method can take a null parameter,
 /// which will take no effect, and its coresponding PopScope won't truly pop
-/// scope from stack but will still return the last scope in stack.
+/// scope from stack but will still return the last not-null scope in stack.
 /// </summary>
-/// <param name="init"></param>
-public class ScopeStack(Scope init) {
-    private readonly List<Scope> _stack = [init];
+/// <param name="root"></param>
+public class ScopeStack(Scope root) {
+    private readonly Stack<Scope> _stack = new([root]);
     /// <summary>
-    /// Variable to count the times the PushScope receive null paramter.
+    /// List to mark all the points that the PushScope receive null paramter.
     /// If PushScope and PopScope are used in pair, we can garantee that the
     /// null Push will not lead to wrong Pop.
     /// </summary>
-    private int _nullCounter = 0;
+    private readonly Stack<int> _nullMarker = [];
 
     public void PushScope(Scope? scope) {
         if (scope == null) {
-            _nullCounter++;
-            return;
+            _nullMarker.Push(_stack.Count);
+        } else {
+            _stack.Push(scope);
         }
-        _stack.Add(scope);
     }
     public Scope PopScope() {
-        var scope = _stack[^1];
-        if (_nullCounter > 0) {
-            _nullCounter--;
+        if (_nullMarker.Count > 0 && _nullMarker.Peek() == _stack.Count) {
+            _nullMarker.Pop();
+            return _stack.Peek();
         } else if (_stack.Count > 1) {
-            _stack.RemoveAt(_stack.Count - 1);
+            return _stack.Pop();
         }
-        return scope;
+        return root;
     }
     public Scope Current() {
-        return _stack[^1];
+        return _stack.Peek();
     }
     public Scope Root() {
-        return _stack[0];
+        return root;
     }
 }
 
