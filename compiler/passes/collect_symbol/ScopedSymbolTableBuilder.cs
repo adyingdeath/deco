@@ -3,15 +3,13 @@ using Deco.Types;
 
 namespace Deco.Compiler.Passes.Collect_Symbol;
 
-/// <summary>
-/// Pass to build symbol tables for nested scopes, including local variables.
-/// This pass traverses all the block bodies and creates scopes for blocks,
-/// including function, if, for, while, etc.
+///// <summary>
+///// Pass to build symbol tables for nested functions and blocks, including local variables.
+/// This pass traverses all the block bodies and creates symbol tables for functions and blocks.
 /// </summary>
-public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<object> {
-    private readonly SymbolTable _symbolTable = symbolTable;
+public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<object> {
+    private readonly ScopeStack scope = new(globalSymbolTable);
     private readonly List<string> _errors = [];
-
     public List<string> Errors => _errors;
 
     public object VisitProgram(ProgramNode node) {
@@ -24,54 +22,50 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
     }
 
     public object VisitFunction(FunctionNode node) {
-        // Enter function scope
-        _symbolTable.EnterScope($"function {node.Name}");
+        // Create a symbol table for this function with the current table as parent
+        node.Scope = scope.Current().CreateChild($"function {node.Name}");
 
-        try {
-            // Set the scope reference for this function node
-            node.Scope = _symbolTable.CurrentScope;
-
-            // Add function parameters to scope
-            foreach (var arg in node.Arguments) {
-                var argType = TypeUtils.ParseType(arg.Type);
-                try {
-                    _symbolTable.AddSymbol(new Symbol(
-                        arg.Name,
-                        argType,
-                        SymbolKind.Parameter,
-                        arg.Line,
-                        arg.Column
-                    ));
-                } catch (SymbolTableException ex) {
-                    _errors.Add($"Function '{node.Name}' parameter error: {ex.Message}");
-                }
+        // Add function parameters to the function's symbol table
+        foreach (var arg in node.Arguments) {
+            var argType = TypeUtils.ParseType(arg.Type);
+            try {
+                node.Scope.AddSymbol(new Symbol(
+                    arg.Name,
+                    argType,
+                    SymbolKind.Parameter,
+                    arg.Line,
+                    arg.Column
+                ));
+            } catch (SymbolTableException ex) {
+                _errors.Add($"Function '{node.Name}' parameter error: {ex.Message}");
             }
-
-            // Visit function body
-            node.Body.Accept(this);
-        } finally {
-            // Exit function scope
-            _symbolTable.ExitScope();
         }
+
+        // Switch to function symbol table for its body
+        scope.PushScope(node.Scope);
+
+        // Visit function body
+        node.Body.Accept(this);
+
+        // Restore previous symbol table
+        scope.PopScope();
 
         return null!;
     }
 
     public object VisitBlock(BlockNode node) {
-        // Enter block scope
-        _symbolTable.EnterScope("block");
+        // Create a symbol table for this block with current table as parent
+        node.Scope = scope.Current().CreateChild("block");
 
-        try {
-            // Set the scope reference for this block node
-            node.Scope = _symbolTable.CurrentScope;
+        // Switch to block symbol table for its statements
+        scope.PushScope(node.Scope);
 
-            foreach (var stmt in node.Statements) {
-                stmt.Accept(this);
-            }
-        } finally {
-            // Exit block scope
-            _symbolTable.ExitScope();
+        foreach (var stmt in node.Statements) {
+            stmt.Accept(this);
         }
+
+        // Restore previous symbol table
+        scope.PopScope();
 
         return null!;
     }
@@ -79,7 +73,7 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
     public object VisitVariableDefinition(VariableDefinitionNode node) {
         var varDefType = TypeUtils.ParseType(node.Type);
         try {
-            _symbolTable.AddSymbol(new Symbol(
+            scope.Current().AddSymbol(new Symbol(
                 node.Name,
                 varDefType,
                 SymbolKind.Variable,
@@ -110,6 +104,8 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
     }
 
     public object VisitFor(ForNode node) {
+        node.Scope = scope.Current().CreateChild("for loop");
+        scope.PushScope(node.Scope);
         // For loop initializer might define variables
         if (node.Initialization is VariableDefinitionNode init) {
             init.Accept(this);
@@ -120,6 +116,7 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
         // Note: Other parts of for loop are visited but don't create new scopes
         // here, because the BlockNode itself will create scope.
         node.Body.Accept(this);
+        scope.PopScope();
         return null!;
     }
 

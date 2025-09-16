@@ -24,7 +24,8 @@ public enum SymbolKind {
 }
 
 /// <summary>
-/// Represents a scope in the symbol table.
+/// Represents a symbol table (originally called scope).
+/// Symbol tables are nested hierarchically.
 /// </summary>
 public class Scope(string name, Scope? parent = null) {
     public Scope? Parent { get; } = parent;
@@ -33,13 +34,13 @@ public class Scope(string name, Scope? parent = null) {
     public Dictionary<string, Symbol> Symbols { get; } = [];
 
     /// <summary>
-    /// Adds a symbol to this scope.
-    /// Throws exception if symbol already exists in this scope.
+    /// Adds a symbol to this symbol table.
+    /// Throws exception if symbol already exists in this table.
     /// </summary>
     public void AddSymbol(Symbol symbol) {
         if (Symbols.TryGetValue(symbol.Name, out Symbol? value)) {
             throw new SymbolTableException(
-                $"Symbol '{symbol.Name}' already declared in scope '{Name}' at line {value.Line}.",
+                $"Symbol '{symbol.Name}' already declared in symbol table '{Name}' at line {value.Line}.",
                 symbol.Line, symbol.Column
             );
         }
@@ -47,7 +48,7 @@ public class Scope(string name, Scope? parent = null) {
     }
 
     /// <summary>
-    /// Looks up a symbol starting from this scope and up the chain.
+    /// Looks up a symbol starting from this symbol table and up the parent chain.
     /// Returns null if not found.
     /// </summary>
     public Symbol? LookupSymbol(string name) {
@@ -56,48 +57,51 @@ public class Scope(string name, Scope? parent = null) {
         }
         return Parent?.LookupSymbol(name);
     }
+
+    public Scope CreateChild(string name) {
+        var child = new Scope(name, this);
+        Children.Add(child);
+        return child;
+    }
 }
 
 /// <summary>
-/// Main symbol table class.
+/// This class is used to enter and leave scope chain. PushScope and PopScope
+/// should be used in pair. The PushScope method can take a null parameter,
+/// which will take no effect, and its coresponding PopScope won't truly pop
+/// scope from stack but will still return the last scope in stack.
 /// </summary>
-public class SymbolTable {
-    public Scope GlobalScope { get; } = new Scope("global");
-    private Scope _currentScope;
+/// <param name="init"></param>
+public class ScopeStack(Scope init) {
+    private readonly List<Scope> _stack = [init];
+    /// <summary>
+    /// Variable to count the times the PushScope receive null paramter.
+    /// If PushScope and PopScope are used in pair, we can garantee that the
+    /// null Push will not lead to wrong Pop.
+    /// </summary>
+    private int _nullCounter = 0;
 
-    public SymbolTable() {
-        _currentScope = GlobalScope;
-    }
-
-    public void EnterScope(string name) {
-        var newScope = new Scope(name, _currentScope);
-        _currentScope.Children.Add(newScope);
-        _currentScope = newScope;
-
-    }
-
-    public void ExitScope() {
-        if (_currentScope.Parent != null) {
-            _currentScope = _currentScope.Parent;
-        } else {
-            throw new InvalidOperationException("Cannot exit global scope");
+    public void PushScope(Scope? scope) {
+        if (scope == null) {
+            _nullCounter++;
+            return;
         }
+        _stack.Add(scope);
     }
-
-    public Scope CurrentScope => _currentScope;
-
-    /// <summary>
-    /// Adds a symbol to the current scope.
-    /// </summary>
-    public void AddSymbol(Symbol symbol) {
-        _currentScope.AddSymbol(symbol);
+    public Scope PopScope() {
+        var scope = _stack[^1];
+        if (_nullCounter > 0) {
+            _nullCounter--;
+        } else if (_stack.Count > 1) {
+            _stack.RemoveAt(_stack.Count - 1);
+        }
+        return scope;
     }
-
-    /// <summary>
-    /// Looks up a symbol starting from current scope.
-    /// </summary>
-    public Symbol? LookupSymbol(string name) {
-        return _currentScope.LookupSymbol(name);
+    public Scope Current() {
+        return _stack[^1];
+    }
+    public Scope Root() {
+        return _stack[0];
     }
 }
 

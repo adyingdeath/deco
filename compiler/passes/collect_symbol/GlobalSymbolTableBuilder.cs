@@ -6,17 +6,17 @@ namespace Deco.Compiler.Passes.Collect_Symbol;
 /// <summary>
 /// Pass to build the global symbol table by collecting global variable and
 /// function declarations.
-/// This pass populates the global scope with symbols.
+/// This pass populates the global symbol table with symbols.
 /// </summary>
-public class GlobalSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<object> {
-    private readonly SymbolTable _symbolTable = symbolTable;
+public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
+    private readonly Scope _symbolTable = symbolTable;
     private readonly List<string> _errors = [];
 
     public List<string> Errors => _errors;
 
     public object VisitProgram(ProgramNode node) {
-        // Set the global scope reference for the program node
-        node.Scope = _symbolTable.GlobalScope;
+        // Set the global symbol table reference for the program node
+        node.Scope = _symbolTable;
 
         // First, collect global variable definitions
         foreach (var varDef in node.VariableDefinitions) {
@@ -32,7 +32,7 @@ public class GlobalSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
     }
 
     public object VisitFunction(FunctionNode node) {
-        // For global scope, we only care about the function signature, not the body
+        // For global table, we only care about the function signature, not the body
         var returnType = TypeUtils.ParseType(node.ReturnType);
         var parameterTypes = node.Arguments
             .Select(arg => TypeUtils.ParseType(arg.Type)).ToList();

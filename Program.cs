@@ -37,6 +37,7 @@ class Program {
 int test1 = 0;
 void main(int a, string b) {
     for (int ab = 3 + 4;a < 5;a = a + 1 + 2) {
+        int c = test + test1;
         print(a + b + c);
     }
 }
@@ -52,13 +53,13 @@ void main(int a, string b) {
         var ast = astBuilder.Visit(tree);
 
         // Build symbol table
-        var symbolTable = new Deco.Types.SymbolTable();
+        var globalSymbolTable = new Deco.Types.Scope("global");
 
         // Collect symbols and build nested symbol table.
         // This includes two steps currently:
         // 1. Build global symbol table;
         // 2. Build scoped symbol table;
-        new Deco.Compiler.Passes.Collect_Symbol.Group(symbolTable).Visit(ast);
+        new Deco.Compiler.Passes.Collect_Symbol.Group(globalSymbolTable).Visit(ast);
 
         var constant_folding_ast = new ConstantFoldingPass().Visit(ast);
 
