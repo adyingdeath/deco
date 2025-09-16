@@ -35,8 +35,8 @@ class Program {
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
 int test1 = 0;
-void main() {
-    for (int a = 3 + 4;a < 5;a = a + 1 + 2) {
+void main(int a, string b) {
+    for (int ab = 3 + 4;a < 5;a = a + 1 + 2) {
         print(a + b + c);
     }
 }
@@ -50,6 +50,15 @@ void main() {
 
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
+
+        // Build symbol table
+        var symbolTable = new Deco.Types.SymbolTable();
+
+        // Collect symbols and build nested symbol table.
+        // This includes two steps currently:
+        // 1. Build global symbol table;
+        // 2. Build scoped symbol table;
+        new Deco.Compiler.Passes.Collect_Symbol.Group(symbolTable).Visit(ast);
 
         var constant_folding_ast = new ConstantFoldingPass().Visit(ast);
 
