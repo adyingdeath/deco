@@ -28,6 +28,9 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
         _symbolTable.EnterScope($"function {node.Name}");
 
         try {
+            // Set the scope reference for this function node
+            node.Scope = _symbolTable.CurrentScope;
+
             // Add function parameters to scope
             foreach (var arg in node.Arguments) {
                 var argType = TypeUtils.ParseType(arg.Type);
@@ -59,6 +62,9 @@ public class ScopedSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
         _symbolTable.EnterScope("block");
 
         try {
+            // Set the scope reference for this block node
+            node.Scope = _symbolTable.CurrentScope;
+
             foreach (var stmt in node.Statements) {
                 stmt.Accept(this);
             }

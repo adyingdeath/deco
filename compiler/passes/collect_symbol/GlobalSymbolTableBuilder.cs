@@ -15,6 +15,9 @@ public class GlobalSymbolTableBuilder(SymbolTable symbolTable) : IAstVisitor<obj
     public List<string> Errors => _errors;
 
     public object VisitProgram(ProgramNode node) {
+        // Set the global scope reference for the program node
+        node.Scope = _symbolTable.GlobalScope;
+
         // First, collect global variable definitions
         foreach (var varDef in node.VariableDefinitions) {
             varDef.Accept(this);
