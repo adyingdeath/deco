@@ -3,30 +3,53 @@ namespace Deco.Types;
 /// <summary>
 /// Abstract base class for all types in the Deco language.
 /// </summary>
-public abstract class Type;
+public abstract class Type(string name) {
+    public string Name { get; } = name;
+    public abstract bool Equals(Type type);
+}
 
 /// <summary>
 /// Represents primitive types like int, bool, string, void.
 /// </summary>
-public class PrimitiveType(string name) : Type {
-    public string Name { get; } = name;
-
+public class PrimitiveType(string name) : Type(name) {
     public override string ToString() => Name;
+    public override bool Equals(Type type) {
+        if (type is PrimitiveType primitiveType) {
+            return Name.Equals(primitiveType.Name);
+        }
+        return false;
+    }
 }
 
 /// <summary>
 /// Represents function types with return type and parameter types.
 /// </summary>
-public class FunctionType(Type returnType, List<Type> parameterTypes) : Type {
+public class FunctionType(Type returnType, List<Type> parameterTypes) : Type("function") {
     public Type ReturnType { get; } = returnType;
     public List<Type> ParameterTypes { get; } = parameterTypes ?? [];
 
     public override string ToString() => $"{ReturnType}({string.Join(", ", ParameterTypes)})";
+    public override bool Equals(Type type) {
+        if (type is FunctionType functionType) {
+            if (!ReturnType.Equals(type))
+                return false;
+            if (parameterTypes.Count != functionType.ParameterTypes.Count)
+                return false;
+            for (int i = ParameterTypes.Count - 1; i >= 0; i--) {
+                if (!ParameterTypes[i].Equals(functionType))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
 }
 
-public class UnresolvedType(string name) : Type {
-    public string Name { get; } = name;
+public class UnresolvedType(string name) : Type(name) {
     public override string ToString() => Name;
+    public override bool Equals(Type type) {
+        return Name.Equals(type.Name);
+    }
 }
 
 /// <summary>
