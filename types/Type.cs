@@ -31,12 +31,12 @@ public class FunctionType(Type returnType, List<Type> parameterTypes) : Type("fu
     public override string ToString() => $"{ReturnType}({string.Join(", ", ParameterTypes)})";
     public override bool Equals(Type type) {
         if (type is FunctionType functionType) {
-            if (!ReturnType.Equals(type))
+            if (!ReturnType.Equals(functionType.ReturnType))
                 return false;
             if (parameterTypes.Count != functionType.ParameterTypes.Count)
                 return false;
-            for (int i = ParameterTypes.Count - 1; i >= 0; i--) {
-                if (!ParameterTypes[i].Equals(functionType))
+            for (int i = 0; i < ParameterTypes.Count; i++) {
+                if (!ParameterTypes[i].Equals(functionType.ParameterTypes[i]))
                     return false;
             }
             return true;
