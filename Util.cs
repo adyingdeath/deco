@@ -219,17 +219,20 @@ public static class Util {
     }
 }
 
-public static class Base36Counter {
+public class Base36Counter {
     private static readonly char[] _chars = "0123456789abcdefghijklmnopqrstuvwxyz".ToCharArray();
     private static readonly char[] _buffer = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
-    private static int _startIndex = 15; // Start Index of valid digit
+    private int _startIndex = 15; // Start Index of valid digit
 
     /// <summary>
     /// Gets the next base-36 string. (Without leading zeros)
     /// </summary>
+    /// <param name="width">default 0. If you need the leading zeros, you should
+    /// provide the total width of the base-36 string</param>
     /// <returns>The next base-36 string.</returns>
-    /// <exception cref="OverflowException">Thrown when the 36-base counter has reached its maximum value.</exception>
-    public static string Next() {
+    /// <exception cref="OverflowException">Thrown when the 36-base counter has
+    /// reached its maximum value.</exception>
+    public string Next(int width = 0) {
         // Increment from the last digit
         for (int i = 15; i >= 0; i--) {
             char c = _buffer[i];
@@ -253,7 +256,9 @@ public static class Base36Counter {
                     _startIndex = i;
 
                 // Return the string without leading zeros
-                return new string(_buffer, _startIndex, 16 - _startIndex);
+                return width == 0
+                    ? new string(_buffer, _startIndex, 16 - _startIndex)
+                    : new string(_buffer, 16 - width, width);
             }
 
             // Carry-over needed, current digit resets to '0'
@@ -267,7 +272,7 @@ public static class Base36Counter {
     /// <summary>
     /// Resets the counter to its initial state ("0").
     /// </summary>
-    public static void Reset() {
+    public void Reset() {
         for (int i = 0; i < 16; i++) {
             _buffer[i] = '0';
         }

@@ -8,6 +8,7 @@ public class Symbol(
     int line = 0, int column = 0
 ) {
     public string Name { get; } = name;
+    public string Code { get; set; } = "";
     public Type Type { get; } = type;
     public SymbolKind Kind { get; } = kind;
     public int Line { get; } = line;
