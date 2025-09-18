@@ -31,6 +31,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
             try {
                 node.Scope.AddSymbol(new Symbol(
                     arg.Name,
+                    Compiler.variableCodeGen.Next(),
                     argType,
                     SymbolKind.Parameter,
                     arg.Line,
@@ -75,6 +76,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
         try {
             scope.Current().AddSymbol(new Symbol(
                 node.Name,
+                Compiler.variableCodeGen.Next(),
                 varDefType,
                 SymbolKind.Variable,
                 node.Line,

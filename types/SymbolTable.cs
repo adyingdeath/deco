@@ -4,11 +4,11 @@ namespace Deco.Types;
 /// Represents a symbol in the symbol table.
 /// </summary>
 public class Symbol(
-    string name, Type type, SymbolKind kind,
+    string name, string code, Type type, SymbolKind kind,
     int line = 0, int column = 0
 ) {
     public string Name { get; } = name;
-    public string Code { get; set; } = "";
+    public string Code { get; set; } = code;
     public Type Type { get; } = type;
     public SymbolKind Kind { get; } = kind;
     public int Line { get; } = line;

@@ -10,7 +10,7 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
         var newRight = (ExpressionNode)Visit(node.Right);
 
         if (!(newLeft is IdentifierNode || newLeft is LiteralNode)) {
-            var tempName = Base36Counter.Next();
+            var tempName = Compiler.variableCodeGen.Next();
             CurrentStatements.Add(
                 new VariableDefinitionNode("[temp]", tempName, newLeft)
             );
@@ -18,7 +18,7 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
         }
 
         if (!(newRight is IdentifierNode || newRight is LiteralNode)) {
-            var tempName = Base36Counter.Next();
+            var tempName = Compiler.variableCodeGen.Next();
             CurrentStatements.Add(
                 new VariableDefinitionNode("[temp]", tempName, newRight)
             );

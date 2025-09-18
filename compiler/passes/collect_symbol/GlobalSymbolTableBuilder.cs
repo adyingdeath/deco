@@ -41,6 +41,7 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
         try {
             _symbolTable.AddSymbol(new Symbol(
                 node.Name,
+                Compiler.functionCodeGen.Next(8),
                 functionType,
                 SymbolKind.Function,
                 node.Line,
@@ -58,6 +59,7 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
         try {
             _symbolTable.AddSymbol(new Symbol(
                 node.Name,
+                Compiler.variableCodeGen.Next(),
                 symbolType,
                 SymbolKind.Variable,
                 node.Line,

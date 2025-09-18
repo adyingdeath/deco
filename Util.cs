@@ -221,7 +221,7 @@ public static class Util {
 
 public class Base36Counter {
     private static readonly char[] _chars = "0123456789abcdefghijklmnopqrstuvwxyz".ToCharArray();
-    private static readonly char[] _buffer = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
+    private readonly char[] _buffer = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'];
     private int _startIndex = 15; // Start Index of valid digit
 
     /// <summary>

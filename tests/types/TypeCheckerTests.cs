@@ -16,10 +16,10 @@ public class TypeCheckerTests
     {
         // Create a root symbol table with some predefined symbols
         _symbolTable = new Scope("global");
-        _symbolTable.AddSymbol(new Symbol("x", TypeUtils.IntType, SymbolKind.Variable, 1, 0));
-        _symbolTable.AddSymbol(new Symbol("y", TypeUtils.BoolType, SymbolKind.Variable, 1, 1));
-        _symbolTable.AddSymbol(new Symbol("foo", new FunctionType(TypeUtils.IntType, [TypeUtils.IntType]), SymbolKind.Function, 2, 0));
-        _symbolTable.AddSymbol(new Symbol("bar", new FunctionType(TypeUtils.BoolType, [TypeUtils.IntType, TypeUtils.StringType]), SymbolKind.Function, 3, 0));
+        _symbolTable.AddSymbol(new Symbol("x", "", TypeUtils.IntType, SymbolKind.Variable, 1, 0));
+        _symbolTable.AddSymbol(new Symbol("y", "", TypeUtils.BoolType, SymbolKind.Variable, 1, 1));
+        _symbolTable.AddSymbol(new Symbol("foo", "", new FunctionType(TypeUtils.IntType, [TypeUtils.IntType]), SymbolKind.Function, 2, 0));
+        _symbolTable.AddSymbol(new Symbol("bar", "", new FunctionType(TypeUtils.BoolType, [TypeUtils.IntType, TypeUtils.StringType]), SymbolKind.Function, 3, 0));
 
         _typeChecker = new TypeChecker(_symbolTable);
     }
