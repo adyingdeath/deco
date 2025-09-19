@@ -30,7 +30,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
             var argType = TypeUtils.ParseType(arg.Type);
             try {
                 node.Scope.AddSymbol(new Symbol(
-                    arg.Name,
+                    arg.Name.Name,
                     Compiler.variableCodeGen.Next(),
                     argType,
                     SymbolKind.Parameter,

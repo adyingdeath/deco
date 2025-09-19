@@ -87,9 +87,14 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitArgument(DecoParser.ArgumentContext context) {
+        var name = new IdentifierNode(
+            context.name.Text,
+            context.name.Line,
+            context.name.Column
+        );
         return new ArgumentNode(
             context.type.Text,
-            context.name.Text,
+            name,
             context.Start.Line,
             context.Start.Column
         );

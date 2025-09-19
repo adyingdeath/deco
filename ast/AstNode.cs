@@ -13,6 +13,10 @@ public abstract class AstNode(int line = 0, int column = 0) {
     public Scope? Scope { get; set; }
 
     public abstract T Accept<T>(IAstVisitor<T> visitor);
+    public virtual AstNode CloneContext(AstNode node) {
+        Scope = node.Scope;
+        return this;
+    }
 }
 
 public interface IAstVisitor<T> {

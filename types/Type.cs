@@ -28,7 +28,7 @@ public class FunctionType(IType returnType, List<IType> parameterTypes) : IType(
     public IType ReturnType { get; } = returnType;
     public List<IType> ParameterTypes { get; } = parameterTypes ?? [];
 
-    public override string ToString() => $"{ReturnType}({string.Join(", ", ParameterTypes)})";
+    public override string ToString() => $"({string.Join(", ", ParameterTypes)}) => {ReturnType}";
     public override bool Equals(IType type) {
         if (type is FunctionType functionType) {
             if (!ReturnType.Equals(functionType.ReturnType))

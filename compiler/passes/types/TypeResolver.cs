@@ -27,7 +27,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newVarDefs = node.VariableDefinitions.Select(v => (VariableDefinitionNode)Visit(v)).ToList();
         var newFunctions = node.Functions.Select(f => (FunctionNode)Visit(f)).ToList();
 
-        return new ProgramNode(newVarDefs, newFunctions, node.Line, node.Column);
+        return new ProgramNode(
+            newVarDefs, newFunctions, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitFunction(FunctionNode node) {
@@ -36,6 +38,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
         // Resolve its name's type
         var newName = (IdentifierNode)Visit(node.Name);
+        var returnType = ResolveUnresolvedType(node.ReturnType);
         var newModifiers = node.Modifiers.Select(m => (ModifierNode)Visit(m)).ToList();
         var newArguments = node.Arguments.Select(a => (ArgumentNode)Visit(a)).ToList();
         var newBody = (BlockNode)Visit(node.Body);
@@ -43,14 +46,19 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         _functionStack.Pop();
         _scope.PopScope();
 
-        return new FunctionNode(newModifiers, node.ReturnType, newName, newArguments, newBody, node.Line, node.Column);
+        return new FunctionNode(
+            newModifiers, returnType, newName, newArguments, newBody,
+            node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitBlock(BlockNode node) {
         _scope.PushScope(node.Scope);
         var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
         _scope.PopScope();
-        return new BlockNode(newStatements, node.Line, node.Column);
+        return new BlockNode(
+            newStatements, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitVariableDefinition(VariableDefinitionNode node) {
@@ -86,7 +94,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         }
 
         // Return new node with resolved identifier
-        return new VariableDefinitionNode(newName, newInit, node.Line, node.Column);
+        return new VariableDefinitionNode(
+            newName, newInit, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitAssignment(AssignmentNode node) {
@@ -97,7 +107,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             _errors.Add($"Type mismatch in assignment to '{node.Variable}' at line {node.Line}: expected {newVariable.Type}, got {newExpression.Type}");
         }
 
-        return new AssignmentNode(newVariable, newExpression, node.Line, node.Column);
+        return new AssignmentNode(
+            newVariable, newExpression, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitReturn(ReturnNode node) {
@@ -117,7 +129,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             }
         }
 
-        return new ReturnNode(newExpression, node.Line, node.Column);
+        return new ReturnNode(
+            newExpression, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitIf(IfNode node) {
@@ -134,7 +148,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             _errors.Add($"If condition must be bool type at line {node.Condition.Line}: got {newCondition.Type}");
         }
 
-        return new IfNode(newCondition, newThenBlock, newElseBlock, node.Line, node.Column);
+        return new IfNode(
+            newCondition, newThenBlock, newElseBlock, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitWhile(WhileNode node) {
@@ -145,7 +161,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             _errors.Add($"While condition must be bool type at line {node.Condition.Line}: got {newCondition.Type}");
         }
 
-        return new WhileNode(newCondition, newBody, node.Line, node.Column);
+        return new WhileNode(
+            newCondition, newBody, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitFor(ForNode node) {
@@ -172,7 +190,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newBody = (BlockNode)Visit(node.Body);
         _scope.PopScope();
 
-        return new ForNode(newInit, newCondition, newIter, newBody, node.Line, node.Column);
+        return new ForNode(
+            newInit, newCondition, newIter, newBody, node.Line, node.Column
+        ).CloneContext(node);
     }
 
     public override AstNode VisitBinaryOp(BinaryOpNode node) {
@@ -186,7 +206,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newNode = new BinaryOpNode(newLeft, node.Operator, newRight, node.Line, node.Column);
         newNode.Type = resultType;
 
-        return newNode;
+        return newNode.CloneContext(node);
     }
 
     public override AstNode VisitUnaryOp(UnaryOpNode node) {
@@ -199,7 +219,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newNode = new UnaryOpNode(node.Operator, newOperand, node.Line, node.Column);
         newNode.Type = resultType;
 
-        return newNode;
+        return newNode.CloneContext(node);
     }
 
     public override AstNode VisitFunctionCall(FunctionCallNode node) {
@@ -230,7 +250,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newNode = new FunctionCallNode(newName, newArguments, node.Line, node.Column);
         newNode.Type = returnType;
 
-        return newNode;
+        return newNode.CloneContext(node);
     }
 
     public override AstNode VisitIdentifier(IdentifierNode node) {
@@ -244,7 +264,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newNode = new IdentifierNode(node.Name, node.Line, node.Column);
         newNode.Type = symbol.Type;
 
-        return newNode;
+        return newNode.CloneContext(node);
     }
 
     public override AstNode VisitLiteral(LiteralNode node) {
@@ -364,10 +384,15 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
         return type;
     }
+    public override AstNode VisitArgument(ArgumentNode node) {
+        var newName = (IdentifierNode)Visit(node.Name);
+        return new ArgumentNode(
+            node.Type, newName, node.Line, node.Column
+        ).CloneContext(node);
+    }
 
     // Stub implementations for other nodes
     public override AstNode VisitModifier(ModifierNode node) => node;
-    public override AstNode VisitArgument(ArgumentNode node) => node;
     public override AstNode VisitExpressionStatement(ExpressionStatementNode node) =>
         new ExpressionStatementNode((ExpressionNode)Visit(node.Expression), node.Line, node.Column);
     public override AstNode VisitCommand(CommandNode node) => node;
