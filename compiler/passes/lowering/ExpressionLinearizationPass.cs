@@ -1,7 +1,6 @@
 using Deco.Ast;
-using Deco.Types;
 
-namespace Deco.Compiler.Passes;
+namespace Deco.Compiler.Passes.Lowering;
 
 public class ExpressionLinearizationPass : AstTransformVisitor {
     private readonly List<StatementNode> CurrentStatements = [];

@@ -1,8 +1,7 @@
 using Deco.Ast;
 using Deco.Types;
-using System;
 
-namespace Deco.Compiler.Passes;
+namespace Deco.Compiler.Passes.Lowering;
 
 /// <summary>
 /// A transformation pass that performs constant folding.
@@ -60,7 +59,9 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
             // Other combinations cannot be folded
             default:
-                return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+                var newNode = (BinaryOpNode)new BinaryOpNode(left, original.Operator, right, original.Line, original.Column).CloneContext(original);
+                newNode.Type = original.Type;
+                return newNode;
         }
     }
 

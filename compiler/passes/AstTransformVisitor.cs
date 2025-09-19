@@ -108,7 +108,10 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
             node.Initialization == null ?
             null :
             (StatementNode)Visit(node.Initialization);
-        var newCondition = (ExpressionNode)Visit(node.Condition);
+        var newCondition =
+            node.Condition == null
+            ? null
+            : (ExpressionNode)Visit(node.Condition);
         var newIter =
             node.Iteration == null ?
             null :
@@ -159,9 +162,11 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     public virtual AstNode VisitBinaryOp(BinaryOpNode node) {
         var newLeft = (ExpressionNode)Visit(node.Left);
         var newRight = (ExpressionNode)Visit(node.Right);
-        return new BinaryOpNode(
+        var newNode = (BinaryOpNode)new BinaryOpNode(
             newLeft, node.Operator, newRight, node.Line, node.Column
         ).CloneContext(node);
+        newNode.Type = node.Type;
+        return newNode;
     }
 
     public virtual AstNode VisitUnaryOp(UnaryOpNode node) {

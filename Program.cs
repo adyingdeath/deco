@@ -1,7 +1,7 @@
 using Antlr4.Runtime;
 using Deco.Ast;
 using Deco.Compiler;
-using Deco.Compiler.Passes;
+using Deco.Compiler.Passes.Lowering;
 
 class Program {
     static void Main(string[] args) {

@@ -12,8 +12,8 @@ public class Group(Scope symbolTable) {
     public void Visit(AstNode astNode) {
         var gstBuilder = new GlobalSymbolTableBuilder(symbolTable);
         var sstBuilder = new ScopedSymbolTableBuilder(symbolTable);
-        gstBuilder.VisitProgram((ProgramNode)astNode);
-        sstBuilder.VisitProgram((ProgramNode)astNode);
+        astNode.Accept(gstBuilder);
+        astNode.Accept(sstBuilder);
         if (gstBuilder.Errors.Count != 0) {
             Console.WriteLine("Global symbol table errors:");
             foreach (var error in gstBuilder.Errors) {
@@ -28,7 +28,7 @@ public class Group(Scope symbolTable) {
         }
 
         var usageChecker = new IdentifierUsageChecker(symbolTable);
-        usageChecker.Visit(astNode);
+        astNode.Accept(usageChecker);
         if (usageChecker.Errors.Count != 0) {
             Console.WriteLine("Identifier usage errors:");
             foreach (var error in usageChecker.Errors) {
