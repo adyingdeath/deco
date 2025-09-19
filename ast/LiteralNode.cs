@@ -1,14 +1,10 @@
+using Deco.Types;
+
 namespace Deco.Ast;
 
-public enum LiteralType {
-    Number,
-    String,
-    Boolean,
-    Null
-}
-
-public class LiteralNode(LiteralType type, string value, int line = 0, int column = 0) : ExpressionNode(line, column) {
-    public LiteralType Type { get; } = type;
+public class LiteralNode(
+    IType type, string value, int line = 0, int column = 0
+) : ExpressionNode(type, line, column) {
     public string Value { get; } = value;
 
     public override T Accept<T>(IAstVisitor<T> visitor) {

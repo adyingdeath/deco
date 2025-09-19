@@ -1,4 +1,5 @@
 using Deco.Ast;
+using Deco.Types;
 using System;
 
 namespace Deco.Compiler.Passes;
@@ -33,14 +34,14 @@ public class ConstantFoldingPass : AstTransformVisitor {
     private AstNode FoldBinaryOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
         switch (original.Operator) {
             // Arithmetic operations (require both operands to be numbers)
-            case BinaryOperator.Add when left.Type == LiteralType.Number && right.Type == LiteralType.Number:
-            case BinaryOperator.Subtract when left.Type == LiteralType.Number && right.Type == LiteralType.Number:
-            case BinaryOperator.Multiply when left.Type == LiteralType.Number && right.Type == LiteralType.Number:
-            case BinaryOperator.Divide when left.Type == LiteralType.Number && right.Type == LiteralType.Number:
+            case BinaryOperator.Add when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
+            case BinaryOperator.Subtract when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
+            case BinaryOperator.Multiply when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
+            case BinaryOperator.Divide when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
                 return FoldArithmeticOp(original, left, right);
 
             // String concatenation (ADD applied to strings)
-            case BinaryOperator.Add when left.Type == LiteralType.String && right.Type == LiteralType.String:
+            case BinaryOperator.Add when left.Type.Equals(TypeUtils.StringType) && right.Type.Equals(TypeUtils.StringType):
                 return FoldStringConcatOp(original, left, right);
 
             // Comparison operations (require same types or compatible types)
@@ -53,8 +54,8 @@ public class ConstantFoldingPass : AstTransformVisitor {
                 return FoldComparisonOp(original, left, right);
 
             // Logical operations (require boolean operands)
-            case BinaryOperator.LogicalAnd when left.Type == LiteralType.Boolean && right.Type == LiteralType.Boolean:
-            case BinaryOperator.LogicalOr when left.Type == LiteralType.Boolean && right.Type == LiteralType.Boolean:
+            case BinaryOperator.LogicalAnd when left.Type.Equals(TypeUtils.BoolType) && right.Type.Equals(TypeUtils.BoolType):
+            case BinaryOperator.LogicalOr when left.Type.Equals(TypeUtils.BoolType) && right.Type.Equals(TypeUtils.BoolType):
                 return FoldLogicalOp(original, left, right);
 
             // Other combinations cannot be folded
@@ -81,10 +82,14 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
         if (result.HasValue) {
             // Handle integer results specially (avoid unnecessary decimal places)
-            string resultStr = result.Value % 1 == 0 ?
-                ((int)result.Value).ToString() :
-                result.Value.ToString();
-            return new LiteralNode(LiteralType.Number, resultStr, original.Line, original.Column);
+            bool isInteger = Math.Floor(result.Value) == result.Value;
+            string resultStr = isInteger
+                ? ((int)result.Value).ToString()
+                : result.Value.ToString();
+            return new LiteralNode(
+                isInteger ? TypeUtils.IntType : TypeUtils.FloatType, resultStr,
+                original.Line, original.Column
+            );
         }
 
         return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
@@ -94,64 +99,57 @@ public class ConstantFoldingPass : AstTransformVisitor {
         string leftStr = left.Value.Trim('"');
         string rightStr = right.Value.Trim('"');
         string concatenated = $"\"{leftStr}{rightStr}\"";
-        return new LiteralNode(LiteralType.String, concatenated, original.Line, original.Column);
+        return new LiteralNode(TypeUtils.StringType, concatenated, original.Line, original.Column);
     }
 
     private static AstNode FoldComparisonOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
         // Only fold comparisons between compatible types
-        if (left.Type != right.Type) {
+        if (!left.Type.Equals(right.Type)) {
             return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
         }
 
         bool result;
 
-        switch (left.Type) {
-            case LiteralType.Number:
-                if (!double.TryParse(left.Value, out var leftNum) ||
-                    !double.TryParse(right.Value, out var rightNum)) {
-                    return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
-                }
-
-                result = original.Operator switch {
-                    BinaryOperator.Equal => leftNum == rightNum,
-                    BinaryOperator.NotEqual => leftNum != rightNum,
-                    BinaryOperator.LessThan => leftNum < rightNum,
-                    BinaryOperator.LessThanOrEqual => leftNum <= rightNum,
-                    BinaryOperator.GreaterThan => leftNum > rightNum,
-                    BinaryOperator.GreaterThanOrEqual => leftNum >= rightNum,
-                    _ => false
-                };
-                break;
-
-            case LiteralType.Boolean:
-                if (!bool.TryParse(left.Value, out var leftBool) ||
-                    !bool.TryParse(right.Value, out var rightBool)) {
-                    return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
-                }
-
-                result = original.Operator switch {
-                    BinaryOperator.Equal => leftBool == rightBool,
-                    BinaryOperator.NotEqual => leftBool != rightBool,
-                    _ => false // Other comparisons don't make sense for booleans
-                };
-                break;
-
-            case LiteralType.String:
-                string leftStr = left.Value.Trim('"');
-                string rightStr = right.Value.Trim('"');
-
-                result = original.Operator switch {
-                    BinaryOperator.Equal => leftStr == rightStr,
-                    BinaryOperator.NotEqual => leftStr != rightStr,
-                    _ => false // Other comparisons not supported for strings
-                };
-                break;
-
-            default:
+        if (TypeUtils.IsNumeric(left.Type)) {
+            if (!double.TryParse(left.Value, out var leftNum) ||
+                !double.TryParse(right.Value, out var rightNum)) {
                 return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            }
+
+            result = original.Operator switch {
+                BinaryOperator.Equal => leftNum == rightNum,
+                BinaryOperator.NotEqual => leftNum != rightNum,
+                BinaryOperator.LessThan => leftNum < rightNum,
+                BinaryOperator.LessThanOrEqual => leftNum <= rightNum,
+                BinaryOperator.GreaterThan => leftNum > rightNum,
+                BinaryOperator.GreaterThanOrEqual => leftNum >= rightNum,
+                _ => false
+            };
+        } else if (left.Type.Equals(TypeUtils.BoolType)) {
+            if (!bool.TryParse(left.Value, out var leftBool) ||
+                !bool.TryParse(right.Value, out var rightBool)) {
+                return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            }
+
+            result = original.Operator switch {
+                BinaryOperator.Equal => leftBool == rightBool,
+                BinaryOperator.NotEqual => leftBool != rightBool,
+                _ => false // Other comparisons don't make sense for booleans
+            };
+        } else if (left.Type.Equals(TypeUtils.StringType)) {
+            string leftStr = left.Value.Trim('"');
+            string rightStr = right.Value.Trim('"');
+
+            result = original.Operator switch {
+                BinaryOperator.Equal => leftStr == rightStr,
+                BinaryOperator.NotEqual => leftStr != rightStr,
+                _ => false // Other comparisons not supported for strings
+            };
+        } else {
+            return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
         }
 
-        return new LiteralNode(LiteralType.Boolean, result.ToString().ToLower(), original.Line, original.Column);
+        return new LiteralNode(TypeUtils.BoolType, result.ToString().ToLower(), original.Line, original.Column);
     }
 
     private static AstNode FoldLogicalOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
@@ -166,7 +164,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
             _ => throw new InvalidOperationException("Unexpected operator in logical folding")
         };
 
-        return new LiteralNode(LiteralType.Boolean, result.ToString().ToLower(), original.Line, original.Column);
+        return new LiteralNode(TypeUtils.BoolType, result.ToString().ToLower(), original.Line, original.Column);
     }
 
     public override AstNode VisitUnaryOp(UnaryOpNode node) {
@@ -185,20 +183,24 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
     private static AstNode FoldUnaryOp(UnaryOpNode original, LiteralNode operand) {
         switch (original.Operator) {
-            case UnaryOperator.Negate when operand.Type == LiteralType.Number:
+            case UnaryOperator.Negate when TypeUtils.IsNumeric(operand.Type):
                 if (double.TryParse(operand.Value, out var num)) {
                     double negated = -num;
-                    string resultStr = negated % 1 == 0 ?
-                        ((int)negated).ToString() :
-                        negated.ToString();
-                    return new LiteralNode(LiteralType.Number, resultStr, original.Line, original.Column);
+                    bool isInteger = Math.Floor(negated) == negated;
+                    string resultStr = isInteger
+                        ? ((int)negated).ToString()
+                        : negated.ToString();
+                    return new LiteralNode(
+                        isInteger ? TypeUtils.IntType : TypeUtils.FloatType, resultStr,
+                        original.Line, original.Column
+                    );
                 }
                 break;
 
-            case UnaryOperator.LogicalNot when operand.Type == LiteralType.Boolean:
+            case UnaryOperator.LogicalNot when operand.Type.Equals(TypeUtils.BoolType):
                 if (bool.TryParse(operand.Value, out var boolVal)) {
                     bool negated = !boolVal;
-                    return new LiteralNode(LiteralType.Boolean, negated.ToString().ToLower(), original.Line, original.Column);
+                    return new LiteralNode(TypeUtils.BoolType, negated.ToString().ToLower(), original.Line, original.Column);
                 }
                 break;
         }

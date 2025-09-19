@@ -33,14 +33,11 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
 
     public object VisitFunction(FunctionNode node) {
         // For global table, we only care about the function signature, not the body
-        var returnType = TypeUtils.ParseType(node.ReturnType);
-        var parameterTypes = node.Arguments
-            .Select(arg => TypeUtils.ParseType(arg.Type)).ToList();
-        var functionType = new FunctionType(returnType, parameterTypes);
+        var functionType = new FunctionType(node.ReturnType, []);
 
         try {
             _symbolTable.AddSymbol(new Symbol(
-                node.Name,
+                node.Name.Name,
                 Compiler.functionCodeGen.Next(8),
                 functionType,
                 SymbolKind.Function,
@@ -55,12 +52,11 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
     }
 
     public object VisitVariableDefinition(VariableDefinitionNode node) {
-        var symbolType = TypeUtils.ParseType(node.Type);
         try {
             _symbolTable.AddSymbol(new Symbol(
-                node.Name,
+                node.Name.Name,
                 Compiler.variableCodeGen.Next(),
-                symbolType,
+                node.Type,
                 SymbolKind.Variable,
                 node.Line,
                 node.Column

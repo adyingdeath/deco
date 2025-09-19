@@ -1,4 +1,5 @@
 using Deco.Ast;
+using Deco.Types;
 
 namespace Deco.Compiler.Passes;
 
@@ -11,16 +12,22 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
 
         if (!(newLeft is IdentifierNode || newLeft is LiteralNode)) {
             var tempName = Compiler.variableCodeGen.Next();
+            var name = new IdentifierNode(
+                tempName, newLeft.Line, newLeft.Column
+            );
             CurrentStatements.Add(
-                new VariableDefinitionNode("[temp]", tempName, newLeft)
+                new VariableDefinitionNode(TypeUtils.VoidType, name, newLeft)
             );
             newLeft = new IdentifierNode(tempName);
         }
 
         if (!(newRight is IdentifierNode || newRight is LiteralNode)) {
             var tempName = Compiler.variableCodeGen.Next();
+            var name = new IdentifierNode(
+                tempName, newRight.Line, newRight.Column
+            );
             CurrentStatements.Add(
-                new VariableDefinitionNode("[temp]", tempName, newRight)
+                new VariableDefinitionNode(TypeUtils.VoidType, name, newRight)
             );
             newRight = new IdentifierNode(tempName);
         }

@@ -3,17 +3,17 @@ namespace Deco.Types;
 /// <summary>
 /// Abstract base class for all types in the Deco language.
 /// </summary>
-public abstract class Type(string name) {
+public abstract class IType(string name) {
     public string Name { get; } = name;
-    public abstract bool Equals(Type type);
+    public abstract bool Equals(IType type);
 }
 
 /// <summary>
 /// Represents primitive types like int, bool, string, void.
 /// </summary>
-public class PrimitiveType(string name) : Type(name) {
+public class PrimitiveType(string name) : IType(name) {
     public override string ToString() => Name;
-    public override bool Equals(Type type) {
+    public override bool Equals(IType type) {
         if (type is PrimitiveType primitiveType) {
             return Name.Equals(primitiveType.Name);
         }
@@ -24,12 +24,12 @@ public class PrimitiveType(string name) : Type(name) {
 /// <summary>
 /// Represents function types with return type and parameter types.
 /// </summary>
-public class FunctionType(Type returnType, List<Type> parameterTypes) : Type("function") {
-    public Type ReturnType { get; } = returnType;
-    public List<Type> ParameterTypes { get; } = parameterTypes ?? [];
+public class FunctionType(IType returnType, List<IType> parameterTypes) : IType("function") {
+    public IType ReturnType { get; } = returnType;
+    public List<IType> ParameterTypes { get; } = parameterTypes ?? [];
 
     public override string ToString() => $"{ReturnType}({string.Join(", ", ParameterTypes)})";
-    public override bool Equals(Type type) {
+    public override bool Equals(IType type) {
         if (type is FunctionType functionType) {
             if (!ReturnType.Equals(functionType.ReturnType))
                 return false;
@@ -45,9 +45,9 @@ public class FunctionType(Type returnType, List<Type> parameterTypes) : Type("fu
     }
 }
 
-public class UnresolvedType(string name) : Type(name) {
+public class UnresolvedType(string name) : IType(name) {
     public override string ToString() => Name;
-    public override bool Equals(Type type) {
+    public override bool Equals(IType type) {
         return Name.Equals(type.Name);
     }
 }
@@ -57,6 +57,7 @@ public class UnresolvedType(string name) : Type(name) {
 /// </summary>
 public static class TypeUtils {
     public static readonly PrimitiveType IntType = new("int");
+    public static readonly PrimitiveType FloatType = new("float");
     public static readonly PrimitiveType BoolType = new("bool");
     public static readonly PrimitiveType StringType = new("string");
     public static readonly PrimitiveType VoidType = new("void");
@@ -65,7 +66,7 @@ public static class TypeUtils {
     /// Parses a type from a string name. For primitives, returns the predefined instance.
     /// For unknown types, creates a new PrimitiveType.
     /// </summary>
-    public static Type ParseType(string typeName) {
+    public static IType ParseType(string typeName) {
         return typeName switch {
             "int" => IntType,
             "bool" => BoolType,
@@ -73,5 +74,9 @@ public static class TypeUtils {
             "void" => VoidType,
             _ => new UnresolvedType(typeName)
         };
+    }
+
+    public static bool IsNumeric(IType type) {
+        return type.Equals(IntType) || type.Equals(FloatType);
     }
 }

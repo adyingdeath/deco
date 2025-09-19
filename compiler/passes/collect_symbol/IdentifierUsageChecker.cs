@@ -58,7 +58,7 @@ public class IdentifierUsageChecker(Scope globalSymbolTable) : IAstVisitor<objec
 
     public object VisitAssignment(AssignmentNode node) {
         // Check if the variable on the left side is defined
-        CheckIdentifier(node.Variable, node.Line, node.Column);
+        CheckIdentifier(node.Variable.Name, node.Line, node.Column);
 
         // Check the right side expression
         node.Expression.Accept(this);
@@ -112,7 +112,7 @@ public class IdentifierUsageChecker(Scope globalSymbolTable) : IAstVisitor<objec
 
     public object VisitFunctionCall(FunctionCallNode node) {
         // Check if the function name is defined
-        CheckIdentifier(node.Name, node.Line, node.Column);
+        CheckIdentifier(node.Name.Name, node.Line, node.Column);
 
         // Check arguments
         foreach (var arg in node.Arguments) {

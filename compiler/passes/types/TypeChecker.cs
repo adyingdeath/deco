@@ -8,7 +8,7 @@ namespace Deco.Compiler.Passes.Types;
 /// This pass traverses the AST and verifies type compatibility for assignments,
 /// function call arguments, return statements, and expressions.
 /// </summary>
-public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type> {
+public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.IType> {
     private readonly ScopeStack _scope = new(globalSymbolTable);
     private readonly Stack<FunctionNode> _functionStack = new();
     private readonly List<string> _errors = [];
@@ -19,7 +19,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         astNode.Accept(this);
     }
 
-    public Deco.Types.Type VisitProgram(ProgramNode node) {
+    public IType VisitProgram(ProgramNode node) {
         // Visit global variable definitions
         foreach (var varDef in node.VariableDefinitions) {
             varDef.Accept(this);
@@ -33,7 +33,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitFunction(FunctionNode node) {
+    public IType VisitFunction(FunctionNode node) {
         _scope.PushScope(node.Scope);
         _functionStack.Push(node);
 
@@ -44,7 +44,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitBlock(BlockNode node) {
+    public IType VisitBlock(BlockNode node) {
         _scope.PushScope(node.Scope);
         foreach (var stmt in node.Statements) {
             stmt.Accept(this);
@@ -53,9 +53,9 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitVariableDefinition(VariableDefinitionNode node) {
+    public IType VisitVariableDefinition(VariableDefinitionNode node) {
+        var expectedType = node.Type;
         // Check if the type annotation matches the initial value type
-        var expectedType = TypeUtils.ParseType(node.Type);
         if (node.InitialValue != null) {
             var actualType = node.InitialValue.Accept(this);
             if (!AreTypesCompatible(actualType, expectedType)) {
@@ -65,8 +65,8 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitAssignment(AssignmentNode node) {
-        var leftType = GetVariableType(node.Variable);
+    public IType VisitAssignment(AssignmentNode node) {
+        var leftType = node.Variable.Type;
         if (leftType == null) {
             _errors.Add($"Undefined variable '{node.Variable}' in assignment at line {node.Line}");
             return null!;
@@ -79,14 +79,14 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitReturn(ReturnNode node) {
+    public IType VisitReturn(ReturnNode node) {
         if (_functionStack.Count == 0) {
             _errors.Add($"Return statement outside of function at line {node.Line}");
             return null!;
         }
 
         var currentFunction = _functionStack.Peek();
-        var expectedReturnType = TypeUtils.ParseType(currentFunction.ReturnType);
+        var expectedReturnType = currentFunction.ReturnType;
         if (node.Expression == null) {
             // Return without expression (should be void)
             if (!(expectedReturnType is PrimitiveType pt && pt.Name == "void")) {
@@ -101,7 +101,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitIf(IfNode node) {
+    public IType VisitIf(IfNode node) {
         var conditionType = node.Condition.Accept(this);
         var boolType = TypeUtils.BoolType;
         if (!AreTypesCompatible(conditionType, boolType)) {
@@ -113,7 +113,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitWhile(WhileNode node) {
+    public IType VisitWhile(WhileNode node) {
         var conditionType = node.Condition.Accept(this);
         var boolType = TypeUtils.BoolType;
         if (!AreTypesCompatible(conditionType, boolType)) {
@@ -124,7 +124,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitFor(ForNode node) {
+    public IType VisitFor(ForNode node) {
         _scope.PushScope(node.Scope);
 
         if (node.Initialization != null) {
@@ -148,8 +148,8 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return null!;
     }
 
-    public Deco.Types.Type VisitFunctionCall(FunctionCallNode node) {
-        var symbol = _scope.Current().LookupSymbol(node.Name);
+    public IType VisitFunctionCall(FunctionCallNode node) {
+        var symbol = _scope.Current().LookupSymbol(node.Name.Name);
         if (symbol == null) {
             _errors.Add($"Undefined function '{node.Name}' at line {node.Line}");
             return TypeUtils.VoidType; // Return void to avoid further errors
@@ -176,7 +176,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return funcType.ReturnType;
     }
 
-    public Deco.Types.Type VisitBinaryOp(BinaryOpNode node) {
+    public IType VisitBinaryOp(BinaryOpNode node) {
         var leftType = node.Left.Accept(this);
         var rightType = node.Right.Accept(this);
 
@@ -230,7 +230,7 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         }
     }
 
-    public Deco.Types.Type VisitUnaryOp(UnaryOpNode node) {
+    public IType VisitUnaryOp(UnaryOpNode node) {
         var operandType = node.Operand.Accept(this);
 
         switch (node.Operator) {
@@ -254,15 +254,11 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         }
     }
 
-    public Deco.Types.Type VisitLiteral(LiteralNode node) {
-        return node.Type switch {
-            LiteralType.String => TypeUtils.StringType,
-            LiteralType.Boolean => TypeUtils.BoolType,
-            _ => TypeUtils.IntType, // Number and Null default to int
-        };
+    public IType VisitLiteral(LiteralNode node) {
+        return node.Type;
     }
 
-    public Deco.Types.Type VisitIdentifier(IdentifierNode node) {
+    public IType VisitIdentifier(IdentifierNode node) {
         var symbol = _scope.Current().LookupSymbol(node.Name);
         if (symbol == null) {
             _errors.Add($"Undefined identifier '{node.Name}' at line {node.Line}");
@@ -271,31 +267,31 @@ public class TypeChecker(Scope globalSymbolTable) : IAstVisitor<Deco.Types.Type>
         return symbol.Type;
     }
 
-    private Deco.Types.Type? GetVariableType(string name) {
+    private Deco.Types.IType? GetVariableType(string name) {
         var symbol = _scope.Current().LookupSymbol(name);
         return symbol?.Type;
     }
 
-    private static bool AreTypesCompatible(Deco.Types.Type actual, Deco.Types.Type expected) {
+    private static bool AreTypesCompatible(Deco.Types.IType actual, Deco.Types.IType expected) {
         return expected.Equals(actual);
     }
 
-    private static bool IsNumericType(Deco.Types.Type type) {
+    private static bool IsNumericType(Deco.Types.IType type) {
         return type is PrimitiveType pt && (pt.Name == "int");
     }
 
-    private static bool IsBoolType(Deco.Types.Type type) {
+    private static bool IsBoolType(Deco.Types.IType type) {
         return type is PrimitiveType pt && pt.Name == "bool";
     }
 
-    private static bool IsStringType(Deco.Types.Type type) {
+    private static bool IsStringType(Deco.Types.IType type) {
         return type is PrimitiveType pt && pt.Name == "string";
     }
 
     // Stub implementations for other nodes
-    public Deco.Types.Type VisitModifier(ModifierNode node) => null!;
-    public Deco.Types.Type VisitArgument(ArgumentNode node) => null!;
-    public Deco.Types.Type VisitExpressionStatement(ExpressionStatementNode node) => node.Expression.Accept(this);
-    public Deco.Types.Type VisitCommand(CommandNode node) => null!;
-    public Deco.Types.Type VisitFakeBlock(FakeBlockNode node) => null!;
+    public IType VisitModifier(ModifierNode node) => null!;
+    public IType VisitArgument(ArgumentNode node) => null!;
+    public IType VisitExpressionStatement(ExpressionStatementNode node) => node.Expression.Accept(this);
+    public IType VisitCommand(CommandNode node) => null!;
+    public IType VisitFakeBlock(FakeBlockNode node) => null!;
 }

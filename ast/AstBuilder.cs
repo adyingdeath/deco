@@ -1,4 +1,5 @@
 using Antlr4.Runtime.Tree;
+using Deco.Types;
 
 namespace Deco.Ast;
 
@@ -12,7 +13,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 varDefs.Add(varDef);
             }
         }
-    
+
         foreach (var functionContext in context.function()) {
             if (VisitFunction(functionContext) is FunctionNode function) {
                 functions.Add(function);
@@ -34,7 +35,13 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             }
         }
 
-        return new ModifierNode(context.name.Text, parameters, context.Start.Line, context.Start.Column);
+        var name = new IdentifierNode(
+            context.name.Text,
+            context.name.Line,
+            context.name.Column
+        );
+
+        return new ModifierNode(name, parameters, context.Start.Line, context.Start.Column);
     }
 
     public override AstNode VisitFunction(DecoParser.FunctionContext context) {
@@ -62,10 +69,16 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             throw new InvalidOperationException("Function must have a body");
         }
 
+        var name = new IdentifierNode(
+            context.name.Text,
+            context.name.Line,
+            context.name.Column
+        );
+
         return new FunctionNode(
             modifiers,
-            context.type.Text,
-            context.name.Text,
+            new UnresolvedType(context.type.Text),
+            name,
             arguments,
             body,
             context.Start.Line,
@@ -439,9 +452,15 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             initExpr = (ExpressionNode)Visit(context.expression());
         }
 
-        return new VariableDefinitionNode(
-            context.type.Text,
+        var name = new IdentifierNode(
             context.name.Text,
+            context.name.Line,
+            context.name.Column
+        );
+
+        return new VariableDefinitionNode(
+            new UnresolvedType(context.type.Text),
+            name,
             initExpr,
             context.Start.Line,
             context.Start.Column
@@ -449,12 +468,17 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     }
 
     public override AstNode VisitAssignment(DecoParser.AssignmentContext context) {
+        var variable = new IdentifierNode(
+            context.IDENTIFIER().GetText(),
+            context.IDENTIFIER().Symbol.Line,
+            context.IDENTIFIER().Symbol.Column
+        );
         var expression =
             Visit(context.expression()) as ExpressionNode
             ?? throw new InvalidOperationException("Assignment must have a valid expression");
 
         return new AssignmentNode(
-            context.IDENTIFIER().GetText(),
+            variable,
             expression,
             context.Start.Line,
             context.Start.Column
@@ -473,8 +497,14 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             }
         }
 
-        return new FunctionCallNode(
+        var function = new IdentifierNode(
             context.name.Text,
+            context.name.Line,
+            context.name.Column
+        );
+
+        return new FunctionCallNode(
+            function,
             arguments,
             context.Start.Line,
             context.Start.Column
@@ -484,7 +514,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
     public override AstNode VisitPrimary(DecoParser.PrimaryContext context) {
         if (context.NUMBER() != null) {
             return new LiteralNode(
-                LiteralType.Number,
+                TypeUtils.IntType,
                 context.NUMBER().GetText(),
                 context.Start.Line,
                 context.Start.Column
@@ -496,7 +526,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             // Remove quotes
             text = text[1..^1];
             return new LiteralNode(
-                LiteralType.String,
+                TypeUtils.StringType,
                 text,
                 context.Start.Line,
                 context.Start.Column
@@ -505,7 +535,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.TRUE() != null) {
             return new LiteralNode(
-                LiteralType.Boolean,
+                TypeUtils.BoolType,
                 "true",
                 context.Start.Line,
                 context.Start.Column
@@ -514,7 +544,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.FALSE() != null) {
             return new LiteralNode(
-                LiteralType.Boolean,
+                TypeUtils.BoolType,
                 "false",
                 context.Start.Line,
                 context.Start.Column

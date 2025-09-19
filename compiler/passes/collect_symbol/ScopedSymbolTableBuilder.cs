@@ -72,12 +72,11 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
     }
 
     public object VisitVariableDefinition(VariableDefinitionNode node) {
-        var varDefType = TypeUtils.ParseType(node.Type);
         try {
             scope.Current().AddSymbol(new Symbol(
-                node.Name,
+                node.Name.Name,
                 Compiler.variableCodeGen.Next(),
-                varDefType,
+                node.Type,
                 SymbolKind.Variable,
                 node.Line,
                 node.Column

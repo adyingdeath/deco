@@ -1,3 +1,5 @@
+using Deco.Types;
+
 namespace Deco.Ast;
 
 public enum BinaryOperator {
@@ -20,7 +22,10 @@ public enum BinaryOperator {
     LogicalOr
 }
 
-public class BinaryOpNode(ExpressionNode left, BinaryOperator op, ExpressionNode right, int line = 0, int column = 0) : ExpressionNode(line, column) {
+public class BinaryOpNode(
+    ExpressionNode left, BinaryOperator op, ExpressionNode right,
+    int line = 0, int column = 0
+) : ExpressionNode(TypeUtils.VoidType, line, column) {
     public ExpressionNode Left { get; } = left;
     public BinaryOperator Operator { get; } = op;
     public ExpressionNode Right { get; } = right;
