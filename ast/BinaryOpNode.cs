@@ -25,7 +25,7 @@ public enum BinaryOperator {
 public class BinaryOpNode(
     ExpressionNode left, BinaryOperator op, ExpressionNode right,
     int line = 0, int column = 0
-) : ExpressionNode(TypeUtils.VoidType, line, column) {
+) : ExpressionNode(line, column) {
     public ExpressionNode Left { get; } = left;
     public BinaryOperator Operator { get; } = op;
     public ExpressionNode Right { get; } = right;

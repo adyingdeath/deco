@@ -48,7 +48,15 @@ public class FunctionType(IType returnType, List<IType> parameterTypes) : IType(
 public class UnresolvedType(string name) : IType(name) {
     public override string ToString() => Name;
     public override bool Equals(IType type) {
-        return Name.Equals(type.Name);
+        // Unresolved types can only equal other unresolved types with same name,
+        // or primitive types with same name (for type resolution purposes)
+        if (type is UnresolvedType unresolved) {
+            return Name == unresolved.Name;
+        }
+        if (type is PrimitiveType primitive) {
+            return Name == primitive.Name;
+        }
+        return false;
     }
 }
 
@@ -61,6 +69,7 @@ public static class TypeUtils {
     public static readonly PrimitiveType BoolType = new("bool");
     public static readonly PrimitiveType StringType = new("string");
     public static readonly PrimitiveType VoidType = new("void");
+    public static readonly UnresolvedType UnknownType = new("<unknown>");
 
     /// <summary>
     /// Parses a type from a string name. For primitives, returns the predefined instance.
@@ -78,5 +87,12 @@ public static class TypeUtils {
 
     public static bool IsNumeric(IType type) {
         return type.Equals(IntType) || type.Equals(FloatType);
+    }
+
+    /// <summary>
+    /// Checks if a type is unresolved (either unknown or an unresolved type).
+    /// </summary>
+    public static bool IsUnresolved(IType type) {
+        return type is UnresolvedType || type == UnknownType;
     }
 }
