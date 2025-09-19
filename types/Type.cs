@@ -95,4 +95,15 @@ public static class TypeUtils {
     public static bool IsUnresolved(IType type) {
         return type is UnresolvedType || type == UnknownType;
     }
+
+    /// <summary>
+    /// Gets the resolved type if possible, otherwise returns the original type.
+    /// This is a safe way to attempt type resolution.
+    /// </summary>
+    public static IType GetResolvedType(IType type) {
+        if (type is UnresolvedType unresolved) {
+            return ParseType(unresolved.Name);
+        }
+        return type;
+    }
 }

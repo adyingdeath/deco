@@ -9,7 +9,7 @@ public class Symbol(
 ) {
     public string Name { get; } = name;
     public string Code { get; set; } = code;
-    public IType Type { get; } = type;
+    public IType Type { get; set; } = type;
     public SymbolKind Kind { get; } = kind;
     public int Line { get; } = line;
     public int Column { get; } = column;

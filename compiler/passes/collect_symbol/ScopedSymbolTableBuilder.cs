@@ -72,11 +72,14 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
     }
 
     public object VisitVariableDefinition(VariableDefinitionNode node) {
+        // Since VariableDefinitionNode no longer has Type, we need to find the expected type
+        // This can be done by looking for type annotations that should be provided separately
+        // For now, store as UnknownType and let type inference handle it
         try {
             scope.Current().AddSymbol(new Symbol(
                 node.Name.Name,
                 Compiler.variableCodeGen.Next(),
-                node.Type,
+                TypeUtils.UnknownType,
                 SymbolKind.Variable,
                 node.Line,
                 node.Column

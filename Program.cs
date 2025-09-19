@@ -34,11 +34,14 @@ class Program {
 
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
-int test1 = 0;
-void main(int a, string b) {
+void print(int p) {
+    int b = p + 1;
+}
+
+int test1 = 5;
+void main(int a, int b) {
     for (int ab = 3 + 4;a < 5;a = a + 1 + 2) {
-        int c = test + test1;
-        print(a + b + c);
+        print(a + b + test1);
     }
 }
         ");
@@ -61,7 +64,10 @@ void main(int a, string b) {
         // 2. Build scoped symbol table;
         new Deco.Compiler.Passes.Collect_Symbol.Group(globalSymbolTable).Visit(ast);
 
-        var constant_folding_ast = new ConstantFoldingPass().Visit(ast);
+        // Type check and resolve types
+        var typedAst = (ProgramNode)new Deco.Compiler.Passes.Types.Group(globalSymbolTable).Visit(ast);
+
+        var constant_folding_ast = new ConstantFoldingPass().Visit(typedAst);
 
         var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
 

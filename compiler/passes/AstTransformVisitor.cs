@@ -49,9 +49,9 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
         if (node.InitialValue != null) {
             newInit = (ExpressionNode)Visit(node.InitialValue);
         }
+        var newName = (IdentifierNode)Visit(node.Name);
         return new VariableDefinitionNode(
-            node.Type, node.Name, newInit,
-            node.Line, node.Column
+            newName, newInit, node.Line, node.Column
         );
     }
 

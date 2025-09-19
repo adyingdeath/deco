@@ -16,7 +16,7 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
                 tempName, newLeft.Line, newLeft.Column
             );
             CurrentStatements.Add(
-                new VariableDefinitionNode(TypeUtils.VoidType, name, newLeft)
+                new VariableDefinitionNode(name, newLeft)
             );
             newLeft = new IdentifierNode(tempName);
         }
@@ -27,7 +27,7 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
                 tempName, newRight.Line, newRight.Column
             );
             CurrentStatements.Add(
-                new VariableDefinitionNode(TypeUtils.VoidType, name, newRight)
+                new VariableDefinitionNode(name, newRight)
             );
             newRight = new IdentifierNode(tempName);
         }
@@ -41,9 +41,9 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
         if (node.InitialValue != null) {
             newInit = (ExpressionNode)Visit(node.InitialValue);
         }
+        var newName = (IdentifierNode)Visit(node.Name);
         var definition = new VariableDefinitionNode(
-            node.Type, node.Name, newInit,
-            node.Line, node.Column
+            newName, newInit, node.Line, node.Column
         );
         if (CurrentStatements.Count > 0) {
             var newStatements = CurrentStatements.Append(definition).ToList();

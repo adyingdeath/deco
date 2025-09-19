@@ -32,8 +32,16 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
     }
 
     public object VisitFunction(FunctionNode node) {
-        // For global table, we only care about the function signature, not the body
-        var functionType = new FunctionType(node.ReturnType, []);
+        // For global table, we use raw UnresolvedTypes - parsing will be done later in TypeResolver
+        var parameterTypes = new List<IType>();
+        foreach (var arg in node.Arguments) {
+            // arg.Type is the raw string name (e.g., "int"), keep as UnresolvedType
+            var unresolvedParamType = new UnresolvedType(arg.Type);
+            parameterTypes.Add(unresolvedParamType);
+        }
+
+        // node.ReturnType is UnresolvedType from AST builder
+        var functionType = new FunctionType(node.ReturnType, parameterTypes);
 
         try {
             _symbolTable.AddSymbol(new Symbol(
@@ -52,11 +60,14 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
     }
 
     public object VisitVariableDefinition(VariableDefinitionNode node) {
+        // We can't determine the variable type from VariableDefinitionNode alone anymore
+        // The type should be resolved from the initializer expression, but that's circular
+        // in the current pipeline. For now, we'll store UnknownType and let the type resolver handle it.
         try {
             _symbolTable.AddSymbol(new Symbol(
                 node.Name.Name,
                 Compiler.variableCodeGen.Next(),
-                node.Type,
+                TypeUtils.UnknownType,  // Will be resolved during type checking
                 SymbolKind.Variable,
                 node.Line,
                 node.Column

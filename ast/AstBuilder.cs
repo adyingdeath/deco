@@ -458,8 +458,8 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             context.name.Column
         );
 
+        // Create VariableDefinitionNode without type - type info is stored in symbol table
         return new VariableDefinitionNode(
-            new UnresolvedType(context.type.Text),
             name,
             initExpr,
             context.Start.Line,
