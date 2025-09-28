@@ -1,6 +1,7 @@
 using Antlr4.Runtime;
 using Deco.Ast;
 using Deco.Compiler;
+using Deco.Compiler.IR;
 using Deco.Compiler.Passes.Lowering;
 
 class Program {
@@ -72,6 +73,8 @@ void main(int a, int b) {
         var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
 
         var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
+
+        var irs = expression_linearization_ast.Accept(new IRBuilder());
 
         return;
 

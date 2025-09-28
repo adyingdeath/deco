@@ -90,6 +90,28 @@ public static class TypeUtils {
     }
 
     /// <summary>
+    /// This helper function is used to check if a given type should be stored
+    /// in scoreboard or not
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns>True if the type can be stored in scoreboard. False if it can
+    /// only be stored in storage or something else.</returns>
+    public static bool IsScoreboard(IType type) {
+        return type.Equals(IntType) || type.Equals(BoolType);
+    }
+
+    public static string GetInitialValue(IType type) {
+        if (type.Equals(IntType) || type.Equals(BoolType)) {
+            return "0";
+        } else if (type.Equals(FloatType)) {
+            return "0.0f";
+        } else if (type.Equals(StringType)) {
+            return "";
+        }
+        return "";
+    }
+
+    /// <summary>
     /// Checks if a type is unresolved (either unknown or an unresolved type).
     /// </summary>
     public static bool IsUnresolved(IType type) {
