@@ -33,23 +33,37 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
                 ));
             }
         });
+        node.Functions.ForEach((func) => {
+            _inst.AddRange(func.Accept(this) ?? []);
+        });
         return _inst;
     }
 
     public List<IRInstruction> VisitArgument(ArgumentNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitAssignment(AssignmentNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        // Evaluate the expression to get its operand
+        var valueOperand = node.Expression.Accept(evaluator.Inst(insts));
+        // Get the variable operand
+        var variableOperand = node.Variable.Accept(evaluator);
+        // Create move instruction
+        insts.Add(new MoveInstruction(valueOperand, variableOperand));
+        return insts;
     }
 
     public List<IRInstruction> VisitBinaryOp(BinaryOpNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitBlock(BlockNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        foreach (var statement in node.Statements) {
+            insts.AddRange(statement.Accept(this) ?? []);
+        }
+        return insts;
     }
 
     public List<IRInstruction> VisitCommand(CommandNode node) {
@@ -57,54 +71,139 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
     }
 
     public List<IRInstruction> VisitExpressionStatement(ExpressionStatementNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        // Evaluate the expression (instructions will be added to insts)
+        // The result is discarded as this is a statement
+        node.Expression.Accept(evaluator.Inst(insts));
+        return insts;
     }
 
     public List<IRInstruction> VisitFakeBlock(FakeBlockNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        foreach (var statement in node.Statements) {
+            insts.AddRange(statement.Accept(this) ?? []);
+        }
+        return insts;
     }
 
     public List<IRInstruction> VisitFor(ForNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitFunction(FunctionNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+
+        // Create function entry label
+        var functionLabel = new LabelInstruction(node.Name.Name);
+        insts.Add(functionLabel);
+
+        // Process function body
+        insts.AddRange(node.Body.Accept(this) ?? []);
+
+        return insts;
     }
 
     public List<IRInstruction> VisitFunctionCall(FunctionCallNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitIdentifier(IdentifierNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitIf(IfNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        // Evaluate condition
+        var conditionOperand = node.Condition.Accept(evaluator.Inst(insts));
+
+        // Create labels
+        var elseLabel = new LabelInstruction("__else_" + Compiler.variableCodeGen.Next());
+        var endLabel = new LabelInstruction("__endif_" + Compiler.variableCodeGen.Next());
+
+        // Check if condition is true. Jump to else unless condition is true
+        var oneOperand = new ConstantOperand("1");
+        var condition = new Condition(ConditionType.Equal, conditionOperand, oneOperand);
+
+        // Jump to else unless condition_operand == 1 (i.e. jump when condition is false)
+        insts.Add(new JumpUnlessInstruction(condition, elseLabel));
+
+        // Then block
+        insts.AddRange(node.ThenBlock.Accept(this) ?? []);
+
+        // If there's else block, jump over it
+        if (node.ElseBlock != null) {
+            insts.Add(new JumpInstruction(endLabel));
+        }
+
+        // Else label
+        insts.Add(elseLabel);
+
+        // Else block (if exists)
+        if (node.ElseBlock != null) {
+            insts.AddRange(node.ElseBlock.Accept(this) ?? []);
+            insts.Add(endLabel);
+        }
+
+        return insts;
     }
 
     public List<IRInstruction> VisitLiteral(LiteralNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitModifier(ModifierNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitReturn(ReturnNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+        if (node.Expression != null) {
+            // Evaluate the return value
+            var returnValueOperand = node.Expression.Accept(evaluator.Inst(insts));
+            insts.Add(new ReturnInstruction(returnValueOperand));
+        } else {
+            insts.Add(new ReturnInstruction());
+        }
+        return insts;
     }
 
     public List<IRInstruction> VisitUnaryOp(UnaryOpNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitVariableDefinition(VariableDefinitionNode node) {
-        return null!;
+        return [];
     }
 
     public List<IRInstruction> VisitWhile(WhileNode node) {
-        return null!;
+        var insts = new List<IRInstruction>();
+
+        // Create labels
+        var loopStartLabel = new LabelInstruction("__while_start_" + Compiler.variableCodeGen.Next());
+        var loopEndLabel = new LabelInstruction("__while_end_" + Compiler.variableCodeGen.Next());
+
+        // Start label
+        insts.Add(loopStartLabel);
+
+        // Evaluate condition
+        var conditionOperand = node.Condition.Accept(evaluator.Inst(insts));
+
+        // Check if condition is true. Jump to end unless condition is true
+        var oneOperand = new ConstantOperand("1");
+        var condition = new Condition(ConditionType.Equal, conditionOperand, oneOperand);
+
+        // Jump to end unless condition_operand == 1 (i.e. exit loop when condition is false)
+        insts.Add(new JumpUnlessInstruction(condition, loopEndLabel));
+
+        // Loop body
+        insts.AddRange(node.Body.Accept(this) ?? []);
+
+        // Jump back to start
+        insts.Add(new JumpInstruction(loopStartLabel));
+
+        // End label
+        insts.Add(loopEndLabel);
+
+        return insts;
     }
 }

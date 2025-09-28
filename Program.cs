@@ -56,6 +56,8 @@ void main(int a, int b) {
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
 
+        new Deco.Compiler.Passes.FindFatherPass().Visit(ast);
+
         // Build symbol table
         var globalSymbolTable = new Deco.Types.Scope("global");
 
@@ -72,9 +74,9 @@ void main(int a, int b) {
 
         var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
 
-        var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
+        // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
-        var irs = expression_linearization_ast.Accept(new IRBuilder());
+        var irs = for_loop_to_while_ast.Accept(new IRBuilder());
 
         return;
 

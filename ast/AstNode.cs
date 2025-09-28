@@ -11,11 +11,17 @@ public abstract class AstNode(int line = 0, int column = 0) {
     /// Used for reference checking and other analyses during AST traversal.
     /// </summary>
     public Scope? Scope { get; set; }
+    public AstNode? Parent { get; set; }
 
     public abstract T Accept<T>(IAstVisitor<T> visitor);
     public virtual AstNode CloneContext(AstNode node) {
         Scope = node.Scope;
+        Parent = node.Parent;
         return this;
+    }
+    public virtual Scope? FindScope() {
+        if (Scope != null) return Scope;
+        return Parent?.FindScope();
     }
 }
 

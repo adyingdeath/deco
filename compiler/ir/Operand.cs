@@ -1,3 +1,5 @@
+using Deco.Types;
+
 namespace Deco.Compiler.IR;
 
 public abstract class Operand { }
@@ -14,7 +16,13 @@ public class ConstantOperand(string value) : Operand {
 /// </summary>
 public abstract class VariableOperand(string code) : Operand {
     public string Code { get; } = code;
-    public override string ToString() => $"Variable({code})";
+    public override string ToString() => $"Variable({Code})";
+    public static Operand Create(Symbol symbol) {
+        if (TypeUtils.IsScoreboard(symbol.Type)) {
+            return new ScoreboardOperand(symbol.Code);
+        }
+        return new StorageOperand(symbol.Code);
+    }
 }
 
 /// <summary>

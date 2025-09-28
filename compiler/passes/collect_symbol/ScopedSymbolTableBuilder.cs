@@ -25,6 +25,15 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
         // Create a symbol table for this function with the current table as parent
         node.Scope = scope.Current().CreateChild($"function {node.Name}");
 
+        node.Scope.AddSymbol(new Symbol(
+            $"{node.Name.Name}#return",
+            Compiler.variableCodeGen.Next(),
+            node.ReturnType,
+            SymbolKind.Variable,
+            node.Line,
+            node.Column
+        ));
+
         // Add function parameters to the function's symbol table
         foreach (var arg in node.Arguments) {
             var argType = TypeUtils.ParseType(arg.Type);

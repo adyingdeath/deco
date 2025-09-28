@@ -9,6 +9,11 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
         Insts = irs;
         return this;
     }
+
+    public Operand VisitProgram(ProgramNode node) {
+        throw new NotImplementedException();
+    }
+    
     public Operand VisitArgument(ArgumentNode node) {
         throw new NotImplementedException();
     }
@@ -143,11 +148,33 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     }
 
     public Operand VisitFunctionCall(FunctionCallNode node) {
-        throw new NotImplementedException();
+        var scope = node.FindScope();
+        if (scope == null) return null!;
+        var symbol = scope.LookupSymbol(node.Name.Name);
+        if (symbol == null) return null!;
+        FunctionType type = (FunctionType)symbol.Type;
+        for (int i = 0; i < type.ParameterTypes.Count; i++) {
+            if (node.Arguments.Count < i) {
+                throw new Exception($"function '{node.Name.Name}' should have {type.ParameterTypes.Count} parameters, but got {node.Arguments.Count}.");
+            }
+            Operand argValue = node.Arguments[i].Accept(this);
+            var argSymbol = scope.LookupSymbol(type.ParameterTypes[i].Name);
+            if (argSymbol == null) continue;
+            Insts.Add(new MoveInstruction(argValue, VariableOperand.Create(argSymbol)));
+        }
+
+        // Find the special symbol for function return value. The symbol's name
+        // is "{functionName}#return". The creation of return symbol can be
+        // found in ScopedSymbolTableBuilder.cs
+        var returnSymbol = scope.LookupSymbol($"{node.Name.Name}#return");
+        if (returnSymbol == null || returnSymbol.Type.Equals(TypeUtils.VoidType)) {
+            return null!;
+        }
+        return VariableOperand.Create(returnSymbol);
     }
 
     public Operand VisitIdentifier(IdentifierNode node) {
-        var symbol = (node.Scope?.LookupSymbol(node.Name))
+        var symbol = node.FindScope()?.LookupSymbol(node.Name)
             ?? throw new InvalidOperationException($"Symbol '{node.Name}' not found");
         var scoreboard = TypeUtils.IsScoreboard(symbol.Type);
         return scoreboard
@@ -164,10 +191,6 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     }
 
     public Operand VisitModifier(ModifierNode node) {
-        throw new NotImplementedException();
-    }
-
-    public Operand VisitProgram(ProgramNode node) {
         throw new NotImplementedException();
     }
 

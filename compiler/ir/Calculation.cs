@@ -10,6 +10,7 @@ public class MoveInstruction(
     public Operand Destination { get; } = dest;
 
     public override List<object> Operands => [Source, Destination];
+    public override string ToString() => $"Move {Source} => {Destination}";
 }
 
 /// <summary>
@@ -23,6 +24,7 @@ public class BinaryInstruction(
     public Operand Right { get; } = right;
 
     public override List<object> Operands => [Left, Right];
+    public override string ToString() => $"{OpCode} {Left} {Right} => {Destination}";
 }
 
 /// <summary>
@@ -35,6 +37,8 @@ public class UnaryInstruction(
     public Operand Operand { get; } = operand;
 
     public override List<object> Operands => [Operand];
+    public override string ToString() => $"{OpCode} {Operand} => {Destination}";
+
 }
 
 // Convenience classes for specific operations
