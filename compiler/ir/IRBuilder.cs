@@ -7,31 +7,40 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
     public ExpressionEvaluator evaluator = new();
     public List<IRInstruction> Instructions = [];
 
+    private void BuildVariableDefinition(VariableDefinitionNode varDef, List<IRInstruction> insts) {
+        // Find the variable's symbol definition. The symbol should exist,
+        // because we've done checks in semantic analysis phase.
+        Symbol symbol = varDef.FindScope()?.LookupSymbol(varDef.Name.Name)!;
+
+        // Determine if the variable should be stored in scoreboard or storage.
+        var isScoreboard = TypeUtils.IsScoreboard(symbol.Type);
+        Operand variable = isScoreboard
+            ? new ScoreboardOperand(symbol.Code)
+            : new StorageOperand(symbol.Code);
+
+        // Create a MOVE instruction to set the initial value of the variable
+        if (varDef.InitialValue != null) {
+            // If there is an initial value, we should evaluate the initial 
+            // value first
+            var initialValueOperand = varDef.InitialValue.Accept(evaluator.Inst(insts));
+            insts.Add(new MoveInstruction(
+                initialValueOperand,
+                variable
+            ));
+        } else {
+            // If no initial value, use default value
+            var initial = TypeUtils.GetInitialValue(symbol.Type);
+            insts.Add(new MoveInstruction(
+                new ConstantOperand(initial),
+                variable
+            ));
+        }
+    }
+
     public List<IRInstruction> VisitProgram(ProgramNode node) {
         List<IRInstruction> _inst = [];
         node.VariableDefinitions.ForEach((varDef) => {
-            var symbol = node.Scope?.LookupSymbol(varDef.Name.Name);
-            if (symbol == null) return;
-            var scoreboard = TypeUtils.IsScoreboard(symbol.Type);
-            Operand variable = scoreboard
-                ? new ScoreboardOperand(symbol.Code)
-                : new StorageOperand(symbol.Code);
-            // Create a MOVE instruction to set the initial value of the variable
-            if (varDef.InitialValue != null) {
-                // If there is an initial value, we should evaluate the initial 
-                // value first
-                var operand = varDef.InitialValue.Accept(evaluator.Inst(_inst));
-                _inst.Add(new MoveInstruction(
-                    operand,
-                    variable
-                ));
-            } else {
-                var initial = TypeUtils.GetInitialValue(symbol.Type);
-                _inst.Add(new MoveInstruction(
-                    new ConstantOperand(initial),
-                    variable
-                ));
-            }
+            BuildVariableDefinition(varDef, _inst);
         });
         node.Functions.ForEach((func) => {
             _inst.AddRange(func.Accept(this) ?? []);
@@ -94,7 +103,8 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         var insts = new List<IRInstruction>();
 
         // Create function entry label
-        var functionLabel = new LabelInstruction(node.Name.Name);
+        var functionSymbol = node.FindScope()?.LookupSymbol(node.Name.Name);
+        var functionLabel = new LabelInstruction(functionSymbol?.Code ?? node.Name.Name);
         insts.Add(functionLabel);
 
         // Process function body
@@ -117,8 +127,8 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         var conditionOperand = node.Condition.Accept(evaluator.Inst(insts));
 
         // Create labels
-        var elseLabel = new LabelInstruction("__else_" + Compiler.variableCodeGen.Next());
-        var endLabel = new LabelInstruction("__endif_" + Compiler.variableCodeGen.Next());
+        var elseLabel = new LabelInstruction("__else_" + Compiler.functionCodeGen.Next());
+        var endLabel = new LabelInstruction("__endif_" + Compiler.functionCodeGen.Next());
 
         // Check if condition is true. Jump to else unless condition is true
         var oneOperand = new ConstantOperand("1");
@@ -172,15 +182,17 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
     }
 
     public List<IRInstruction> VisitVariableDefinition(VariableDefinitionNode node) {
-        return [];
+        var insts = new List<IRInstruction>();
+        BuildVariableDefinition(node, insts);
+        return insts;
     }
 
     public List<IRInstruction> VisitWhile(WhileNode node) {
         var insts = new List<IRInstruction>();
 
         // Create labels
-        var loopStartLabel = new LabelInstruction("__while_start_" + Compiler.variableCodeGen.Next());
-        var loopEndLabel = new LabelInstruction("__while_end_" + Compiler.variableCodeGen.Next());
+        var loopStartLabel = new LabelInstruction("__while_start_" + Compiler.functionCodeGen.Next(8));
+        var loopEndLabel = new LabelInstruction("__while_end_" + Compiler.functionCodeGen.Next(8));
 
         // Start label
         insts.Add(loopStartLabel);

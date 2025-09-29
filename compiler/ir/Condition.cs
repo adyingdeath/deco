@@ -14,4 +14,14 @@ public class Condition(
     public ConditionType Type { get; } = type;
     public Operand Left { get; } = left;
     public Operand Right { get; } = right;
+    public override string ToString() {
+        return Type switch {
+            ConditionType.Equal => $"[{Left} == {Right}]",
+            ConditionType.GreaterEqual => $"[{Left} >= {Right}]",
+            ConditionType.Greater => $"[{Left} > {Right}]",
+            ConditionType.LessEqual => $"[{Left} <= {Right}]",
+            ConditionType.Less => $"[{Left} < {Right}]",
+            _ => "",
+        };
+    }
 }

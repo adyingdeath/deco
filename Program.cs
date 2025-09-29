@@ -41,8 +41,10 @@ void print(int p) {
 
 int test1 = 5;
 void main(int a, int b) {
+    int ttt = 3;
+    ttt = 4;
     for (int ab = 3 + 4;a < 5;a = a + 1 + 2) {
-        print(a + b + test1);
+        print(a + b + test1 + ab);
     }
 }
         ");
