@@ -22,30 +22,41 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
     }
 
     public object VisitFunction(FunctionNode node) {
+        // Find the function's symbol in symbol table.
+        if (scope.Current().LookupSymbol(node.Name.Name) is not FunctionSymbol functionSymbol) {
+            // This shouldn't happen because we've added it when building global
+            // symbol table. This is only for keeping robustness.
+            _errors.Add($"Internal compiler error: Function '{node.Name.Name}' not found in global scope.");
+            return null!;
+        }
+
         // Create a symbol table for this function with the current table as parent
         node.Scope = scope.Current().CreateChild($"function {node.Name}");
 
-        node.Scope.AddSymbol(new Symbol(
+        functionSymbol.ReturnSymbol = new Symbol(
             $"{node.Name.Name}#return",
             Compiler.variableCodeGen.Next(),
             node.ReturnType,
             SymbolKind.Variable,
             node.Line,
             node.Column
-        ));
+        );
+        node.Scope.AddSymbol(functionSymbol.ReturnSymbol);
 
         // Add function parameters to the function's symbol table
         foreach (var arg in node.Arguments) {
             var argType = TypeUtils.ParseType(arg.Type);
             try {
-                node.Scope.AddSymbol(new Symbol(
+                var param = new Symbol(
                     arg.Name.Name,
                     Compiler.variableCodeGen.Next(),
                     argType,
                     SymbolKind.Parameter,
                     arg.Line,
                     arg.Column
-                ));
+                );
+                functionSymbol.ParameterSymbol.Add(param);
+                node.Scope.AddSymbol(param);
             } catch (SymbolTableException ex) {
                 _errors.Add($"Function '{node.Name}' parameter error: {ex.Message}");
             }

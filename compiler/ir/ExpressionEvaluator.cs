@@ -150,23 +150,20 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     public Operand VisitFunctionCall(FunctionCallNode node) {
         var scope = node.FindScope();
         if (scope == null) return null!;
-        var symbol = scope.LookupSymbol(node.Name.Name);
-        if (symbol == null) return null!;
-        FunctionType type = (FunctionType)symbol.Type;
-        for (int i = 0; i < type.ParameterTypes.Count; i++) {
+        // Get the function's symbol. We need symbols of its arguments and return
+        if (scope.LookupSymbol(node.Name.Name) is not FunctionSymbol symbol) return null!;
+
+        for (int i = 0; i < symbol.ParameterSymbol.Count; i++) {
             if (node.Arguments.Count < i) {
-                throw new Exception($"function '{node.Name.Name}' should have {type.ParameterTypes.Count} parameters, but got {node.Arguments.Count}.");
+                throw new Exception($"function '{node.Name.Name}' should have {symbol.ParameterSymbol.Count} parameters, but got {node.Arguments.Count}.");
             }
             Operand argValue = node.Arguments[i].Accept(this);
-            var argSymbol = scope.LookupSymbol(type.ParameterTypes[i].Name);
-            if (argSymbol == null) continue;
-            Insts.Add(new MoveInstruction(argValue, VariableOperand.Create(argSymbol)));
+            Insts.Add(new MoveInstruction(
+                argValue, VariableOperand.Create(symbol.ParameterSymbol[i]
+            )));
         }
 
-        // Find the special symbol for function return value. The symbol's name
-        // is "{functionName}#return". The creation of return symbol can be
-        // found in ScopedSymbolTableBuilder.cs
-        var returnSymbol = scope.LookupSymbol($"{node.Name.Name}#return");
+        var returnSymbol = symbol.ReturnSymbol;
         if (returnSymbol == null || returnSymbol.Type.Equals(TypeUtils.VoidType)) {
             return null!;
         }

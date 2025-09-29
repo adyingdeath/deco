@@ -35,8 +35,9 @@ class Program {
 
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
-void print(int p) {
+int print(int p) {
     int b = p + 1;
+    return b;
 }
 
 int test1 = 5;

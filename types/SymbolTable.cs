@@ -13,6 +13,25 @@ public class Symbol(
     public SymbolKind Kind { get; } = kind;
     public int Line { get; } = line;
     public int Column { get; } = column;
+
+    public static readonly Symbol Uninitialized = new(
+        "__uninitialized__", 
+        "#", // Invalid address
+        TypeUtils.UnknownType, // Use UnknownType
+        SymbolKind.Variable, // Add a special kind if you want
+        0, 0
+    );
+}
+
+public class FunctionSymbol(
+    string name, string code, IType type, List<Symbol> parameterSymbol, Symbol returnSymbol,
+    int line = 0, int column = 0
+) : Symbol(
+    name, code, type, SymbolKind.Function,
+    line, column
+) {
+    public List<Symbol> ParameterSymbol { get; set; } = parameterSymbol;
+    public Symbol ReturnSymbol { get; set; } = returnSymbol;
 }
 
 /// <summary>

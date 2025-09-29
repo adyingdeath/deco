@@ -44,11 +44,12 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
         var functionType = new FunctionType(node.ReturnType, parameterTypes);
 
         try {
-            _symbolTable.AddSymbol(new Symbol(
+            _symbolTable.AddSymbol(new FunctionSymbol(
                 node.Name.Name,
                 Compiler.functionCodeGen.Next(8),
                 functionType,
-                SymbolKind.Function,
+                [],
+                Symbol.Uninitialized,
                 node.Line,
                 node.Column
             ));
