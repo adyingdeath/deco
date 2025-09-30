@@ -46,9 +46,9 @@ int test(int a, int b) {
         return b;
     } else if (test1 < a + 1) {
         return test1 + 1;
-    } else {
-        return test1;
     }
+    test1 = test1 + 2;
+    return test1;
 }
         ");
 
@@ -83,7 +83,10 @@ int test(int a, int b) {
 
         var irs = for_loop_to_while_ast.Accept(new IRBuilder());
 
-        var irs_str = string.Join("\n", irs.Select((e) => e.ToString()).Select((e) => e.StartsWith("Label") ? e : $"  {e}"));
+        var irs_str = string.Join("\n", irs.Select((e) => {
+            if (e is LabelInstruction) return e.ToString();
+            return "  " + e.ToString();
+        }));
 
         File.WriteAllText("./irs.txt", irs_str);
 

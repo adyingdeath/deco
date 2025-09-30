@@ -130,6 +130,10 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         var thenLabel = new LabelInstruction("__if_then_" + Compiler.functionCodeGen.Next(8));
         var elseLabel = new LabelInstruction("__if_else_" + Compiler.functionCodeGen.Next(8));
 
+        // Link to the __if_end_
+        var endLabel = new LabelInstruction("__link_if_end_" + Compiler.functionCodeGen.Next(8));
+        var linkEnd = new LinkInstruction(endLabel);
+
         // Check if condition is true. Jump to else unless condition is true
         var condition = new Condition(
             ConditionType.Equal,
@@ -140,7 +144,9 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         // Jump to then if condition_operand == 1
         // or else unless condition_operand == 1
         insts.Add(new JumpIfInstruction(condition, thenLabel));
-        insts.Add(new JumpUnlessInstruction(condition, elseLabel));
+        if(node.ElseBlock != null)
+            insts.Add(new JumpUnlessInstruction(condition, elseLabel));
+        insts.Add(linkEnd); // Directly link to the end of if here
 
         // Then block
         insts.Add(thenLabel);
@@ -151,6 +157,8 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
             insts.Add(elseLabel);
             insts.AddRange(node.ElseBlock.Accept(this) ?? []);
         }
+
+        insts.Add(endLabel);
 
         return insts;
     }
