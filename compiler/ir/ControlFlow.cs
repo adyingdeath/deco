@@ -15,9 +15,8 @@ public class JumpInstruction(
 /// </summary>
 public class JumpIfInstruction(
     Condition condition, LabelInstruction target
-) : IRInstruction {
+) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
-    public LabelInstruction Target { get; } = target;
     public override string ToString() => $"Jump Label({Target.Label}) if {Condition}";
 }
 
@@ -26,9 +25,8 @@ public class JumpIfInstruction(
 /// </summary>
 public class JumpUnlessInstruction(
     Condition condition, LabelInstruction target
-) : IRInstruction {
+) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
-    public LabelInstruction Target { get; } = target;
     public override string ToString() => $"Jump Label({Target.Label}) unless {Condition}";
 }
 
@@ -37,8 +35,7 @@ public class JumpUnlessInstruction(
 /// </summary>
 public class CallInstruction(
     LabelInstruction target
-) : IRInstruction {
-    public LabelInstruction Target { get; } = target;
+) : JumpInstruction(target) {
     public override string ToString() => $"Call Label({Target.Label})";
 }
 
