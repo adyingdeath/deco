@@ -44,6 +44,8 @@ int test(int a, int b) {
     if (test1 < a) {
         test1 = a;
         return b;
+    } else if (test1 < a + 1) {
+        return test1 + 1;
     } else {
         return test1;
     }

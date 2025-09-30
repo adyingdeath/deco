@@ -127,31 +127,29 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         var conditionOperand = node.Condition.Accept(evaluator.Inst(insts));
 
         // Create labels
-        var elseLabel = new LabelInstruction("__else_" + Compiler.functionCodeGen.Next());
-        var endLabel = new LabelInstruction("__endif_" + Compiler.functionCodeGen.Next());
+        var thenLabel = new LabelInstruction("__if_then_" + Compiler.functionCodeGen.Next(8));
+        var elseLabel = new LabelInstruction("__if_else_" + Compiler.functionCodeGen.Next(8));
 
         // Check if condition is true. Jump to else unless condition is true
-        var oneOperand = new ConstantOperand("1");
-        var condition = new Condition(ConditionType.Equal, conditionOperand, oneOperand);
+        var condition = new Condition(
+            ConditionType.Equal,
+            conditionOperand,
+            new ConstantOperand("1")
+        );
 
-        // Jump to else unless condition_operand == 1 (i.e. jump when condition is false)
+        // Jump to then if condition_operand == 1
+        // or else unless condition_operand == 1
+        insts.Add(new JumpIfInstruction(condition, thenLabel));
         insts.Add(new JumpUnlessInstruction(condition, elseLabel));
 
         // Then block
+        insts.Add(thenLabel);
         insts.AddRange(node.ThenBlock.Accept(this) ?? []);
-
-        // If there's else block, jump over it
-        if (node.ElseBlock != null) {
-            insts.Add(new JumpInstruction(endLabel));
-        }
-
-        // Else label
-        insts.Add(elseLabel);
 
         // Else block (if exists)
         if (node.ElseBlock != null) {
+            insts.Add(elseLabel);
             insts.AddRange(node.ElseBlock.Accept(this) ?? []);
-            insts.Add(endLabel);
         }
 
         return insts;
