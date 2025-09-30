@@ -7,7 +7,12 @@ public class JumpInstruction(
     LabelInstruction target
 ) : IRInstruction {
     public LabelInstruction Target { get; } = target;
-    public override string ToString() => $"Jump Label({Target.Label})";
+    public bool IsFallThrough { get; set; } = false;
+    public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label})";
+    public JumpInstruction FallThrough() {
+        IsFallThrough = true;
+        return this;
+    }
 }
 
 /// <summary>
@@ -17,7 +22,7 @@ public class JumpIfInstruction(
     Condition condition, LabelInstruction target
 ) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
-    public override string ToString() => $"Jump Label({Target.Label}) if {Condition}";
+    public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) if {Condition}";
 }
 
 /// <summary>
@@ -27,7 +32,7 @@ public class JumpUnlessInstruction(
     Condition condition, LabelInstruction target
 ) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
-    public override string ToString() => $"Jump Label({Target.Label}) unless {Condition}";
+    public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) unless {Condition}";
 }
 
 /// <summary>
@@ -90,4 +95,23 @@ public class ReturnIfInstruction(Condition condition, Operand? value = null) : I
     public Condition Condition { get; } = condition;
     public Operand? Value { get; } = value;
     public override string ToString() => $"Return {Value} if {Condition}";
+}
+
+/// <summary>
+/// This is a special instruction for fall through case. It's actually just
+/// `Return 1 if Scoreboard(0) == 1`.
+/// When creating jump for if, you will find a problem that `return` within the
+/// if block will only exit and then back to the block where the `if` stands.
+/// But we need the `return` to return from the function where the `if` is in.
+/// This is a fall through. I tackle this by returning an integer `1` from the
+/// if block and store it in Scoreboard(0), which is unused. Then use this
+/// special instruction to test if Scoreboard(0) == 1, where it will return again
+/// like it's shot through. Also work for loop.
+/// </summary>
+public class FallThroughInstruction() : ReturnIfInstruction(
+    new Condition(
+        ConditionType.Equal, new ScoreboardOperand("0"), new ConstantOperand("1")
+    ), new ConstantOperand("1")
+) {
+    public override string ToString() => $"FallThrough";
 }

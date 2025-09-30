@@ -143,10 +143,15 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
 
         // Jump to then if condition_operand == 1
         // or else unless condition_operand == 1
-        insts.Add(new JumpIfInstruction(condition, thenLabel));
+        insts.Add(new JumpIfInstruction(condition, thenLabel).FallThrough());
         if(node.ElseBlock != null)
-            insts.Add(new JumpUnlessInstruction(condition, elseLabel));
-        insts.Add(linkEnd); // Directly link to the end of if here
+            insts.Add(new JumpUnlessInstruction(condition, elseLabel).FallThrough());
+
+        // Do fall through here.
+        insts.Add(new FallThroughInstruction());
+
+        // Directly link to the end of if here
+        insts.Add(linkEnd);
 
         // Then block
         insts.Add(thenLabel);
@@ -188,7 +193,7 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
                 returnValueOperand, VariableOperand.Create(symbol.ReturnSymbol)
             ));
         }
-        insts.Add(new ReturnInstruction());
+        insts.Add(new ReturnInstruction(new ConstantOperand("1")));
         return insts;
     }
 

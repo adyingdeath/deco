@@ -46,7 +46,7 @@ int test(int a, int b) {
         test1 = a;
         return b;
     } else if (test1 < a + 1) {
-        return test1 + 1;
+        int c = test1 + 1;
     }
     test1 = test1 + 2;
     return test1;
