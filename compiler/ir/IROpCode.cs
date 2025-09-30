@@ -10,6 +10,7 @@ public enum IROpCode {
     Jump,
     JumpIf,
     JumpUnless,
+    Call,
     Return,
     ReturnIf,
 

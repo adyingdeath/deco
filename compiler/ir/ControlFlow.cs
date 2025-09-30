@@ -33,6 +33,16 @@ public class JumpUnlessInstruction(
 }
 
 /// <summary>
+/// Similar to Jump, but is specially designed for function call.
+/// </summary>
+public class CallInstruction(
+    LabelInstruction target
+) : IRInstruction(IROpCode.Call) {
+    public LabelInstruction Target { get; } = target;
+    public override string ToString() => $"Call Label({Target.Label})";
+}
+
+/// <summary>
 /// IR instruction representing a label (target for jumps).
 /// </summary>
 public class LabelInstruction(string label) : IRInstruction(IROpCode.Label) {

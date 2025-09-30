@@ -166,14 +166,23 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
     }
 
     public List<IRInstruction> VisitReturn(ReturnNode node) {
+        // Find its coresponding FunctionNode. We need its symbol
+        var scope = node.FindScope();
+        var functionNode = node.FindParent<FunctionNode>();
+        if (functionNode == null || scope == null) return [];
+        // Get the function's symbol. We need symbols of its arguments and return
+        if (scope.LookupSymbol(functionNode.Name.Name) is not FunctionSymbol symbol) return [];
+
         var insts = new List<IRInstruction>();
         if (node.Expression != null) {
             // Evaluate the return value
             var returnValueOperand = node.Expression.Accept(evaluator.Inst(insts));
-            insts.Add(new ReturnInstruction(returnValueOperand));
-        } else {
-            insts.Add(new ReturnInstruction());
+            // Store the return value to the function's return symbol
+            insts.Add(new MoveInstruction(
+                returnValueOperand, VariableOperand.Create(symbol.ReturnSymbol)
+            ));
         }
+        insts.Add(new ReturnInstruction());
         return insts;
     }
 

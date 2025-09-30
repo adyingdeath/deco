@@ -35,17 +35,17 @@ class Program {
 
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
-int print(int p) {
-    int b = p + 1;
-    return b;
-}
-
 int test1 = 5;
-void main(int a, int b) {
-    int ttt = 3;
-    ttt = 4;
-    for (int ab = 3 + 4;a < 5;a = a + 1 + 2) {
-        print(a + b + test1 + ab);
+int main() {
+    int result = test(6, 2);
+    return result + 1;
+}
+int test(int a, int b) {
+    if (test1 < a) {
+        test1 = a;
+        return b;
+    } else {
+        return test1;
     }
 }
         ");
@@ -80,6 +80,10 @@ void main(int a, int b) {
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
         var irs = for_loop_to_while_ast.Accept(new IRBuilder());
+
+        var irs_str = string.Join("\n", irs.Select((e) => e.ToString()).Select((e) => e.StartsWith("Label") ? e : $"  {e}"));
+
+        File.WriteAllText("./irs.txt", irs_str);
 
         return;
 

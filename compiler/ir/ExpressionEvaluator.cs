@@ -163,6 +163,11 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
             )));
         }
 
+        // Really call the function with a Call instruction
+        Insts.Add(new CallInstruction(
+            new LabelInstruction(symbol.Code)
+        ));
+
         var returnSymbol = symbol.ReturnSymbol;
         if (returnSymbol == null || returnSymbol.Type.Equals(TypeUtils.VoidType)) {
             return null!;

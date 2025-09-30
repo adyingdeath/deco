@@ -23,6 +23,22 @@ public abstract class AstNode(int line = 0, int column = 0) {
         if (Scope != null) return Scope;
         return Parent?.FindScope();
     }
+    
+    /// <summary>
+    /// Finds the first parent of a specific type in the AST hierarchy.
+    /// </summary>
+    /// <typeparam name="T">The type of the parent node to find.</typeparam>
+    /// <returns>The first parent node of the specified type, or null if not found.</returns>
+    public virtual T? FindParent<T>() where T : AstNode {
+        AstNode? current = Parent;
+        while (current != null) {
+            if (current is T typedParent) {
+                return typedParent;
+            }
+            current = current.Parent;
+        }
+        return null;
+    }
 }
 
 public interface IAstVisitor<T> {

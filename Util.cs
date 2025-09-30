@@ -162,61 +162,6 @@ public static class Util {
             Console.WriteLine($"[FileUtil Error] An unknown error occurred: {ex.Message}");
         }
     }
-
-    private static readonly Random _random = new Random();
-    private static readonly HashSet<string> _generatedStrings = new HashSet<string>();
-
-    /// <summary>
-    /// Generates a random string of a given length that is guaranteed to be unique
-    /// within the current application session.
-    /// It uses a HashSet to store and check for previously generated strings to ensure uniqueness.
-    /// </summary>
-    /// <param name="length">The desired length of the random string.</param>
-    /// <returns>A unique random string.</returns>
-    public static string GenerateRandomString(int length) {
-        const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-        while (true) {
-            string candidate = new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[_random.Next(s.Length)]).ToArray());
-
-            // Attempt to add the new string to the set.
-            // .Add() returns true if the item was added,
-            // and false if the item was already present.
-            if (_generatedStrings.Add(candidate)) {
-                return candidate;
-            }
-            // If the string was already in the set, the loop continues and generates a new one.
-        }
-    }
-
-    public static DecoParser.PrimaryContext GetPrimaryContext(DecoParser.ExpressionContext expression) {
-        if (expression == null) return null;
-
-        var orExpr = expression.or_expr();
-        if (orExpr.and_expr().Length > 1) return null;
-
-        var andExpr = orExpr.and_expr(0);
-        if (andExpr.eq_expr().Length > 1) return null;
-
-        var eqExpr = andExpr.eq_expr(0);
-        if (eqExpr.rel_expr().Length > 1) return null;
-
-        var relExpr = eqExpr.rel_expr(0);
-        if (relExpr.add_expr().Length > 1) return null;
-
-        var addExpr = relExpr.add_expr(0);
-        if (addExpr.mul_expr().Length > 1) return null;
-
-        var mulExpr = addExpr.mul_expr(0);
-        if (mulExpr.unary_expr().Length > 1) return null;
-
-        var unaryExpr = mulExpr.unary_expr(0);
-
-        if (unaryExpr.primary() == null) return null;
-
-        return unaryExpr.primary();
-    }
 }
 
 public class Base36Counter {
