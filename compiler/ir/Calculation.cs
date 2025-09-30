@@ -8,8 +8,6 @@ public class MoveInstruction(
 ) : IRInstruction(IROpCode.Move) {
     public Operand Source { get; } = source;
     public Operand Destination { get; } = dest;
-
-    public override List<object> Operands => [Source, Destination];
     public override string ToString() => $"Move {Source} => {Destination}";
 }
 
@@ -22,8 +20,6 @@ public class BinaryInstruction(
     public Operand Destination { get; } = dest;
     public Operand Left { get; } = left;
     public Operand Right { get; } = right;
-
-    public override List<object> Operands => [Left, Right];
     public override string ToString() => $"{OpCode} {Left} {Right} => {Destination}";
 }
 
@@ -35,8 +31,6 @@ public class UnaryInstruction(
 ) : IRInstruction(opCode) {
     public Operand Destination { get; } = dest;
     public Operand Operand { get; } = operand;
-
-    public override List<object> Operands => [Operand];
     public override string ToString() => $"{OpCode} {Operand} => {Destination}";
 
 }

@@ -7,15 +7,7 @@ namespace Deco.Compiler.IR;
 public abstract class IRInstruction(IROpCode opCode) {
     public IROpCode OpCode { get; protected set; } = opCode;
 
-    /// <summary>
-    /// Gets the operands for this instruction. Default implementation returns empty list.
-    /// </summary>
-    public virtual List<object> Operands => [];
-
-    public override string ToString() {
-        var operandsStr = Operands.Count > 0 ? string.Join(", ", Operands) : "";
-        return $"{OpCode} {operandsStr}";
-    }
+    public override abstract string ToString();
 }
 
 /// <summary>
@@ -24,6 +16,6 @@ public abstract class IRInstruction(IROpCode opCode) {
 public class CommandInstruction(string command) : IRInstruction(IROpCode.Command) {
     public string Command { get; } = command;
 
-    public override List<object> Operands => [Command];
+    public override string ToString() => $"Command {Command}";
 }
 

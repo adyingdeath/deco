@@ -11,6 +11,7 @@ public enum IROpCode {
     JumpIf,
     JumpUnless,
     Return,
+    ReturnIf,
 
     // Variables and assignment
     Move,

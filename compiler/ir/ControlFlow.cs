@@ -7,8 +7,7 @@ public class JumpInstruction(
     LabelInstruction target
 ) : IRInstruction(IROpCode.Jump) {
     public LabelInstruction Target { get; } = target;
-
-    public override List<object> Operands => [Target];
+    public override string ToString() => $"Jump Label({Target.Label})";
 }
 
 /// <summary>
@@ -19,8 +18,7 @@ public class JumpIfInstruction(
 ) : IRInstruction(IROpCode.JumpIf) {
     public Condition Condition { get; } = condition;
     public LabelInstruction Target { get; } = target;
-
-    public override List<object> Operands => [Condition, Target];
+    public override string ToString() => $"Jump Label({Target.Label}) if {Condition}";
 }
 
 /// <summary>
@@ -31,8 +29,7 @@ public class JumpUnlessInstruction(
 ) : IRInstruction(IROpCode.JumpUnless) {
     public Condition Condition { get; } = condition;
     public LabelInstruction Target { get; } = target;
-
-    public override List<object> Operands => [Condition, Target];
+    public override string ToString() => $"Jump Label({Target.Label}) unless {Condition}";
 }
 
 /// <summary>
@@ -40,23 +37,20 @@ public class JumpUnlessInstruction(
 /// </summary>
 public class LabelInstruction(string label) : IRInstruction(IROpCode.Label) {
     public string Label { get; } = label;
-
-    public override List<object> Operands => [Label];
+    public override string ToString() => $"Label {Label}:";
 }
 
 /// <summary>
 /// IR instruction for function return.
 /// Return value -> ()
 /// </summary>
-public class ReturnInstruction(object? value = null) : IRInstruction(IROpCode.Return) {
-    public object? Value { get; } = value;
-
-    public override List<object> Operands => Value != null ? [Value] : [];
+public class ReturnInstruction(Operand? value = null) : IRInstruction(IROpCode.Return) {
+    public Operand? Value { get; } = value;
+    public override string ToString() => $"Return {Value}";
 }
 
-/// <summary>
-/// IR instruction for no operation.
-/// </summary>
-public class NopInstruction() : IRInstruction(IROpCode.Nop) {
-    // No operands
+public class ReturnIfInstruction(Condition condition, Operand? value = null) : IRInstruction(IROpCode.ReturnIf) {
+    public Condition Condition { get; } = condition;
+    public Operand? Value { get; } = value;
+    public override string ToString() => $"Return {Value} if {Condition}";
 }
