@@ -41,10 +41,13 @@ public class CallInstruction(
 
 /// <summary>
 /// IR instruction representing a label (target for jumps).
+/// IsAnchor is true if you want it to be an anchor label, which is peered with
+/// another link and will be removed later.
 /// </summary>
-public class LabelInstruction(string label) : IRInstruction {
+public class LabelInstruction(string label, bool isAnchor = false) : IRInstruction {
     public string Label { get; } = label;
-    public override string ToString() => $"Label {Label}:";
+    public bool IsAnchor { get; } = isAnchor;
+    public override string ToString() => (IsAnchor ? "#" : "") + $"Label {Label}:";
 }
 
 /// <summary>

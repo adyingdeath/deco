@@ -2,6 +2,7 @@ using Antlr4.Runtime;
 using Deco.Ast;
 using Deco.Compiler;
 using Deco.Compiler.IR;
+using Deco.Compiler.IR.Passes;
 using Deco.Compiler.Passes.Lowering;
 
 class Program {
@@ -82,6 +83,8 @@ int test(int a, int b) {
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
         var irs = for_loop_to_while_ast.Accept(new IRBuilder());
+
+        irs = LinkMergePass.Visit(irs);
 
         var irs_str = string.Join("\n", irs.Select((e) => {
             if (e is LabelInstruction) return e.ToString();

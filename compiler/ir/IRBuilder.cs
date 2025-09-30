@@ -131,7 +131,7 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
         var elseLabel = new LabelInstruction("__if_else_" + Compiler.functionCodeGen.Next(8));
 
         // Link to the __if_end_
-        var endLabel = new LabelInstruction("__link_if_end_" + Compiler.functionCodeGen.Next(8));
+        var endLabel = new LabelInstruction("__link_if_end_" + Compiler.functionCodeGen.Next(8), true);
         var linkEnd = new LinkInstruction(endLabel);
 
         // Check if condition is true. Jump to else unless condition is true
