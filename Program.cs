@@ -1,9 +1,9 @@
 using Antlr4.Runtime;
-using Deco.Ast;
+using Deco.Compiler.Ast;
 using Deco.Compiler;
 using Deco.Compiler.IR;
 using Deco.Compiler.IR.Passes;
-using Deco.Compiler.Passes.Lowering;
+using Deco.Compiler.Ast.Passes.Lowering;
 
 class Program {
     static void Main(string[] args) {
@@ -62,7 +62,7 @@ int test(int a, int b) {
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
 
-        new Deco.Compiler.Passes.FindFatherPass().Visit(ast);
+        new Deco.Compiler.Ast.Passes.FindFatherPass().Visit(ast);
 
         // Build symbol table
         var globalSymbolTable = new Deco.Types.Scope("global");
@@ -71,10 +71,10 @@ int test(int a, int b) {
         // This includes two steps currently:
         // 1. Build global symbol table;
         // 2. Build scoped symbol table;
-        new Deco.Compiler.Passes.Collect_Symbol.Group(globalSymbolTable).Visit(ast);
+        new Deco.Compiler.Ast.Passes.Collect_Symbol.Group(globalSymbolTable).Visit(ast);
 
         // Type check and resolve types
-        var typedAst = (ProgramNode)new Deco.Compiler.Passes.Types.Group(globalSymbolTable).Visit(ast);
+        var typedAst = (ProgramNode)new Deco.Compiler.Ast.Passes.Types.Group(globalSymbolTable).Visit(ast);
 
         var constant_folding_ast = new ConstantFoldingPass().Visit(typedAst);
 

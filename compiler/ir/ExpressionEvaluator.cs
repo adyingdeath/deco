@@ -1,4 +1,4 @@
-using Deco.Ast;
+using Deco.Compiler.Ast;
 using Deco.Types;
 
 namespace Deco.Compiler.IR;
