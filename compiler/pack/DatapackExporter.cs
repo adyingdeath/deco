@@ -26,7 +26,7 @@ public static class DatapackExporter {
 
         // Write functions
         if (datapack.Functions.Any()) {
-            string functionsPath = Path.Combine(namespacePath, "functions");
+            string functionsPath = Path.Combine(namespacePath, "function");
             Directory.CreateDirectory(functionsPath);
 
             foreach (var function in datapack.Functions) {
@@ -36,6 +36,7 @@ public static class DatapackExporter {
                 File.WriteAllLines(functionPath, function.Commands);
             }
         }
+
 
         // TODO: Export other resources like advancements, loot tables, etc.
     }

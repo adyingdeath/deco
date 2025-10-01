@@ -83,7 +83,9 @@ int test(int a, int b) {
 
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
-        var irs = for_loop_to_while_ast.Accept(new IRBuilder());
+        var datapack = new Datapack("6u753i8", "deco");
+
+        var irs = for_loop_to_while_ast.Accept(new IRBuilder(datapack));
 
         var program = NestInstructionPass.Visit(irs);
 
@@ -94,10 +96,9 @@ int test(int a, int b) {
 
         File.WriteAllText("./irs.txt", irs_str);
 
-        var datapack = new Datapack("6u753i8", "deco");
         new DatapackBuilder(datapack).VisitProgram(program);
 
-        DatapackExporter.Export(datapack, "./datapack");
+        DatapackExporter.Export(datapack, "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\deco");
 
         return;
 

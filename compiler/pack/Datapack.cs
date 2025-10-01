@@ -5,7 +5,12 @@ namespace Deco.Compiler.Pack;
 public class PackMcmeta(int packFormat, string description) {
     public int PackFormat { get; set; } = packFormat;
     public string Description { get; set; } = description;
-    public override string ToString() => JsonSerializer.Serialize(this);
+    public override string ToString() => JsonSerializer.Serialize(new {
+        pack = new {
+            pack_format = PackFormat,
+            description = Description,
+        }
+    });
 }
 
 /// <summary>
@@ -25,7 +30,7 @@ public class Datapack {
     /// <summary>
     /// The pack.mcmeta JSON content.
     /// </summary>
-    public PackMcmeta PackMcmeta { get; set; } = new(15, "test");
+    public PackMcmeta PackMcmeta { get; set; } = new(48, "test");
 
     /// <summary>
     /// Function resource locations to Function objects mapping.

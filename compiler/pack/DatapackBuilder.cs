@@ -131,7 +131,7 @@ public class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
     }
 
     public override List<string> VisitReturnInstruction(ReturnInstruction inst) {
-        return [];
+        return [$"return {GenOperand(inst.Value)}"];
     }
 
     public override List<string> VisitUnaryInstruction(UnaryInstruction inst) {

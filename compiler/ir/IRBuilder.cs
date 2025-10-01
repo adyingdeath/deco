@@ -1,9 +1,11 @@
 using Deco.Compiler.Ast;
+using Deco.Compiler.Pack;
 using Deco.Types;
 
 namespace Deco.Compiler.IR;
 
-public class IRBuilder : IAstVisitor<List<IRInstruction>> {
+public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
+    private Datapack _datapack = datapack;
     public ExpressionEvaluator evaluator = new();
     public List<IRInstruction> Instructions = [];
 
@@ -40,6 +42,10 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
     public List<IRInstruction> VisitProgram(ProgramNode node) {
         List<IRInstruction> _inst = [];
         _inst.Add(new LabelInstruction("global"));
+        // Initialize the main scoreboard and the main storage
+        _inst.Add(new CommandInstruction($"scoreboard objectives remove {_datapack.Id}"));
+        _inst.Add(new CommandInstruction($"scoreboard objectives add {_datapack.Id} dummy"));
+        //_inst.Add(new CommandInstruction($"data remove storage minecraft:{_datapack.Id}"));
         node.VariableDefinitions.ForEach((varDef) => {
             BuildVariableDefinition(varDef, _inst);
         });
