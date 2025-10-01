@@ -9,6 +9,7 @@ public class JumpInstruction(
     public LabelInstruction Target { get; } = target;
     public bool IsFallThrough { get; set; } = false;
     public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label})";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitJumpInstruction(this);
     public JumpInstruction FallThrough() {
         IsFallThrough = true;
         return this;
@@ -53,6 +54,7 @@ public class LabelInstruction(string label, bool isAnchor = false) : IRInstructi
     public string Label { get; } = label;
     public bool IsAnchor { get; } = isAnchor;
     public override string ToString() => (IsAnchor ? "#" : "") + $"Label {Label}:";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitLabelInstruction(this);
 }
 
 /// <summary>
@@ -80,6 +82,7 @@ public class LinkInstruction(
     public LabelInstruction Target { get; } = target;
 
     public override string ToString() => $"Link Label({Target.Label})";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitLinkInstruction(this);
 }
 
 /// <summary>
@@ -89,12 +92,14 @@ public class LinkInstruction(
 public class ReturnInstruction(Operand? value = null) : IRInstruction {
     public Operand? Value { get; } = value;
     public override string ToString() => $"Return {Value}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitReturnInstruction(this);
 }
 
 public class ReturnIfInstruction(Condition condition, Operand? value = null) : IRInstruction {
     public Condition Condition { get; } = condition;
     public Operand? Value { get; } = value;
     public override string ToString() => $"Return {Value} if {Condition}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitReturnIfInstruction(this);
 }
 
 /// <summary>

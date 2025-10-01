@@ -9,6 +9,7 @@ public class MoveInstruction(
     public Operand Source { get; } = source;
     public Operand Destination { get; } = dest;
     public override string ToString() => $"Move {Source} => {Destination}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitMoveInstruction(this);
 }
 
 /// <summary>
@@ -22,6 +23,7 @@ public class BinaryInstruction(
     public Operand Right { get; } = right;
     // Base ToString for binary operations, concrete instructions will override or prepend.
     public override string ToString() => $"Binary {Left} {Right} => {Destination}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitBinaryInstruction(this);
 }
 
 /// <summary>
@@ -34,6 +36,7 @@ public class UnaryInstruction(
     public Operand Operand { get; } = operand;
     // Base ToString for unary operations, concrete instructions will override or prepend.
     public override string ToString() => $"Unary {Operand} => {Destination}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitUnaryInstruction(this);
 }
 
 // Convenience classes for specific operations

@@ -6,6 +6,8 @@ namespace Deco.Compiler.IR;
 /// </summary>
 public abstract class IRInstruction {
     public override abstract string ToString();
+
+    public abstract T Accept<T>(IRVisitor<T> visitor);
 }
 
 /// <summary>
@@ -15,5 +17,6 @@ public class CommandInstruction(string command) : IRInstruction {
     public string Command { get; } = command;
 
     public override string ToString() => $"Command {Command}";
-}
 
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitCommandInstruction(this);
+}
