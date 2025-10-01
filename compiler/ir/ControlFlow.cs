@@ -53,6 +53,7 @@ public class CallInstruction(
 public class LabelInstruction(string label, bool isAnchor = false) : IRInstruction {
     public string Label { get; } = label;
     public bool IsAnchor { get; } = isAnchor;
+    public List<IRInstruction> Instructions { get; } = [];
     public override string ToString() => (IsAnchor ? "#" : "") + $"Label {Label}:";
     public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitLabelInstruction(this);
 }

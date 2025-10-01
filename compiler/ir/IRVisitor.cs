@@ -1,5 +1,3 @@
-using Deco.Compiler.Pack;
-
 namespace Deco.Compiler.IR;
 
 /// <summary>
@@ -7,7 +5,7 @@ namespace Deco.Compiler.IR;
 /// Each visit method returns a list of IR instructions.
 /// </summary>
 public abstract class IRVisitor<T> {
-    public abstract T VisitProgram(List<IRInstruction> instructions);
+    public abstract T VisitProgram(ProgramInstruction inst);
 
     public abstract T VisitLabelInstruction(LabelInstruction inst);
 

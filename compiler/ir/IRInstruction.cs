@@ -20,3 +20,10 @@ public class CommandInstruction(string command) : IRInstruction {
 
     public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitCommandInstruction(this);
 }
+
+public class ProgramInstruction : IRInstruction {
+    public List<LabelInstruction> Labels { get; } = [];
+    public override string ToString() => "Program:";
+
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitProgram(this);
+}

@@ -39,6 +39,7 @@ public class IRBuilder : IAstVisitor<List<IRInstruction>> {
 
     public List<IRInstruction> VisitProgram(ProgramNode node) {
         List<IRInstruction> _inst = [];
+        _inst.Add(new LabelInstruction("global"));
         node.VariableDefinitions.ForEach((varDef) => {
             BuildVariableDefinition(varDef, _inst);
         });

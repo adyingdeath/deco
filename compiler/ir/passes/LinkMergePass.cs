@@ -1,38 +1,30 @@
 namespace Deco.Compiler.IR.Passes;
 
 public class LinkMergePass {
-    public static List<IRInstruction> Visit(List<IRInstruction> irs) {
-        Dictionary<string, int> labels = [];
-        List<IRInstruction> instructions = [];
-        // Collect all the labels and its index
-        for (int i = 0; i < irs.Count; i++) {
-            if (irs[i] is LabelInstruction label) {
-                labels[label.Label] = i;
-            }
+    public static ProgramInstruction Visit(ProgramInstruction program) {
+        // Process each label's instructions
+        foreach (LabelInstruction label in program.Labels) {
+            ProcessInstructions(label.Instructions);
         }
-        for (int i = 0; i < irs.Count;) {
-            if (irs[i] is LabelInstruction label && label.IsAnchor) {
-                // Just skip all the instructions in it for Anchor Label.
-                while (++i < irs.Count) {
-                    if (irs[i] is LabelInstruction) break;
+
+        // Remove all anchor labels after inlining
+        program.Labels.RemoveAll(label => label.IsAnchor);
+
+        return program;
+    }
+
+    private static void ProcessInstructions(List<IRInstruction> instrs) {
+        for (int i = 0; i < instrs.Count; ) {
+            if (instrs[i] is LinkInstruction link) {
+                // Replace the link with the target's instructions
+                instrs.RemoveAt(i);
+                // Skip anchor labels
+                if (!link.Target.IsAnchor) {
+                    instrs.InsertRange(i, link.Target.Instructions);
                 }
-                continue;
-            } else if (irs[i] is LinkInstruction link) {
-                if (!labels.TryGetValue(link.Target.Label, out int pos)) {
-                    i++;
-                    continue;
-                }
-                int end = pos;
-                while (++end < irs.Count) {
-                    if (irs[end] is LabelInstruction) break;
-                    instructions.Add(irs[end]);
-                }
+            } else {
                 i++;
-                continue;
             }
-            instructions.Add(irs[i]);
-            i++;
         }
-        return instructions;
     }
 }
