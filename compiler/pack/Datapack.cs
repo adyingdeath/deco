@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Deco.Compiler.Datapack;
+namespace Deco.Compiler.Pack;
 
 public class PackMcmeta(int packFormat, string description) {
     public int PackFormat { get; set; } = packFormat;
@@ -30,44 +30,44 @@ public class Datapack {
     /// <summary>
     /// Function resource locations to Function objects mapping.
     /// </summary>
-    public Dictionary<ResourceLocation, Function> Functions { get; } = [];
+    public List<Function> Functions { get; } = [];
 
     /// <summary>
     /// Advancement resource locations to Advancement objects mapping.
     /// </summary>
-    public Dictionary<ResourceLocation, Advancement> Advancements { get; } = [];
+    public List<Advancement> Advancements { get; } = [];
 
     /// <summary>
     /// Loot table resource locations to LootTable objects mapping.
     /// </summary>
-    public Dictionary<ResourceLocation, LootTable> LootTables { get; } = [];
+    public List<LootTable> LootTables { get; } = [];
 
     /// <summary>
     /// Tag resource locations to Tag objects mapping (for function tags, item tags, etc.).
     /// </summary>
-    public Dictionary<ResourceLocation, Tag> Tags { get; } = [];
+    public List<Tag> Tags { get; } = [];
 
     /// <summary>
     /// Predicate resource locations to Predicate objects mapping.
     /// </summary>
-    public Dictionary<ResourceLocation, Predicate> Predicates { get; } = [];
+    public List<Predicate> Predicates { get; } = [];
 
     /// <summary>
     /// Recipe resource locations to Recipe objects mapping.
     /// </summary>
-    public Dictionary<ResourceLocation, Recipe> Recipes { get; } = [];
+    public List<Recipe> Recipes { get; } = [];
 
-    public Datapack(string id, string? namespaceName = null) {
+    public Datapack(string id, string namespaceName) {
         Id = id;
-        Namespace = namespaceName ?? id;
-        // We need these two tags by default.
+        Namespace = namespaceName;
+        // We need these two tags by default. Register load tag for main function.
         Tags.Add(
-            new ResourceLocation("minecraft", "load"),
             new Tag(TagType.Function, [])
+            .SetLocation(new ResourceLocation("minecraft", "load"))
         );
         Tags.Add(
-            new ResourceLocation("minecraft", "tick"),
             new Tag(TagType.Function, [])
+            .SetLocation(new ResourceLocation("minecraft", "tick"))
         );
     }
 }

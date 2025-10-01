@@ -4,6 +4,7 @@ using Deco.Compiler;
 using Deco.Compiler.IR;
 using Deco.Compiler.IR.Passes;
 using Deco.Compiler.Ast.Passes.Lowering;
+using Deco.Compiler.Pack;
 
 class Program {
     static void Main(string[] args) {
@@ -84,14 +85,19 @@ int test(int a, int b) {
 
         var irs = for_loop_to_while_ast.Accept(new IRBuilder());
 
-        irs = LinkMergePass.Visit(irs);
+        var program = NestInstructionPass.Visit(irs);
 
-        var irs_str = string.Join("\n", irs.Select((e) => {
-            if (e is LabelInstruction) return e.ToString();
-            return "  " + e.ToString();
-        }));
+        program = LinkMergePass.Visit(program);
+
+        // Generate string from nested structure
+        var irs_str = GenerateNestedString(program);
 
         File.WriteAllText("./irs.txt", irs_str);
+
+        var datapack = new Datapack("6u753i8", "deco");
+        new DatapackBuilder(datapack).VisitProgram(program);
+
+        DatapackExporter.Export(datapack, "./datapack");
 
         return;
 
@@ -111,5 +117,16 @@ int test(int a, int b) {
         string testFileName = testList[1];
         string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
         string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks";
+    }
+
+    static string GenerateNestedString(ProgramInstruction program) {
+        List<string> lines = [program.ToString()];
+        foreach (var label in program.Labels) {
+            lines.Add(label.ToString());
+            foreach (var instr in label.Instructions) {
+                lines.Add("  " + instr.ToString());
+            }
+        }
+        return string.Join("\n", lines);
     }
 }

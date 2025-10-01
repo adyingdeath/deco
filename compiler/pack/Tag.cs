@@ -1,4 +1,4 @@
-namespace Deco.Compiler.Datapack;
+namespace Deco.Compiler.Pack;
 
 public enum TagType {
     Block,
@@ -24,7 +24,7 @@ public enum TagType {
 /// <summary>
 /// Represents a Minecraft datapack tag.
 /// </summary>
-public class Tag(TagType type, List<string> entries) {
+public class Tag(TagType type, List<string> entries) : HasResourceLocationBase<Tag> {
     public TagType Type { get; } = type;
     public bool Replace { get; set; } = false;
     /// <summary>

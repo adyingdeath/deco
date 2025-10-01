@@ -1,10 +1,9 @@
-namespace Deco.Compiler.Datapack;
+namespace Deco.Compiler.Pack;
 
 /// <summary>
 /// Represents a Minecraft datapack recipe.
 /// </summary>
-public class Recipe(string json)
-{
+public class Recipe(string json) : HasResourceLocationBase<Recipe> {
     /// <summary>
     /// The JSON content of the recipe.
     /// </summary>
