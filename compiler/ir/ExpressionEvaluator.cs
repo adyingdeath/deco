@@ -23,98 +23,122 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     }
 
     public Operand VisitBinaryOp(BinaryOpNode node) {
+        Operand left = node.Left.Accept(this);
+        Operand right = node.Right.Accept(this);
+
         // We should have a temporary variable to store the intermediate
         // result, so we need to determine where the variable should be
         // stored in.
-        var bothScoreboard = TypeUtils.IsScoreboard(node.Left.Type)
-            && TypeUtils.IsScoreboard(node.Right.Type);
-        Operand temp = bothScoreboard
+        bool hasStorage = left is StorageOperand || right is StorageOperand;
+        bool toScoreboard = false;
+        switch (node.Operator) {
+            case BinaryOperator.Add:
+            case BinaryOperator.Subtract:
+            case BinaryOperator.Multiply:
+            case BinaryOperator.Divide:
+                if (hasStorage) break; // No hope for temp to be scoreboard.
+                if (!left.IsScoreboard || !right.IsScoreboard) break;
+                toScoreboard = true;
+                break;
+            case BinaryOperator.Equal:
+            case BinaryOperator.NotEqual:
+            case BinaryOperator.LessThan:
+            case BinaryOperator.LessThanOrEqual:
+            case BinaryOperator.GreaterThan:
+            case BinaryOperator.GreaterThanOrEqual:
+            case BinaryOperator.LogicalAnd:
+            case BinaryOperator.LogicalOr:
+                toScoreboard = true;
+                break;
+        }
+
+        Operand temp = toScoreboard
             ? new ScoreboardOperand(Compiler.variableCodeGen.Next())
             : new StorageOperand(Compiler.variableCodeGen.Next());
-
+        
         switch (node.Operator) {
             case BinaryOperator.Add:
                 Insts.Add(new AddInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.Subtract:
                 Insts.Add(new SubtractInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.Multiply:
                 Insts.Add(new MultiplyInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.Divide:
                 Insts.Add(new DivideInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.Equal:
                 Insts.Add(new EqualInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.NotEqual:
                 Insts.Add(new NotEqualInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.LessThan:
                 Insts.Add(new LessThanInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.LessThanOrEqual:
                 Insts.Add(new LessThanOrEqualInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.GreaterThan:
                 Insts.Add(new GreaterThanInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.GreaterThanOrEqual:
                 Insts.Add(new GreaterThanOrEqualInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.LogicalAnd:
                 Insts.Add(new LogicalAndInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             case BinaryOperator.LogicalOr:
                 Insts.Add(new LogicalOrInstruction(
                     temp,
-                    node.Left.Accept(this),
-                    node.Right.Accept(this)
+                    left,
+                    right
                 ));
                 break;
             default:
