@@ -23,6 +23,9 @@ public abstract class IRVisitor<T> {
     public abstract T VisitLogicalAndInstruction(LogicalAndInstruction inst);
     public abstract T VisitLogicalOrInstruction(LogicalOrInstruction inst);
     public abstract T VisitJumpInstruction(JumpInstruction inst);
+    public abstract T VisitJumpIfInstruction(JumpIfInstruction inst);
+    public abstract T VisitJumpUnlessInstruction(JumpUnlessInstruction inst);
+    public abstract T VisitCallInstruction(CallInstruction inst);
     public abstract T VisitLinkInstruction(LinkInstruction inst);
     public abstract T VisitReturnInstruction(ReturnInstruction inst);
     public abstract T VisitCommandInstruction(CommandInstruction inst);

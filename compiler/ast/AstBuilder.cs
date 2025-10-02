@@ -116,7 +116,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         if (context.COMMAND() != null) {
             // COMMAND statement
             return new CommandNode(
-                context.COMMAND().GetText(),
+                context.COMMAND().GetText()[2..^1],
                 context.Start.Line,
                 context.Start.Column
             );

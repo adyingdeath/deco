@@ -24,6 +24,7 @@ public class JumpIfInstruction(
 ) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
     public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) if {Condition}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitJumpIfInstruction(this);
 }
 
 /// <summary>
@@ -34,6 +35,7 @@ public class JumpUnlessInstruction(
 ) : JumpInstruction(target) {
     public Condition Condition { get; } = condition;
     public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) unless {Condition}";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitJumpUnlessInstruction(this);
 }
 
 /// <summary>
@@ -43,6 +45,7 @@ public class CallInstruction(
     LabelInstruction target
 ) : JumpInstruction(target) {
     public override string ToString() => $"Call Label({Target.Label})";
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitCallInstruction(this);
 }
 
 /// <summary>

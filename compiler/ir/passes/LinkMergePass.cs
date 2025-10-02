@@ -19,7 +19,7 @@ public class LinkMergePass {
                 // Replace the link with the target's instructions
                 instrs.RemoveAt(i);
                 // Skip anchor labels
-                if (!link.Target.IsAnchor) {
+                if (link.Target.IsAnchor) {
                     instrs.InsertRange(i, link.Target.Instructions);
                 }
             } else {

@@ -37,20 +37,20 @@ class Program {
 
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
-int test1 = 5;
-int main() {
-    int result = test(6, 2);
-    return result + 1;
-}
-int test(int a, int b) {
-    if (test1 < a) {
-        test1 = a;
-        return b;
-    } else if (test1 < a + 1) {
-        int c = test1 + 1;
+int counter = 0;
+void main() {
+    counter = 7 + 8;
+    if (range(2, 10)) {
+        say in range!;
+    } else {
+        say out of range!;
     }
-    test1 = test1 + 2;
-    return test1;
+}
+bool range(int a, int b) {
+    if (a <= counter && counter <= b) {
+        return true;
+    }
+    return false;
 }
         ");
 

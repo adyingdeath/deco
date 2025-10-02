@@ -20,6 +20,20 @@ public partial class ConstantOperand(string value) : Operand {
         }
         return false;
     }
+    /// <summary>
+    /// Method to calculate its value representation in game. Like if this.Value
+    /// is "true", the GetValueInGame will return "1" because in minecraft we
+    /// store bool type true as 1 in scoreboard.
+    /// </summary>
+    /// <returns></returns>
+    public string GetValueInGame() {
+        if (Value.Equals("true")) {
+            return "1";
+        } else if (Value.Equals("false")) {
+            return "0";
+        }
+        return Value;
+    }
 
     [GeneratedRegex("[0-9]+")]
     private static partial Regex IntegerRegex();

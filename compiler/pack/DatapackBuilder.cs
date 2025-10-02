@@ -44,6 +44,38 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
         );
         return [$"execute store result score 0 {_datapack.Id} run function {location}"];
     }
+    public override List<string> VisitJumpIfInstruction(JumpIfInstruction inst) {
+        var location = new ResourceLocation(
+            _datapack.Namespace, inst.Target.Label
+        );
+        // Added a condition check
+        // The right operand is always ConstantOperand in JumpIfInstruction, you
+        // can find it in IRBuilder
+        if (inst.Condition.Right is not ConstantOperand constant) return [];
+        if (inst.Condition.Left is ScoreboardOperand scoreboard) {
+            return [$"execute if score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}"];
+        }
+        // It can't be storage, because the left operand is always the result
+        // of evaluating some logical expressions, whose result should be
+        // a bool type, which is stored in Scoreboard.
+        return [];
+    }
+    public override List<string> VisitJumpUnlessInstruction(JumpUnlessInstruction inst) {
+        var location = new ResourceLocation(
+            _datapack.Namespace, inst.Target.Label
+        );
+        if (inst.Condition.Right is not ConstantOperand constant) return [];
+        if (inst.Condition.Left is ScoreboardOperand scoreboard) {
+            return [$"execute unless score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}"];
+        }
+        return [];
+    }
+    public override List<string> VisitCallInstruction(CallInstruction inst) {
+        var location = new ResourceLocation(
+            _datapack.Namespace, inst.Target.Label
+        );
+        return [$"execute store result score 0 {_datapack.Id} run function {location}"];
+    }
 
     public override List<string> VisitLinkInstruction(LinkInstruction inst) {
         return [];
@@ -59,7 +91,7 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             (ConstantOperand source, ScoreboardOperand dest) =>
                 // Move constant to scoreboard:
                 // /scoreboard players set <target> <objective> <value>
-                [$"scoreboard players set {dest.Code} {_datapack.Id} {source.Value}"],
+                [$"scoreboard players set {dest.Code} {_datapack.Id} {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, ScoreboardOperand dest) =>
                 // Move scoreboard to scoreboard:
@@ -75,7 +107,7 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             (ConstantOperand source, StorageOperand dest) =>
                 // Move constant to storage:
                 // /data modify storage <id> <path> set value <value>
-                [$"data modify storage {_datapack.Id} {dest.Code} set value {source.Value}"],
+                [$"data modify storage {_datapack.Id} {dest.Code} set value {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, StorageOperand dest) =>
                 // Move scoreboard to storage:
@@ -92,17 +124,17 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
     }
 
     public override List<string> VisitReturnIfInstruction(ReturnIfInstruction inst) {
-        return (inst.Condition.Left, inst.Condition.Left) switch {
+        return (inst.Condition.Left, inst.Condition.Right) switch {
             (ConstantOperand left, ConstantOperand right) =>
                 left.Value.Equals(right.Value) ? [$"return {GenOperand(inst.Value)}"] : [],
 
             // ----- Constant and Scoreboard -----
             (ScoreboardOperand left, ConstantOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {left.Code} {_datapack.Id} matches {GenOperand(right)} return {GenOperand(inst.Value)}"],
+                [$"execute if score {left.Code} {_datapack.Id} matches {GenOperand(right)} run return {GenOperand(inst.Value)}"],
             (ConstantOperand left, ScoreboardOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {right.Code} {_datapack.Id} matches {GenOperand(left)} return {GenOperand(inst.Value)}"],
+                [$"execute if score {right.Code} {_datapack.Id} matches {GenOperand(left)} run return {GenOperand(inst.Value)}"],
             (ScoreboardOperand left, ScoreboardOperand right) =>
                 // Move scoreboard to scoreboard:
                 // /execute if score <destTarget> <destObj> = <sourceTarget> <sourceObj>
