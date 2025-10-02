@@ -39,36 +39,29 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
     }
 
     public override List<string> VisitJumpInstruction(JumpInstruction inst) {
+        List<string> insts = [];
         var location = new ResourceLocation(
             _datapack.Namespace, inst.Target.Label
         );
-        return [$"execute store result score 0 {_datapack.Id} run function {location}"];
-    }
-    public override List<string> VisitJumpIfInstruction(JumpIfInstruction inst) {
-        var location = new ResourceLocation(
-            _datapack.Namespace, inst.Target.Label
-        );
-        // Added a condition check
-        // The right operand is always ConstantOperand in JumpIfInstruction, you
-        // can find it in IRBuilder
-        if (inst.Condition.Right is not ConstantOperand constant) return [];
-        if (inst.Condition.Left is ScoreboardOperand scoreboard) {
-            return [$"execute if score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}"];
+        if (inst.IsFallThrough) {
+            insts.Add("scoreboard players set 0 6u753i8 0");
         }
-        // It can't be storage, because the left operand is always the result
-        // of evaluating some logical expressions, whose result should be
-        // a bool type, which is stored in Scoreboard.
-        return [];
-    }
-    public override List<string> VisitJumpUnlessInstruction(JumpUnlessInstruction inst) {
-        var location = new ResourceLocation(
-            _datapack.Namespace, inst.Target.Label
-        );
-        if (inst.Condition.Right is not ConstantOperand constant) return [];
-        if (inst.Condition.Left is ScoreboardOperand scoreboard) {
-            return [$"execute unless score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}"];
+        if (inst is ConditionalInstruction condInst) {
+            // Added a condition check
+            // The right operand is always ConstantOperand in JumpIfInstruction, you
+            // can find it in IRBuilder
+            if (condInst.Condition.Right is not ConstantOperand constant) return [];
+            if (condInst.Condition.Left is ScoreboardOperand scoreboard) {
+                var ifOrUnless = inst is JumpIfInstruction ? "if" : "unless";
+                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}");
+            }
+            // It can't be storage, because the left operand is always the result
+            // of evaluating some logical expressions, whose result should be
+            // a bool type, which is stored in Scoreboard.
+        } else if (inst is JumpIfInstruction) {
+            insts.Add($"execute store result score 0 {_datapack.Id} run function {location}");
         }
-        return [];
+        return insts;
     }
     public override List<string> VisitCallInstruction(CallInstruction inst) {
         var location = new ResourceLocation(

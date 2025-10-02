@@ -1,5 +1,9 @@
 namespace Deco.Compiler.IR;
 
+public interface ConditionalInstruction {
+    Condition Condition { get; }
+}
+
 /// <summary>
 /// IR instruction for unconditional jump to a label.
 /// </summary>
@@ -21,10 +25,9 @@ public class JumpInstruction(
 /// </summary>
 public class JumpIfInstruction(
     Condition condition, LabelInstruction target
-) : JumpInstruction(target) {
+) : JumpInstruction(target), ConditionalInstruction {
     public Condition Condition { get; } = condition;
     public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) if {Condition}";
-    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitJumpIfInstruction(this);
 }
 
 /// <summary>
@@ -32,10 +35,9 @@ public class JumpIfInstruction(
 /// </summary>
 public class JumpUnlessInstruction(
     Condition condition, LabelInstruction target
-) : JumpInstruction(target) {
+) : JumpInstruction(target), ConditionalInstruction {
     public Condition Condition { get; } = condition;
     public override string ToString() => (IsFallThrough ? "<- " : "") + $"Jump Label({Target.Label}) unless {Condition}";
-    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitJumpUnlessInstruction(this);
 }
 
 /// <summary>
@@ -99,7 +101,9 @@ public class ReturnInstruction(Operand? value = null) : IRInstruction {
     public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitReturnInstruction(this);
 }
 
-public class ReturnIfInstruction(Condition condition, Operand? value = null) : IRInstruction {
+public class ReturnIfInstruction(
+    Condition condition, Operand? value = null
+) : IRInstruction, ConditionalInstruction {
     public Condition Condition { get; } = condition;
     public Operand? Value { get; } = value;
     public override string ToString() => $"Return {Value} if {Condition}";

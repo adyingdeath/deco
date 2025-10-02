@@ -40,7 +40,7 @@ class Program {
 int counter = 0;
 void main() {
     counter = 7 + 8;
-    if (range(2, 10)) {
+    if (range(16, 18)) {
         say in range!;
     } else {
         say out of range!;
