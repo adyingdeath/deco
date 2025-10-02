@@ -5,7 +5,7 @@ namespace Deco.Compiler.Pack;
 /// <summary>
 /// Builds a Datapack from a list of IR instructions.
 /// </summary>
-public class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
+public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
     private readonly Datapack _datapack = datapack;
 
     public override List<string> VisitProgram(ProgramInstruction inst) {
@@ -31,10 +31,6 @@ public class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
             if (load == null) return [];
             load.Entries.Add(function.Location.ToString());
         }
-        return [];
-    }
-
-    public override List<string> VisitBinaryInstruction(BinaryInstruction inst) {
         return [];
     }
 
@@ -103,10 +99,10 @@ public class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
             // ----- Constant and Scoreboard -----
             (ScoreboardOperand left, ConstantOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {left.Code} {_datapack.Id} matches {right.Value} return {GenOperand(inst.Value)}"],
+                [$"execute if score {left.Code} {_datapack.Id} matches {GenOperand(right)} return {GenOperand(inst.Value)}"],
             (ConstantOperand left, ScoreboardOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {right.Code} {_datapack.Id} matches {left.Value} return {GenOperand(inst.Value)}"],
+                [$"execute if score {right.Code} {_datapack.Id} matches {GenOperand(left)} return {GenOperand(inst.Value)}"],
             (ScoreboardOperand left, ScoreboardOperand right) =>
                 // Move scoreboard to scoreboard:
                 // /execute if score <destTarget> <destObj> = <sourceTarget> <sourceObj>
@@ -132,17 +128,5 @@ public class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
 
     public override List<string> VisitReturnInstruction(ReturnInstruction inst) {
         return [$"return {GenOperand(inst.Value)}"];
-    }
-
-    public override List<string> VisitUnaryInstruction(UnaryInstruction inst) {
-        return [];
-    }
-
-    public string GenOperand(Operand? operand) {
-        return operand switch {
-            ConstantOperand constant => constant.Value,
-            VariableOperand variable => variable.Code,
-            _ => ""
-        };
     }
 }
