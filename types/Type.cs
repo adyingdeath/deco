@@ -89,17 +89,6 @@ public static class TypeUtils {
         return type.Equals(IntType) || type.Equals(FloatType);
     }
 
-    /// <summary>
-    /// This helper function is used to check if a given type should be stored
-    /// in scoreboard or not
-    /// </summary>
-    /// <param name="type"></param>
-    /// <returns>True if the type can be stored in scoreboard. False if it can
-    /// only be stored in storage or something else.</returns>
-    public static bool IsScoreboard(IType type) {
-        return type.Equals(IntType) || type.Equals(BoolType);
-    }
-
     public static string GetInitialValue(IType type) {
         if (type.Equals(IntType) || type.Equals(BoolType)) {
             return "0";

@@ -9,7 +9,11 @@ public abstract class IRVisitor<T> {
     public abstract T VisitLabelInstruction(LabelInstruction inst);
     public abstract T VisitMoveInstruction(MoveInstruction inst);
     public abstract T VisitBinaryInstruction(BinaryInstruction inst);
-    // --- Specific Binary Instruction Types ---
+    // --- Push and Pop ---
+    public abstract T VisitPushInstruction(PushInstruction inst);
+    public abstract T VisitPopInstruction(PopInstruction inst);
+
+    // --- Binary Operation Types ---
     public abstract T VisitAddInstruction(AddInstruction inst);
     public abstract T VisitSubtractInstruction(SubtractInstruction inst);
     public abstract T VisitMultiplyInstruction(MultiplyInstruction inst);

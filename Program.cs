@@ -39,18 +39,15 @@ class Program {
         string processedCode = preprocessor.Preprocess(@"
 int counter = 0;
 void main() {
-    counter = 7 + 8;
-    if (range(16, 18)) {
-        say in range!;
-    } else {
-        say out of range!;
-    }
+    counter = 6 + 1;
+    int result = 567;
+    result = chain(counter);
 }
-bool range(int a, int b) {
-    if (a <= counter && counter <= b) {
-        return true;
+int chain(int a) {
+    if (a == 1) {
+        return 1;
     }
-    return false;
+    return a * chain(a - 1);
 }
         ");
 

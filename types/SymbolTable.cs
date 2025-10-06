@@ -1,3 +1,5 @@
+using Deco.Compiler.IR;
+
 namespace Deco.Types;
 
 /// <summary>
@@ -15,7 +17,7 @@ public class Symbol(
     public int Column { get; } = column;
 
     public static readonly Symbol Uninitialized = new(
-        "__uninitialized__", 
+        "__uninitialized__",
         "#", // Invalid address
         TypeUtils.UnknownType, // Use UnknownType
         SymbolKind.Variable, // Add a special kind if you want

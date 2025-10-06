@@ -26,35 +26,13 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
         Operand left = node.Left.Accept(this);
         Operand right = node.Right.Accept(this);
 
-        // We should have a temporary variable to store the intermediate
-        // result, so we need to determine where the variable should be
-        // stored in.
-        bool hasStorage = left is StorageOperand || right is StorageOperand;
-        bool toScoreboard = false;
-        switch (node.Operator) {
-            case BinaryOperator.Add:
-            case BinaryOperator.Subtract:
-            case BinaryOperator.Multiply:
-            case BinaryOperator.Divide:
-                if (hasStorage) break; // No hope for temp to be scoreboard.
-                if (!left.IsScoreboard || !right.IsScoreboard) break;
-                toScoreboard = true;
-                break;
-            case BinaryOperator.Equal:
-            case BinaryOperator.NotEqual:
-            case BinaryOperator.LessThan:
-            case BinaryOperator.LessThanOrEqual:
-            case BinaryOperator.GreaterThan:
-            case BinaryOperator.GreaterThanOrEqual:
-            case BinaryOperator.LogicalAnd:
-            case BinaryOperator.LogicalOr:
-                toScoreboard = true;
-                break;
-        }
-
-        Operand temp = toScoreboard
-            ? new ScoreboardOperand(Compiler.variableCodeGen.Next())
-            : new StorageOperand(Compiler.variableCodeGen.Next());
+        // We should have a temporary variable to store the intermediate result,
+        // so we need to determine where the variable should be stored in. Here
+        // we used to use complex logics to determine the temp variable's type,
+        // but I move the logics to OperandUtils now.
+        Operand temp = OperandUtils.ResolveVariable(
+            left, right, Compiler.variableCodeGen.Next()
+        );
         
         switch (node.Operator) {
             case BinaryOperator.Add:
@@ -177,20 +155,31 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
         // Get the function's symbol. We need symbols of its arguments and return
         if (scope.LookupSymbol(node.Name.Name) is not FunctionSymbol symbol) return null!;
 
+        List<IRInstruction> popInsts = [];
+
+        // Pass arguments using Move
         for (int i = 0; i < symbol.ParameterSymbol.Count; i++) {
             if (node.Arguments.Count < i) {
                 throw new Exception($"function '{node.Name.Name}' should have {symbol.ParameterSymbol.Count} parameters, but got {node.Arguments.Count}.");
             }
             Operand argValue = node.Arguments[i].Accept(this);
-            Insts.Add(new MoveInstruction(
-                argValue, VariableOperand.Create(symbol.ParameterSymbol[i]
-            )));
+            VariableOperand argVar = (VariableOperand)VariableOperand.Create(symbol.ParameterSymbol[i]);
+            // Push the old value to stack, with its coresponding Pop. We will
+            // reverse the pop list later.
+            Insts.Add(new PushInstruction(argVar));
+            popInsts.Add(new PopInstruction(argVar));
+            // Move the calculated value to the parameter variable operand
+            Insts.Add(new MoveInstruction(argValue, argVar));
         }
 
         // Really call the function with a Call instruction
         Insts.Add(new CallInstruction(
             new LabelInstruction(symbol.Code)
         ));
+
+        // Pop old value from stack
+        popInsts.Reverse();
+        Insts.AddRange(popInsts);
 
         var returnSymbol = symbol.ReturnSymbol;
         if (returnSymbol == null || returnSymbol.Type.Equals(TypeUtils.VoidType)) {
@@ -202,10 +191,7 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     public Operand VisitIdentifier(IdentifierNode node) {
         var symbol = node.FindScope()?.LookupSymbol(node.Name)
             ?? throw new InvalidOperationException($"Symbol '{node.Name}' not found");
-        var scoreboard = TypeUtils.IsScoreboard(symbol.Type);
-        return scoreboard
-            ? new ScoreboardOperand(symbol.Code)
-            : new StorageOperand(symbol.Code);
+        return VariableOperand.Create(symbol);
     }
 
     public Operand VisitIf(IfNode node) {
@@ -226,10 +212,7 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
 
     public Operand VisitUnaryOp(UnaryOpNode node) {
         // Create temporary variable based on operand type
-        var scoreboard = TypeUtils.IsScoreboard(node.Operand.Type);
-        Operand temp = scoreboard
-            ? new ScoreboardOperand(Compiler.variableCodeGen.Next())
-            : new StorageOperand(Compiler.variableCodeGen.Next());
+        Operand temp = OperandUtils.ParseVariable(node.Operand.Type, Compiler.variableCodeGen.Next());
 
         switch (node.Operator) {
             case UnaryOperator.Negate:

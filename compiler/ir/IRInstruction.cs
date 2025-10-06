@@ -27,3 +27,19 @@ public class ProgramInstruction : IRInstruction {
 
     public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitProgram(this);
 }
+
+public class PushInstruction(VariableOperand operand) : IRInstruction {
+    public VariableOperand Operand = operand;
+
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitPushInstruction(this);
+
+    public override string ToString() => $"Push {Operand} => Stack({Operand.StackName})";
+}
+
+public class PopInstruction(VariableOperand operand) : IRInstruction {
+    public VariableOperand Operand = operand;
+
+    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitPopInstruction(this);
+
+    public override string ToString() => $"Pop Stack({Operand.StackName}) => {Operand}";
+}

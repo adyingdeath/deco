@@ -154,4 +154,29 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
     public override List<string> VisitReturnInstruction(ReturnInstruction inst) {
         return [$"return {GenOperand(inst.Value)}"];
     }
+
+    public override List<string> VisitPushInstruction(PushInstruction inst) {
+        if (inst.Operand is ScoreboardOperand scoreboard) {
+            return [
+                $"data modify storage minecraft:{_datapack.Id} {scoreboard.StackName} prepend value 0",
+                $"execute store result storage minecraft:6u753i8 {scoreboard.StackName}[0] int 1 run scoreboard players get {scoreboard.Code} {_datapack.Id}"
+            ];
+        }
+        return [$"data modify storage minecraft:{_datapack.Id} {inst.Operand.StackName} prepend from storage minecraft:{_datapack.Id} {inst.Operand.Code}"];
+    }
+
+    public override List<string> VisitPopInstruction(PopInstruction inst) {
+        if (inst.Operand is ScoreboardOperand scoreboard) {
+            return [
+                $"execute store result score {scoreboard.Code} {_datapack.Id} run data get storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0] 1",
+                $"data remove storage minecraft:{_datapack.Id} {scoreboard.StackName}[0]"
+            ];
+        }
+        return [
+            // Pop the value to the Operant.
+            $"data modify storage minecraft:{_datapack.Id} {inst.Operand.Code} set from storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0]",
+            // Remove the element we've just poped.
+            $"data remove storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0]",
+        ];
+    }
 }

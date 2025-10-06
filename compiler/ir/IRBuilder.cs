@@ -15,10 +15,7 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
         Symbol symbol = varDef.FindScope()?.LookupSymbol(varDef.Name.Name)!;
 
         // Determine if the variable should be stored in scoreboard or storage.
-        var isScoreboard = TypeUtils.IsScoreboard(symbol.Type);
-        Operand variable = isScoreboard
-            ? new ScoreboardOperand(symbol.Code)
-            : new StorageOperand(symbol.Code);
+        Operand variable = VariableOperand.Create(symbol);
 
         // Create a MOVE instruction to set the initial value of the variable
         if (varDef.InitialValue != null) {
@@ -45,6 +42,10 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
         // Initialize the main scoreboard and the main storage
         _inst.Add(new CommandInstruction($"scoreboard objectives remove {_datapack.Id}"));
         _inst.Add(new CommandInstruction($"scoreboard objectives add {_datapack.Id} dummy"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} String set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Double set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Float set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Int set value []"));
         //_inst.Add(new CommandInstruction($"data remove storage minecraft:{_datapack.Id}"));
         node.VariableDefinitions.ForEach((varDef) => {
             BuildVariableDefinition(varDef, _inst);
