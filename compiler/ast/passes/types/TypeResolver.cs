@@ -273,10 +273,15 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
     }
 
     // Helper methods for type calculation
-    private IType CalculateBinaryOpType(IType left, BinaryOperator op, IType right) {
+    private PrimitiveType CalculateBinaryOpType(
+        IType left, BinaryOperator op, IType right
+    ) {
         switch (op) {
             case BinaryOperator.Add:
-                if (left.Equals(TypeUtils.StringType) && right.Equals(TypeUtils.StringType)) {
+                if (
+                    left.Equals(TypeUtils.StringType)
+                    && right.Equals(TypeUtils.StringType)
+                ) {
                     return TypeUtils.StringType;
                 }
                 if (IsNumericType(left) && IsNumericType(right)) {
