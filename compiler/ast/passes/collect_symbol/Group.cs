@@ -1,4 +1,4 @@
-using Deco.Compiler.Ast;
+using Deco.Compiler.Lib.Core;
 using Deco.Types;
 
 namespace Deco.Compiler.Ast.Passes.Collect_Symbol;
@@ -35,5 +35,8 @@ public class Group(Scope symbolTable) {
                 Console.WriteLine($"  {error}");
             }
         }
+
+        // Collect symbols for library functions.
+        LibraryFunctionSymbolCollector.Build(symbolTable, [new PrintFunction()]);
     }
 }

@@ -46,9 +46,10 @@ public partial class DatapackBuilder {
             return [$"""# ERROR: Comparison destination must be a scoreboard operand, but got "{destOp}"."""];
         }
 
-        var commands = new List<string>();
-        // Default to false (0)
-        commands.Add($"scoreboard players set {dest.Code} {_datapack.Id} 0");
+        List<string> commands = [
+            // Default to false (0)
+            $"scoreboard players set {dest.Code} {_datapack.Id} 0"
+        ];
 
         string condition;
         string executeVerb = invert ? "unless" : "if";
