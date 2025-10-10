@@ -6,7 +6,7 @@ namespace Deco.Compiler.IR;
 
 public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
     private Datapack _datapack = datapack;
-    public ExpressionEvaluator evaluator = new();
+    public ExpressionEvaluator evaluator = new(datapack);
     public List<IRInstruction> Instructions = [];
 
     private void BuildVariableDefinition(VariableDefinitionNode varDef, List<IRInstruction> insts) {

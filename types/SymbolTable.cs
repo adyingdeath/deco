@@ -1,4 +1,5 @@
 using Deco.Compiler.IR;
+using Deco.Compiler.Lib;
 
 namespace Deco.Types;
 
@@ -34,6 +35,17 @@ public class FunctionSymbol(
 ) {
     public List<Symbol> ParameterSymbol { get; set; } = parameterSymbol;
     public Symbol ReturnSymbol { get; set; } = returnSymbol;
+}
+
+public class LibraryFunctionSymbol(
+    string name, string code, IType type, List<Symbol> parameterSymbol,
+    Symbol returnSymbol, DecoFunction implementation,
+    int line = 0, int column = 0
+) : FunctionSymbol(
+    name, code, type, parameterSymbol, returnSymbol,
+    line, column
+) {
+    public DecoFunction Implementation { get; } = implementation;
 }
 
 /// <summary>

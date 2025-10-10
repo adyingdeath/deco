@@ -45,12 +45,13 @@ public class LibraryFunctionSymbolCollector {
 
         // ----- Function -----
         var functionType = new FunctionType(returnType, parameterTypes);
-        var functionSymbol = new FunctionSymbol(
+        var functionSymbol = new LibraryFunctionSymbol(
             function.Name,
             "###", // Library functions don't have entities, so we don't need code.
             functionType,
             parameterSymbols,
             Symbol.Uninitialized,
+            function,
             0,
             0
         );

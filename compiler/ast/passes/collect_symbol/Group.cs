@@ -27,6 +27,9 @@ public class Group(Scope symbolTable) {
             }
         }
 
+        // Collect symbols for library functions.
+        LibraryFunctionSymbolCollector.Build(symbolTable, [new PrintFunction()]);
+
         var usageChecker = new IdentifierUsageChecker(symbolTable);
         astNode.Accept(usageChecker);
         if (usageChecker.Errors.Count != 0) {
@@ -35,8 +38,5 @@ public class Group(Scope symbolTable) {
                 Console.WriteLine($"  {error}");
             }
         }
-
-        // Collect symbols for library functions.
-        LibraryFunctionSymbolCollector.Build(symbolTable, [new PrintFunction()]);
     }
 }

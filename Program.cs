@@ -42,8 +42,10 @@ void main() {
     counter = 6 + 1;
     int result = 567;
     result = chain(counter);
+    print(result);
 }
 int chain(int a) {
+    print(a);
     if (a == 1) {
         return 1;
     }

@@ -1,9 +1,12 @@
 using Deco.Compiler.Ast;
+using Deco.Compiler.Lib;
+using Deco.Compiler.Pack;
 using Deco.Types;
 
 namespace Deco.Compiler.IR;
 
-public class ExpressionEvaluator : IAstVisitor<Operand> {
+public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
+    private Datapack _datapack = datapack;
     private List<IRInstruction> Insts = [];
     public ExpressionEvaluator Inst(List<IRInstruction> irs) {
         Insts = irs;
@@ -13,7 +16,7 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
     public Operand VisitProgram(ProgramNode node) {
         throw new NotImplementedException();
     }
-    
+
     public Operand VisitArgument(ArgumentNode node) {
         throw new NotImplementedException();
     }
@@ -33,7 +36,7 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
         Operand temp = OperandUtils.ResolveVariable(
             left, right, Compiler.variableCodeGen.Next()
         );
-        
+
         switch (node.Operator) {
             case BinaryOperator.Add:
                 Insts.Add(new AddInstruction(
@@ -172,10 +175,32 @@ public class ExpressionEvaluator : IAstVisitor<Operand> {
             Insts.Add(new MoveInstruction(argValue, argVar));
         }
 
-        // Really call the function with a Call instruction
-        Insts.Add(new CallInstruction(
-            new LabelInstruction(symbol.Code)
-        ));
+        if (symbol is LibraryFunctionSymbol libFunc) {
+            // Handle specially the library function here.
+            // Library functions don't need real Call, we just need to call its
+            // `Run` method.
+            var context = new Context();
+            var paramArg = libFunc.ParameterSymbol.Select((sym) => {
+                if (TypeUtils.IsScoreboard(sym.Type)) {
+                    return new Argument(ArgumentType.SCOREBOARD, _datapack.Id, sym.Code);
+                } else {
+                    return new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", sym.Code);
+                }
+            }).ToList();
+            var returnArg = TypeUtils.IsScoreboard(libFunc.ReturnSymbol.Type)
+                ? new Argument(ArgumentType.SCOREBOARD, _datapack.Id, libFunc.ReturnSymbol.Code)
+                : new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", libFunc.ReturnSymbol.Code);
+            libFunc.Implementation.Run(context, paramArg, returnArg);
+            // Now insert generated commands to the function call's position
+            context.CommandList.ForEach((cmd) => {
+                Insts.Add(new CommandInstruction(cmd));
+            });
+        } else {
+            // Really call the function with a Call instruction
+            Insts.Add(new CallInstruction(
+                new LabelInstruction(symbol.Code)
+            ));
+        }
 
         // Pop old value from stack
         popInsts.Reverse();

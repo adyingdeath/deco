@@ -117,4 +117,9 @@ public static class TypeUtils {
         }
         return type;
     }
+
+    public static bool IsScoreboard(IType type) {
+        // Only Int and Bool are stored in scoreboard.
+        return type.Equals(IntType) || type.Equals(BoolType);
+    }
 }
