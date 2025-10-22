@@ -62,41 +62,22 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
     }
 
     public override AstNode VisitVariableDefinition(VariableDefinitionNode node) {
-        // First visit the name to potentially update its type
+        /* First visit the name to potentially update its type. The VisitIdentifier
+        will update the symbol's type first, then this IdentifierNode's type. */
         var newName = (IdentifierNode)Visit(node.Name);
 
         ExpressionNode? newInit = null;
-        IType inferredType = newName.Type; // Start with current type from symbol table
 
         if (node.InitialValue != null) {
             newInit = (ExpressionNode)Visit(node.InitialValue);
 
-            // Infer variable type from the initial value
-            if (TypeUtils.IsUnresolved(inferredType)) {
-                // If current type is unknown, infer from initializer
-                inferredType = newInit.Type;
-
-                // Also update the symbol table with the inferred type
-                var symbol = _scope.Current().LookupSymbol(node.Name.Name);
-                if (symbol != null) {
-                    symbol.Type = inferredType; // Update symbol table
-                    // Create new identifier with resolved type
-                    newName = new IdentifierNode(node.Name.Name, node.Name.Line, node.Name.Column) {
-                        Type = inferredType
-                    };
-                }
-            } else {
-                // Check type compatibility
-                if (!AreTypesCompatible(newInit.Type, inferredType)) {
-                    _errors.Add($"Type mismatch in variable definition '{node.Name.Name}' at line {node.Line}: expected {inferredType}, got {newInit.Type}");
-                }
+            if (!AreTypesCompatible(newInit.Type, newName.Type)) {
+                _errors.Add($"Type mismatch in variable definition '{node.Name.Name}' at line {node.Line}: expected {newName.Type}, got {newInit.Type}");
             }
         }
 
         // Return new node with resolved identifier
-        return new VariableDefinitionNode(
-            newName, newInit, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(name: newName, initialValue: newInit);
     }
 
     public override AstNode VisitAssignment(AssignmentNode node) {
@@ -203,10 +184,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var resultType = CalculateBinaryOpType(newLeft.Type, node.Operator, newRight.Type);
 
         // Create new node and set its type
-        var newNode = new BinaryOpNode(newLeft, node.Operator, newRight, node.Line, node.Column);
-        newNode.Type = resultType;
-
-        return newNode.CloneContext(node);
+        return node.With(type: resultType, left: newLeft, right: newRight);
     }
 
     public override AstNode VisitUnaryOp(UnaryOpNode node) {
@@ -216,10 +194,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var resultType = CalculateUnaryOpType(node.Operator, newOperand.Type);
 
         // Create new node and set its type
-        var newNode = new UnaryOpNode(node.Operator, newOperand, node.Line, node.Column);
-        newNode.Type = resultType;
-
-        return newNode.CloneContext(node);
+        return node.With(type: resultType, operand: newOperand);
     }
 
     public override AstNode VisitFunctionCall(FunctionCallNode node) {
@@ -247,10 +222,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         }
 
         // Create new node and set its type
-        var newNode = new FunctionCallNode(newName, newArguments, node.Line, node.Column);
-        newNode.Type = returnType;
-
-        return newNode.CloneContext(node);
+        return node.With(type: returnType, name: newName, arguments: newArguments);
     }
 
     public override AstNode VisitIdentifier(IdentifierNode node) {
@@ -261,10 +233,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         }
 
         // Create new node and set its resolved type
-        var newNode = new IdentifierNode(node.Name, node.Line, node.Column);
-        newNode.Type = symbol.Type;
-
-        return newNode.CloneContext(node);
+        return node.With(type: symbol.Type, name: node.Name);
     }
 
     public override AstNode VisitLiteral(LiteralNode node) {
@@ -391,9 +360,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
     }
     public override AstNode VisitArgument(ArgumentNode node) {
         var newName = (IdentifierNode)Visit(node.Name);
-        return new ArgumentNode(
-            node.Type, newName, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(name: newName);
     }
 
     // Stub implementations for other nodes
