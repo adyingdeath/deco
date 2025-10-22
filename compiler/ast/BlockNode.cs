@@ -6,6 +6,19 @@ public class BlockNode(List<StatementNode>? statements = null, int line = 0, int
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitBlock(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public BlockNode With(List<StatementNode>? statements = null) {
+        var newNode = new BlockNode(
+            statements ?? [.. this.Statements],
+            this.Line,
+            this.Column
+        );
+        return (BlockNode)newNode.CloneContext(this);
+    }
 }
 
 // <summary>
@@ -16,5 +29,18 @@ public class FakeBlockNode(List<StatementNode>? statements = null, int line = 0,
 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFakeBlock(this);
+    }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public FakeBlockNode With(List<StatementNode>? statements = null) {
+        var newNode = new FakeBlockNode(
+            statements ?? [.. this.Statements],
+            this.Line,
+            this.Column
+        );
+        return (FakeBlockNode)newNode.CloneContext(this);
     }
 }

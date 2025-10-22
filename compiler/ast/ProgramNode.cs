@@ -12,4 +12,21 @@ public class ProgramNode(
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitProgram(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public ProgramNode With(
+        List<VariableDefinitionNode>? variableDefinitions = null,
+        List<FunctionNode>? functions = null
+    ) {
+        var newNode = new ProgramNode(
+            variableDefinitions ?? [.. this.VariableDefinitions],
+            functions ?? [.. this.Functions],
+            this.Line,
+            this.Column
+        );
+        return (ProgramNode)newNode.CloneContext(this);
+    }
 }

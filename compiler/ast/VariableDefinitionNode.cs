@@ -7,4 +7,21 @@ public class VariableDefinitionNode(IdentifierNode name, ExpressionNode? init, i
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitVariableDefinition(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public VariableDefinitionNode With(
+        IdentifierNode? name = null,
+        ExpressionNode? initialValue = null
+    ) {
+        var newNode = new VariableDefinitionNode(
+            name ?? this.Name,
+            initialValue ?? this.InitialValue,
+            this.Line,
+            this.Column
+        );
+        return (VariableDefinitionNode)newNode.CloneContext(this);
+    }
 }

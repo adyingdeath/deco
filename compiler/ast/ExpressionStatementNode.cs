@@ -6,4 +6,17 @@ public class ExpressionStatementNode(ExpressionNode expression, int line = 0, in
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitExpressionStatement(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public ExpressionStatementNode With(ExpressionNode? expression = null) {
+        var newNode = new ExpressionStatementNode(
+            expression ?? this.Expression,
+            this.Line,
+            this.Column
+        );
+        return (ExpressionStatementNode)newNode.CloneContext(this);
+    }
 }

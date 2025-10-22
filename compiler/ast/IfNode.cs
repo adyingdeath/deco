@@ -8,4 +8,23 @@ public class IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode? el
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitIf(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public IfNode With(
+        ExpressionNode? condition = null,
+        BlockNode? thenBlock = null,
+        BlockNode? elseBlock = null
+    ) {
+        var newNode = new IfNode(
+            condition ?? this.Condition,
+            thenBlock ?? this.ThenBlock,
+            elseBlock ?? this.ElseBlock,
+            this.Line,
+            this.Column
+        );
+        return (IfNode)newNode.CloneContext(this);
+    }
 }

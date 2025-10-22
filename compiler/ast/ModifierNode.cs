@@ -9,4 +9,21 @@ public class ModifierNode(IdentifierNode name, List<ExpressionNode>? parameters 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitModifier(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public ModifierNode With(
+        IdentifierNode? name = null,
+        List<ExpressionNode>? parameters = null
+    ) {
+        var newNode = new ModifierNode(
+            name ?? this.Name,
+            parameters ?? [.. this.Parameters],
+            this.Line,
+            this.Column
+        );
+        return (ModifierNode)newNode.CloneContext(this);
+    }
 }

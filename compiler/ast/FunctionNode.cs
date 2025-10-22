@@ -20,4 +20,27 @@ public class FunctionNode(
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFunction(this);
     }
+
+    /// <summary>
+    /// Creates a new Node that is a copy of the current one,
+    /// but with the specified properties replaced.
+    /// </summary>
+    public FunctionNode With(
+        List<ModifierNode>? modifiers = null,
+        IType? returnType = null,
+        IdentifierNode? name = null,
+        List<ArgumentNode>? arguments = null,
+        BlockNode? body = null
+    ) {
+        var newNode = new FunctionNode(
+            modifiers ?? [.. this.Modifiers],
+            returnType ?? this.ReturnType,
+            name ?? this.Name,
+            arguments ?? [.. this.Arguments],
+            body ?? this.Body,
+            this.Line,
+            this.Column
+        );
+        return (FunctionNode)newNode.CloneContext(this);
+    }
 }
