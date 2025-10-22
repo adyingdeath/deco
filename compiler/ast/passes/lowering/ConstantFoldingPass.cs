@@ -27,7 +27,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
         // If we cannot fold the expression, return a new BinaryOpNode with the
         // potentially transformed children.
-        return new BinaryOpNode(newLeft, node.Operator, newRight, node.Line, node.Column);
+        return node.With(left: newLeft, right: newRight);
     }
 
     private AstNode FoldBinaryOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
@@ -59,9 +59,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
             // Other combinations cannot be folded
             default:
-                var newNode = (BinaryOpNode)new BinaryOpNode(left, original.Operator, right, original.Line, original.Column).CloneContext(original);
-                newNode.Type = original.Type;
-                return newNode;
+                return original.With(left: left, right: right);
         }
     }
 
@@ -70,7 +68,8 @@ public class ConstantFoldingPass : AstTransformVisitor {
             !double.TryParse(left.Value, out var leftVal) ||
             !double.TryParse(right.Value, out var rightVal)
         ) {
-            return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            
+            return original.With(left: left, right: right);
         }
 
         double? result = original.Operator switch {
@@ -92,8 +91,8 @@ public class ConstantFoldingPass : AstTransformVisitor {
                 original.Line, original.Column
             );
         }
-
-        return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+        
+        return original.With(left: left, right: right);
     }
 
     private static LiteralNode FoldStringConcatOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
@@ -106,7 +105,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
     private static AstNode FoldComparisonOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
         // Only fold comparisons between compatible types
         if (!left.Type.Equals(right.Type)) {
-            return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            return original.With(left: left, right: right);
         }
 
         bool result;
@@ -114,7 +113,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
         if (TypeUtils.IsNumeric(left.Type)) {
             if (!double.TryParse(left.Value, out var leftNum) ||
                 !double.TryParse(right.Value, out var rightNum)) {
-                return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+                return original.With(left: left, right: right);
             }
 
             result = original.Operator switch {
@@ -129,7 +128,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
         } else if (left.Type.Equals(TypeUtils.BoolType)) {
             if (!bool.TryParse(left.Value, out var leftBool) ||
                 !bool.TryParse(right.Value, out var rightBool)) {
-                return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+                return original.With(left: left, right: right);
             }
 
             result = original.Operator switch {
@@ -147,7 +146,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
                 _ => false // Other comparisons not supported for strings
             };
         } else {
-            return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            return original.With(left: left, right: right);
         }
 
         return new LiteralNode(TypeUtils.BoolType, result.ToString().ToLower(), original.Line, original.Column);
@@ -156,7 +155,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
     private static AstNode FoldLogicalOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
         if (!bool.TryParse(left.Value, out var leftBool) ||
             !bool.TryParse(right.Value, out var rightBool)) {
-            return new BinaryOpNode(left, original.Operator, right, original.Line, original.Column);
+            return original.With(left: left, right: right);
         }
 
         bool result = original.Operator switch {
@@ -179,7 +178,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
         // If we cannot fold the expression, return a new UnaryOpNode with the
         // potentially transformed operand.
-        return new UnaryOpNode(node.Operator, newOperand, node.Line, node.Column);
+        return node.With(operand: newOperand);
     }
 
     private static AstNode FoldUnaryOp(UnaryOpNode original, LiteralNode operand) {
@@ -207,6 +206,6 @@ public class ConstantFoldingPass : AstTransformVisitor {
         }
 
         // Cannot fold this unary operation
-        return new UnaryOpNode(original.Operator, operand, original.Line, original.Column);
+        return original.With(operand: operand);
     }
 }
