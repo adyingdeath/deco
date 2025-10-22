@@ -1,7 +1,7 @@
 using Deco.Compiler.Lib;
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Collect_Symbol;
+namespace Deco.Compiler.Ast.Passes;
 
 public class LibraryFunctionSymbolCollector {
     public static void Build(Scope global, List<DecoFunction> functions) {

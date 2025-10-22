@@ -1,7 +1,7 @@
 using Deco.Compiler.Ast;
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Collect_Symbol;
+namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>
 /// Pass to build the global symbol table by collecting global variable and
@@ -13,6 +13,17 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
     private readonly List<string> _errors = [];
 
     public List<string> Errors => _errors;
+
+    public static void Action(Scope symbolTable, AstNode astNode) {
+        var gstBuilder = new GlobalSymbolTableBuilder(symbolTable);
+        astNode.Accept(gstBuilder);
+        if (gstBuilder.Errors.Count != 0) {
+            Console.WriteLine("Global symbol table errors:");
+            foreach (var error in gstBuilder.Errors) {
+                Console.WriteLine($"  {error}");
+            }
+        }
+    }
 
     public object VisitProgram(ProgramNode node) {
         // Set the global symbol table reference for the program node

@@ -1,7 +1,7 @@
 using Deco.Compiler.Ast;
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Lowering;
+namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>
 /// A transformation pass that performs constant folding.

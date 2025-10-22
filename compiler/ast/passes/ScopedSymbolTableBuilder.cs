@@ -1,6 +1,6 @@
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Collect_Symbol;
+namespace Deco.Compiler.Ast.Passes;
 
 ///// <summary>
 ///// Pass to build symbol tables for nested functions and blocks, including local variables.
@@ -10,6 +10,17 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
     private readonly ScopeStack scope = new(globalSymbolTable);
     private readonly List<string> _errors = [];
     public List<string> Errors => _errors;
+
+    public static void Action(Scope symbolTable, AstNode astNode) {
+        var sstBuilder = new ScopedSymbolTableBuilder(symbolTable);
+        astNode.Accept(sstBuilder);
+        if (sstBuilder.Errors.Count != 0) {
+            Console.WriteLine("Function scope symbol table errors:");
+            foreach (var error in sstBuilder.Errors) {
+                Console.WriteLine($"  {error}");
+            }
+        }
+    }
 
     public object VisitProgram(ProgramNode node) {
         // Process each function's body

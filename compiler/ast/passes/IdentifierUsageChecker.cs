@@ -1,7 +1,6 @@
-using Deco.Compiler.Ast;
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Collect_Symbol;
+namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>
 /// Pass to check for undefined identifiers.
@@ -13,6 +12,17 @@ public class IdentifierUsageChecker(Scope globalSymbolTable) : IAstVisitor<objec
     private readonly List<string> _errors = [];
 
     public List<string> Errors => _errors;
+
+    public static void Action(Scope symbolTable, AstNode astNode) {
+        var usageChecker = new IdentifierUsageChecker(symbolTable);
+        astNode.Accept(usageChecker);
+        if (usageChecker.Errors.Count != 0) {
+            Console.WriteLine("Identifier usage errors:");
+            foreach (var error in usageChecker.Errors) {
+                Console.WriteLine($"  {error}");
+            }
+        }
+    }
 
     private void CheckIdentifier(string name, int line, int column) {
         var symbol = scope.Current().LookupSymbol(name);

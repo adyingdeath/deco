@@ -1,7 +1,6 @@
-using Deco.Compiler.Ast.Passes;
 using Deco.Types;
 
-namespace Deco.Compiler.Ast.Passes.Types;
+namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>
 /// A type resolver pass that travels the AST, resolves types for all expressions,
@@ -15,7 +14,22 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
     public List<string> Errors => _errors;
 
-
+    /// <summary>
+    /// Do the type checking and resolution step.
+    /// Returns the AST with resolved types.
+    /// </summary>
+    public static AstNode Action(Scope symbolTable, AstNode astNode) {
+        // Assume symbol tables are already built by Collect_Symbol passes
+        var typeResolver = new TypeResolver(symbolTable);
+        var resolvedAst = astNode.Accept(typeResolver);
+        if (typeResolver.Errors.Count != 0) {
+            Console.WriteLine("Type check errors:");
+            foreach (var error in typeResolver.Errors) {
+                Console.WriteLine($"  {error}");
+            }
+        }
+        return resolvedAst;
+    }
 
     public override AstNode VisitProgram(ProgramNode node) {
         // Set the global symbol table reference for the program node

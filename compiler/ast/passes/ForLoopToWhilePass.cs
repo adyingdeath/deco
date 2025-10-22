@@ -1,6 +1,6 @@
 using Deco.Compiler.Ast;
 
-namespace Deco.Compiler.Ast.Passes.Lowering;
+namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>
 /// <para>A transformation pass that converts for-loops into while-loops wrapped in a block.

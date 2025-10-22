@@ -3,8 +3,10 @@ using Deco.Compiler.Ast;
 using Deco.Compiler;
 using Deco.Compiler.IR;
 using Deco.Compiler.IR.Passes;
-using Deco.Compiler.Ast.Passes.Lowering;
 using Deco.Compiler.Pack;
+using Deco.Compiler.Ast.Passes;
+using Deco.Compiler.Lib.Core;
+using Deco.Types;
 
 class Program {
     static void Main(string[] args) {
@@ -54,37 +56,47 @@ int chain(int a) {
         ");
 
         ICharStream stream = CharStreams.fromString(processedCode);
-        DecoLexer lexer = new DecoLexer(stream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        DecoParser parser = new DecoParser(tokens);
+        DecoLexer lexer = new(stream);
+        CommonTokenStream tokens = new(lexer);
+        DecoParser parser = new(tokens);
         var tree = parser.program();
 
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
 
-        new Deco.Compiler.Ast.Passes.FindFatherPass().Visit(ast);
+        new FindFatherPass().Visit(ast);
 
         // Build symbol table
-        var globalSymbolTable = new Deco.Types.Scope("global");
+        var symbolTable = new Scope("global");
 
+
+        // ~~~~~~~~~~~ Collect Symbols ~~~~~~~~~~~ //
         // Collect symbols and build nested symbol table.
         // This includes two steps currently:
         // 1. Build global symbol table;
         // 2. Build scoped symbol table;
-        new Deco.Compiler.Ast.Passes.Collect_Symbol.Group(globalSymbolTable).Visit(ast);
+        GlobalSymbolTableBuilder.Action(symbolTable, ast);
+        ScopedSymbolTableBuilder.Action(symbolTable, ast);
+        // Collect symbols for library functions.
+        LibraryFunctionSymbolCollector.Build(symbolTable, [new PrintFunction()]);
+        // Check identifier usage
+        IdentifierUsageChecker.Action(symbolTable, ast);
 
+
+        // ~~~~~~~~~~~~~ Handle Type ~~~~~~~~~~~~~ //
         // Type check and resolve types
-        var typedAst = (ProgramNode)new Deco.Compiler.Ast.Passes.Types.Group(globalSymbolTable).Visit(ast);
+        ast = (ProgramNode)TypeResolver.Action(symbolTable, ast);
 
-        var constant_folding_ast = new ConstantFoldingPass().Visit(typedAst);
 
-        var for_loop_to_while_ast = new ForLoopToWhilePass().Visit(constant_folding_ast);
+        // ~~~~~~~~~~~ AST Optimization ~~~~~~~~~~ //
+        ast = new ConstantFoldingPass().Visit(ast);
+        ast = new ForLoopToWhilePass().Visit(ast);
 
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
         var datapack = new Datapack("6u753i8", "deco");
 
-        var irs = for_loop_to_while_ast.Accept(new IRBuilder(datapack));
+        var irs = ast.Accept(new IRBuilder(datapack));
 
         var program = NestInstructionPass.Visit(irs);
 
