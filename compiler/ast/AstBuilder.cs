@@ -36,6 +36,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         }
 
         var name = new IdentifierNode(
+            TypeUtils.UnknownType,
             context.name.Text,
             context.name.Line,
             context.name.Column
@@ -70,6 +71,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         }
 
         var name = new IdentifierNode(
+            TypeUtils.UnknownType,
             context.name.Text,
             context.name.Line,
             context.name.Column
@@ -88,12 +90,12 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
     public override AstNode VisitArgument(DecoParser.ArgumentContext context) {
         var name = new IdentifierNode(
+            new UnresolvedType(context.type.Text),
             context.name.Text,
             context.name.Line,
             context.name.Column
         );
         return new ArgumentNode(
-            context.type.Text,
             name,
             context.Start.Line,
             context.Start.Column
@@ -270,6 +272,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 BinaryOperator.LogicalOr,
                 right,
@@ -294,6 +297,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 BinaryOperator.LogicalAnd,
                 right,
@@ -326,6 +330,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 op,
                 right,
@@ -360,6 +365,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 op,
                 right,
@@ -392,6 +398,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 op,
                 right,
@@ -424,6 +431,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
                 ?? throw new InvalidOperationException("Expression cannot be null");
 
             result = new BinaryOpNode(
+                TypeUtils.UnknownType,
                 result,
                 op,
                 right,
@@ -447,7 +455,11 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
             var expr =
                 Visit(context.unary_expr()) as ExpressionNode
                 ?? throw new InvalidOperationException("Unary expression must have a valid operand");
-            return new UnaryOpNode(op, expr, context.Start.Line, context.Start.Column);
+            return new UnaryOpNode(
+                TypeUtils.UnknownType,
+                op, expr,
+                context.Start.Line, context.Start.Column
+            );
         }
     }
 
@@ -458,6 +470,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         }
 
         var name = new IdentifierNode(
+            new UnresolvedType(context.type.Text),
             context.name.Text,
             context.name.Line,
             context.name.Column
@@ -474,6 +487,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
     public override AstNode VisitAssignment(DecoParser.AssignmentContext context) {
         var variable = new IdentifierNode(
+            TypeUtils.UnknownType,
             context.IDENTIFIER().GetText(),
             context.IDENTIFIER().Symbol.Line,
             context.IDENTIFIER().Symbol.Column
@@ -503,12 +517,14 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         }
 
         var function = new IdentifierNode(
+            TypeUtils.UnknownType,
             context.name.Text,
             context.name.Line,
             context.name.Column
         );
 
         return new FunctionCallNode(
+            TypeUtils.UnknownType,
             function,
             arguments,
             context.Start.Line,
@@ -558,6 +574,7 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.IDENTIFIER() != null) {
             return new IdentifierNode(
+                TypeUtils.UnknownType,
                 context.IDENTIFIER().GetText(),
                 context.Start.Line,
                 context.Start.Column
