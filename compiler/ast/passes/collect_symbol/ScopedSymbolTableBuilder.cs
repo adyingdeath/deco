@@ -44,12 +44,13 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
 
         // Add function parameters to the function's symbol table
         foreach (var arg in node.Arguments) {
-            var argType = TypeUtils.ParseType(arg.Type);
+            /* Use the arg.Name.Type directly. It's supposed to be UnresolvedType.
+            We will resolve it later in TypeResolver. */
             try {
                 var param = new Symbol(
                     arg.Name.Name,
                     Compiler.variableCodeGen.Next(),
-                    argType,
+                    arg.Name.Type,
                     SymbolKind.Parameter,
                     arg.Line,
                     arg.Column
@@ -91,14 +92,16 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
     }
 
     public object VisitVariableDefinition(VariableDefinitionNode node) {
-        // Since VariableDefinitionNode no longer has Type, we need to find the expected type
-        // This can be done by looking for type annotations that should be provided separately
-        // For now, store as UnknownType and let type inference handle it
+        /* We've stored an UnresolvedType with the raw string name (e.g., "int")
+        into the node.Name.Type. We will directly use the type here. The type will
+        be resolved later in TypeResolver. It will try to parse the type according
+        to the UnresolvedType here. */
         try {
             scope.Current().AddSymbol(new Symbol(
                 node.Name.Name,
                 Compiler.variableCodeGen.Next(),
-                TypeUtils.UnknownType,
+                // This is an UnresolvedType
+                node.Name.Type,
                 SymbolKind.Variable,
                 node.Line,
                 node.Column

@@ -38,10 +38,8 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     }
 
     public virtual AstNode VisitArgument(ArgumentNode node) {
-        // Arguments have no children to visit, so return a new instance or itself.
-        return new ArgumentNode(
-            node.Type, node.Name, node.Line, node.Column
-        ).CloneContext(node);
+        // Arguments have no children to visit, so return a copy of itself.
+        return node.With();
     }
 
     public virtual AstNode VisitExpressionStatement(ExpressionStatementNode node) {
@@ -162,18 +160,12 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     public virtual AstNode VisitBinaryOp(BinaryOpNode node) {
         var newLeft = (ExpressionNode)Visit(node.Left);
         var newRight = (ExpressionNode)Visit(node.Right);
-        var newNode = (BinaryOpNode)new BinaryOpNode(
-            newLeft, node.Operator, newRight, node.Line, node.Column
-        ).CloneContext(node);
-        newNode.Type = node.Type;
-        return newNode;
+        return node.With(left: newLeft, right: newRight);
     }
 
     public virtual AstNode VisitUnaryOp(UnaryOpNode node) {
         var newOperand = (ExpressionNode)Visit(node.Operand);
-        return new UnaryOpNode(
-            node.Operator, newOperand, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(operand: newOperand);
     }
 
     public virtual AstNode VisitLiteral(LiteralNode node) {
@@ -186,8 +178,6 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
 
     public virtual AstNode VisitFunctionCall(FunctionCallNode node) {
         var newArguments = node.Arguments.Select(a => (ExpressionNode)Visit(a)).ToList();
-        return new FunctionCallNode(
-            node.Name, newArguments, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(arguments: newArguments);
     }
 }
