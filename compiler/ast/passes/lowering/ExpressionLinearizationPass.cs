@@ -1,4 +1,4 @@
-using Deco.Compiler.Ast;
+using Deco.Types;
 
 namespace Deco.Compiler.Ast.Passes.Lowering;
 
@@ -9,29 +9,46 @@ public class ExpressionLinearizationPass : AstTransformVisitor {
         var newLeft = (ExpressionNode)Visit(node.Left);
         var newRight = (ExpressionNode)Visit(node.Right);
 
+        /* If the newLeft or newRight is not a smallest unit like identifier or
+        literal, we need to create a new temporary variable and assign the newLeft
+        expression to the new temporary variable.
+        Example:
+
+        int a = a + b + c;
+        
+        Will become:
+        
+        int temp1 = a + b;
+        int a = temp1 + c
+        
+        Because the newLeft is "a + b" which is not a smallest unit so we create
+        the temporary variable and assign the expression to it.
+        We don't know the type of temporary variables so an UnknownType is used
+        here. */
+
         if (!(newLeft is IdentifierNode || newLeft is LiteralNode)) {
             var tempName = Compiler.variableCodeGen.Next();
             var name = new IdentifierNode(
-                tempName, newLeft.Line, newLeft.Column
+                TypeUtils.UnknownType, tempName, newLeft.Line, newLeft.Column
             );
             CurrentStatements.Add(
                 new VariableDefinitionNode(name, newLeft)
             );
-            newLeft = new IdentifierNode(tempName);
+            newLeft = new IdentifierNode(TypeUtils.UnknownType, tempName);
         }
 
         if (!(newRight is IdentifierNode || newRight is LiteralNode)) {
             var tempName = Compiler.variableCodeGen.Next();
             var name = new IdentifierNode(
-                tempName, newRight.Line, newRight.Column
+                TypeUtils.UnknownType, tempName, newRight.Line, newRight.Column
             );
             CurrentStatements.Add(
                 new VariableDefinitionNode(name, newRight)
             );
-            newRight = new IdentifierNode(tempName);
+            newRight = new IdentifierNode(TypeUtils.UnknownType, tempName);
         }
 
-        return new BinaryOpNode(newLeft, node.Operator, newRight, node.Line, node.Column);
+        return node.With(left: newLeft, right: newRight);
     }
 
     public override AstNode VisitVariableDefinition(VariableDefinitionNode node) {
