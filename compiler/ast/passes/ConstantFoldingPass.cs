@@ -33,10 +33,10 @@ public class ConstantFoldingPass : AstTransformVisitor {
     private AstNode FoldBinaryOp(BinaryOpNode original, LiteralNode left, LiteralNode right) {
         switch (original.Operator) {
             // Arithmetic operations (require both operands to be numbers)
-            case BinaryOperator.Add when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
-            case BinaryOperator.Subtract when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
-            case BinaryOperator.Multiply when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
-            case BinaryOperator.Divide when TypeUtils.IsNumeric(left.Type) && TypeUtils.IsNumeric(right.Type):
+            case BinaryOperator.Add when left.Type.IsNumeric && right.Type.IsNumeric:
+            case BinaryOperator.Subtract when left.Type.IsNumeric && right.Type.IsNumeric:
+            case BinaryOperator.Multiply when left.Type.IsNumeric && right.Type.IsNumeric:
+            case BinaryOperator.Divide when left.Type.IsNumeric && right.Type.IsNumeric:
                 return FoldArithmeticOp(original, left, right);
 
             // String concatenation (ADD applied to strings)
@@ -110,7 +110,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
         bool result;
 
-        if (TypeUtils.IsNumeric(left.Type)) {
+        if (left.Type.IsNumeric) {
             if (!double.TryParse(left.Value, out var leftNum) ||
                 !double.TryParse(right.Value, out var rightNum)) {
                 return original.With(left: left, right: right);
@@ -183,7 +183,7 @@ public class ConstantFoldingPass : AstTransformVisitor {
 
     private static AstNode FoldUnaryOp(UnaryOpNode original, LiteralNode operand) {
         switch (original.Operator) {
-            case UnaryOperator.Negate when TypeUtils.IsNumeric(operand.Type):
+            case UnaryOperator.Negate when operand.Type.IsNumeric:
                 if (double.TryParse(operand.Value, out var num)) {
                     double negated = -num;
                     bool isInteger = Math.Floor(negated) == negated;

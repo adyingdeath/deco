@@ -28,7 +28,7 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
             ));
         } else {
             // If no initial value, use default value
-            var initial = TypeUtils.GetInitialValue(symbol.Type);
+            var initial = symbol.Type.GetDefaultValueAsString();
             insts.Add(new MoveInstruction(
                 new ConstantOperand(initial),
                 variable

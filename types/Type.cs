@@ -6,6 +6,31 @@ namespace Deco.Types;
 public abstract class IType(string name) {
     public string Name { get; } = name;
     public abstract bool Equals(IType type);
+
+    /// <summary>
+    /// Indicates if this type represents a numeric value (int, float).
+    /// </summary>
+    public abstract bool IsNumeric { get; }
+
+    /// <summary>
+    /// Indicates if this type can be stored in a Minecraft scoreboard (int, bool).
+    /// </summary>
+    public abstract bool IsStorableInScoreboard { get; }
+
+    /// <summary>
+    /// Gets the default value for this type as a string literal.
+    /// This will be used in Datapack to initialize those unassigned variables.
+    /// </summary>
+    public abstract string GetDefaultValueAsString();
+
+    /// <summary>
+    /// Checks if this type can be assigned to a variable of the target type.
+    /// Allows for implicit conversions.
+    /// </summary>
+    public virtual bool IsAssignableTo(IType targetType) {
+        // Default rule: types must be exactly equal.
+        return Equals(targetType);
+    }
 }
 
 /// <summary>
@@ -14,9 +39,33 @@ public abstract class IType(string name) {
 public class PrimitiveType(string name) : IType(name) {
     public override string ToString() => Name;
     public override bool Equals(IType type) {
-        if (type is PrimitiveType primitiveType) {
-            return Name.Equals(primitiveType.Name);
+        return type is PrimitiveType primitiveType && Name.Equals(primitiveType.Name);
+    }
+
+    public override bool IsNumeric => Name is "int" or "float";
+    public override bool IsStorableInScoreboard => Name is "int" or "bool";
+
+    public override string GetDefaultValueAsString() {
+        return Name switch {
+            "int" or "bool" => "0",
+            "float" => "0.0f",
+            "string" => "\"\"", // Empty string literal
+            _ => ""
+        };
+    }
+
+    public override bool IsAssignableTo(IType targetType) {
+        if (base.IsAssignableTo(targetType)) {
+            return true;
         }
+
+        // Implicit conversion rule: int can be assigned to float
+        if (this.Equals(TypeUtils.IntType) && targetType.Equals(TypeUtils.FloatType)) {
+            return true;
+        }
+
+        // Add more rules here if needed in the future
+
         return false;
     }
 }
@@ -30,38 +79,40 @@ public class FunctionType(IType returnType, List<IType> parameterTypes) : IType(
 
     public override string ToString() => $"({string.Join(", ", ParameterTypes)}) => {ReturnType}";
     public override bool Equals(IType type) {
-        if (type is FunctionType functionType) {
-            if (!ReturnType.Equals(functionType.ReturnType))
+        if (type is not FunctionType functionType) return false;
+        if (!ReturnType.Equals(functionType.ReturnType)) return false;
+        if (ParameterTypes.Count != functionType.ParameterTypes.Count) return false;
+
+        for (int i = 0; i < ParameterTypes.Count; i++) {
+            if (!ParameterTypes[i].Equals(functionType.ParameterTypes[i]))
                 return false;
-            if (parameterTypes.Count != functionType.ParameterTypes.Count)
-                return false;
-            for (int i = 0; i < ParameterTypes.Count; i++) {
-                if (!ParameterTypes[i].Equals(functionType.ParameterTypes[i]))
-                    return false;
-            }
-            return true;
         }
-        return false;
+        return true;
     }
+
+    public override bool IsNumeric => false;
+    public override bool IsStorableInScoreboard => false;
+    public override string GetDefaultValueAsString() => ""; // Functions have no literal default value
 }
 
 public class UnresolvedType(string name) : IType(name) {
     public override string ToString() => Name;
     public override bool Equals(IType type) {
-        // Unresolved types can only equal other unresolved types with same name,
-        // or primitive types with same name (for type resolution purposes)
-        if (type is UnresolvedType unresolved) {
-            return Name == unresolved.Name;
-        }
-        if (type is PrimitiveType primitive) {
-            return Name == primitive.Name;
-        }
-        return false;
+        return type switch {
+            UnresolvedType unresolved => Name == unresolved.Name,
+            PrimitiveType primitive => Name == primitive.Name,
+            _ => false
+        };
     }
+
+    public override bool IsNumeric => false; // Cannot determine until resolved
+    public override bool IsStorableInScoreboard => false; // Cannot determine until resolved
+    public override string GetDefaultValueAsString() => ""; // Cannot determine until resolved
 }
 
 /// <summary>
-/// Utility class for type operations and predefined types.
+/// Utility class for type operations and predefined types, containing shared
+/// type instances and parsing logic.
 /// </summary>
 public static class TypeUtils {
     public static readonly PrimitiveType IntType = new("int");
@@ -73,53 +124,15 @@ public static class TypeUtils {
 
     /// <summary>
     /// Parses a type from a string name. For primitives, returns the predefined instance.
-    /// For unknown types, creates a new PrimitiveType.
     /// </summary>
     public static IType ParseType(string typeName) {
         return typeName switch {
             "int" => IntType,
+            "float" => FloatType,
             "bool" => BoolType,
             "string" => StringType,
             "void" => VoidType,
             _ => new UnresolvedType(typeName)
         };
-    }
-
-    public static bool IsNumeric(IType type) {
-        return type.Equals(IntType) || type.Equals(FloatType);
-    }
-
-    public static string GetInitialValue(IType type) {
-        if (type.Equals(IntType) || type.Equals(BoolType)) {
-            return "0";
-        } else if (type.Equals(FloatType)) {
-            return "0.0f";
-        } else if (type.Equals(StringType)) {
-            return "";
-        }
-        return "";
-    }
-
-    /// <summary>
-    /// Checks if a type is unresolved (either unknown or an unresolved type).
-    /// </summary>
-    public static bool IsUnresolved(IType type) {
-        return type is UnresolvedType || type == UnknownType;
-    }
-
-    /// <summary>
-    /// Gets the resolved type if possible, otherwise returns the original type.
-    /// This is a safe way to attempt type resolution.
-    /// </summary>
-    public static IType GetResolvedType(IType type) {
-        if (type is UnresolvedType unresolved) {
-            return ParseType(unresolved.Name);
-        }
-        return type;
-    }
-
-    public static bool IsScoreboard(IType type) {
-        // Only Int and Bool are stored in scoreboard.
-        return type.Equals(IntType) || type.Equals(BoolType);
     }
 }

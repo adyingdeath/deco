@@ -181,13 +181,13 @@ public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
             // `Run` method.
             var context = new Context();
             var paramArg = libFunc.ParameterSymbol.Select((sym) => {
-                if (TypeUtils.IsScoreboard(sym.Type)) {
+                if (sym.Type.IsStorableInScoreboard) {
                     return new Argument(ArgumentType.SCOREBOARD, _datapack.Id, sym.Code);
                 } else {
                     return new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", sym.Code);
                 }
             }).ToList();
-            var returnArg = TypeUtils.IsScoreboard(libFunc.ReturnSymbol.Type)
+            var returnArg = libFunc.ReturnSymbol.Type.IsStorableInScoreboard
                 ? new Argument(ArgumentType.SCOREBOARD, _datapack.Id, libFunc.ReturnSymbol.Code)
                 : new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", libFunc.ReturnSymbol.Code);
             libFunc.Implementation.Run(context, paramArg, returnArg);
