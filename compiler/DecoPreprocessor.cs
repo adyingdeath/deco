@@ -136,7 +136,7 @@ namespace Deco.Compiler {
                 }
 
                 // 3. Check for a potential bare Minecraft command
-                if (IsBareCommandAt(code, i, out string _)) {
+                if (IsBareCommandAt(code, i, out string? _)) {
                     int commandEndIndex = FindCommandEnd(code, i);
                     if (commandEndIndex != -1) {
                         string command = code.Substring(i, commandEndIndex - i + 1);
@@ -188,7 +188,7 @@ namespace Deco.Compiler {
         /// <param name="index">The starting index in the code string to check for a command.</param>
         /// <param name="matchedKeyword">Outputs the matched keyword if a command is found, otherwise null.</param>
         /// <returns>True if a bare command is found at the given index, false otherwise.</returns>
-        public bool IsBareCommandAt(string code, int index, out string matchedKeyword) {
+        public bool IsBareCommandAt(string code, int index, out string? matchedKeyword) {
             matchedKeyword = null;
 
             // Check preceding characters: scan backwards to the start of the line or string.

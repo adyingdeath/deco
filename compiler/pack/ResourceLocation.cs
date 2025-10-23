@@ -18,7 +18,6 @@ public class ResourceLocation(string @namespace, string path) {
     /// Returns the string representation in the format "namespace:path".
     /// </summary>
     public override string ToString() => $"{Namespace}:{Path}";
-    public static ResourceLocation PlaceHolder = new("minecraft", "deco");
 
     /// <summary>
     /// Parses a resource location string into a ResourceLocation object.
@@ -35,6 +34,13 @@ public class ResourceLocation(string @namespace, string path) {
             && res.Namespace.Equals(Namespace)
             && res.Path.Equals(Path);
     }
+
+    public override int GetHashCode() {
+        /* Here we directly use the string's GetHashCode because two Resource
+        Location objects are supposed to be the same if they have the same string
+        form. */
+        return this.ToString().GetHashCode();
+    }
 }
 
 interface IHasResourceLocation<T> {
@@ -43,7 +49,7 @@ interface IHasResourceLocation<T> {
 }
 
 public abstract class HasResourceLocationBase<T> : IHasResourceLocation<T> where T : HasResourceLocationBase<T> {
-    public ResourceLocation Location { get; set; } = ResourceLocation.PlaceHolder;
+    public ResourceLocation Location { get; set; } = new("minecraft", "deco");
     public T SetLocation(ResourceLocation location) {
         Location = location;
         return (T)this;

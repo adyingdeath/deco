@@ -113,7 +113,7 @@ int chain(int a) {
 
         return;
 
-        Console.WriteLine("--- Running in Test Mode ---");
+        /* Console.WriteLine("--- Running in Test Mode ---");
         string[] testList = [
             "argument_passing",
             "expression_evaluation",
@@ -128,7 +128,7 @@ int chain(int a) {
         ];
         string testFileName = testList[1];
         string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
-        string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks";
+        string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks"; */
     }
 
     static string GenerateNestedString(ProgramInstruction program) {
