@@ -123,7 +123,9 @@ public class ReturnIfInstruction(
 /// </summary>
 public class FallThroughInstruction() : ReturnIfInstruction(
     new Condition(
-        ConditionType.Equal, new ScoreboardOperand("0"), new ConstantOperand("1")
+        ConditionType.Equal,
+        new ScoreboardOperand(Constants.FallThroughReturnHolder),
+        new ConstantOperand("1")
     ), new ConstantOperand("1")
 ) {
     public override string ToString() => $"FallThrough";

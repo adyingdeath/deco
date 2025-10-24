@@ -44,7 +44,7 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             _datapack.Namespace, inst.Target.Label
         );
         if (inst.IsFallThrough) {
-            insts.Add("scoreboard players set 0 6u753i8 0");
+            insts.Add($"scoreboard players set {Constants.FallThroughReturnHolder} {_datapack.Id} 0");
         }
         if (inst is ConditionalInstruction condInst) {
             // Added a condition check
@@ -53,13 +53,13 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             if (condInst.Condition.Right is not ConstantOperand constant) return [];
             if (condInst.Condition.Left is ScoreboardOperand scoreboard) {
                 var ifOrUnless = inst is JumpIfInstruction ? "if" : "unless";
-                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score 0 {_datapack.Id} run function {location}");
+                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}");
             }
             // It can't be storage, because the left operand is always the result
             // of evaluating some logical expressions, whose result should be
             // a bool type, which is stored in Scoreboard.
         } else if (inst is JumpIfInstruction) {
-            insts.Add($"execute store result score 0 {_datapack.Id} run function {location}");
+            insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}");
         }
         return insts;
     }
@@ -67,7 +67,7 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
         var location = new ResourceLocation(
             _datapack.Namespace, inst.Target.Label
         );
-        return [$"execute store result score 0 {_datapack.Id} run function {location}"];
+        return [$"execute store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}"];
     }
 
     public override List<string> VisitLinkInstruction(LinkInstruction inst) {
@@ -159,7 +159,7 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
         if (inst.Operand is ScoreboardOperand scoreboard) {
             return [
                 $"data modify storage minecraft:{_datapack.Id} {scoreboard.StackName} prepend value 0",
-                $"execute store result storage minecraft:6u753i8 {scoreboard.StackName}[0] int 1 run scoreboard players get {scoreboard.Code} {_datapack.Id}"
+                $"execute store result storage minecraft:{_datapack.Id} {scoreboard.StackName}[0] int 1 run scoreboard players get {scoreboard.Code} {_datapack.Id}"
             ];
         }
         return [$"data modify storage minecraft:{_datapack.Id} {inst.Operand.StackName} prepend from storage minecraft:{_datapack.Id} {inst.Operand.Code}"];
