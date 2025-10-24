@@ -1,7 +1,8 @@
+using Deco.Compiler.Types;
 using Deco.Compiler.Ast;
 using Deco.Compiler.Lib;
 using Deco.Compiler.Pack;
-using Deco.Types;
+using Deco.Compiler.Types;
 
 namespace Deco.Compiler.IR;
 

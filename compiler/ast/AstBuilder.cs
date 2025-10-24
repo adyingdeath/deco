@@ -1,5 +1,5 @@
 using Antlr4.Runtime.Tree;
-using Deco.Types;
+using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast;
 

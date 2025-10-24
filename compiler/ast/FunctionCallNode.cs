@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Deco.Types;
+using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast;
 

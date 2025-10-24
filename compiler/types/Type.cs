@@ -1,4 +1,4 @@
-namespace Deco.Types;
+namespace Deco.Compiler.Types;
 
 /// <summary>
 /// Abstract base class for all types in the Deco language.

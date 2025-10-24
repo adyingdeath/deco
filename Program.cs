@@ -6,7 +6,7 @@ using Deco.Compiler.IR.Passes;
 using Deco.Compiler.Pack;
 using Deco.Compiler.Ast.Passes;
 using Deco.Compiler.Lib.Core;
-using Deco.Types;
+using Deco.Compiler.Types;
 
 class Program {
     static void Main(string[] args) {

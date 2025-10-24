@@ -1,7 +1,8 @@
+using Deco.Compiler.Types;
 using Deco.Compiler.IR;
 using Deco.Compiler.Lib;
 
-namespace Deco.Types;
+namespace Deco.Compiler.Types;
 
 /// <summary>
 /// Represents a symbol in the symbol table.

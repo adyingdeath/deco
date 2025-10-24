@@ -1,5 +1,3 @@
-using Deco.Types;
-
 namespace Deco.Compiler.Ast;
 
 public class ArgumentNode(
