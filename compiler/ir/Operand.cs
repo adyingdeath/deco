@@ -49,7 +49,7 @@ public abstract class VariableOperand(string code) : Operand {
 public class ScoreboardOperand(string code) : VariableOperand(code) {
     public override bool IsScoreboard => true;
 
-    public override string StackName => "Int";
+    public override string StackName => Constants.IntStackName;
 
     public override string ToString() => $"Scoreboard({Code})";
 }
@@ -63,15 +63,15 @@ public abstract class StorageOperand(string code) : VariableOperand(code) {
 }
 
 public class FloatOperand(string code) : StorageOperand(code) {
-    public override string StackName => "Float";
+    public override string StackName => Constants.FloatStackName;
 }
 
 public class DoubleOperand(string code) : StorageOperand(code) {
-    public override string StackName => "Double";
+    public override string StackName => Constants.DoubleStackName;
 }
 
 public class StringOperand(string code) : StorageOperand(code) {
-    public override string StackName => "String";
+    public override string StackName => Constants.StringStackName;
 }
 
 public partial class OperandUtils {

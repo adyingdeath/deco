@@ -6,4 +6,8 @@ public static class Constants {
     /// state number.
     /// </summary>
     public const string FallThroughReturnHolder = "0";
+    public const string IntStackName = "Int";
+    public const string FloatStackName = "Float";
+    public const string DoubleStackName = "Double";
+    public const string StringStackName = "String";
 }
