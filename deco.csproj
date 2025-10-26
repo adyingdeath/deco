@@ -10,10 +10,20 @@
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
-    <!-- Test Framework Dependencies -->
+  </ItemGroup>
+
+  <!-- Test Framework Dependencies -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <!-- <PackageReference Include="Verify.NUnit" Version="22.11.2" /> -->
+  </ItemGroup>
+
+  <!-- Make sure the Release version doesn't contain tests codes -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Compile Remove="tests\**\*.cs" />
+    <None Include="tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

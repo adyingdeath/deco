@@ -86,7 +86,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         if (node.InitialValue != null) {
             newInit = (ExpressionNode)Visit(node.InitialValue);
 
-            if (!AreTypesCompatible(newInit.Type, newName.Type)) {
+            if (!newInit.Type.IsAssignableTo(newName.Type)) {
                 _errors.Add($"Type mismatch in variable definition '{node.Name.Name}' at line {node.Line}: expected {newName.Type}, got {newInit.Type}");
             }
         }
@@ -99,7 +99,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newVariable = (IdentifierNode)Visit(node.Variable);
         var newExpression = (ExpressionNode)Visit(node.Expression);
 
-        if (!AreTypesCompatible(newExpression.Type, newVariable.Type)) {
+        if (!newExpression.Type.IsAssignableTo(newVariable.Type)) {
             _errors.Add($"Type mismatch in assignment to '{node.Variable}' at line {node.Line}: expected {newVariable.Type}, got {newExpression.Type}");
         }
 
@@ -120,7 +120,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         ExpressionNode? newExpression = null;
         if (node.Expression != null) {
             newExpression = (ExpressionNode)Visit(node.Expression);
-            if (!AreTypesCompatible(newExpression.Type, expectedReturnType)) {
+            if (!newExpression.Type.IsAssignableTo(expectedReturnType)) {
                 _errors.Add($"Return type mismatch in function '{currentFunction.Name}' at line {node.Line}: expected {expectedReturnType}, got {newExpression.Type}");
             }
         }
@@ -227,7 +227,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
                 _errors.Add($"Function '{newName.Name}' expects {funcType.ParameterTypes.Count} arguments, got {newArguments.Count} at line {node.Line}");
             } else {
                 for (int i = 0; i < newArguments.Count; i++) {
-                    if (!AreTypesCompatible(newArguments[i].Type, funcType.ParameterTypes[i])) {
+                    if (!newArguments[i].Type.IsAssignableTo(funcType.ParameterTypes[i])) {
                         _errors.Add($"Argument {i + 1} of function '{newName}' type mismatch at line {newArguments[i].Line}: expected {funcType.ParameterTypes[i]}, got {newArguments[i].Type}");
                     }
                 }
@@ -284,7 +284,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
             case BinaryOperator.Equal:
             case BinaryOperator.NotEqual:
-                if (!AreTypesCompatible(left, right) && !(IsNumericType(left) && IsNumericType(right))) {
+                if (!(left.IsAssignableTo(right) || right.IsAssignableTo(left))
+                    && !(IsNumericType(left) && IsNumericType(right))
+                ) {
                     _errors.Add($"Comparison requires compatible operands: got {left} and {right}");
                 }
                 return TypeUtils.BoolType;
@@ -317,10 +319,6 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             UnaryOperator.LogicalNot => IsBoolType(operand) ? TypeUtils.BoolType : TypeUtils.BoolType,
             _ => TypeUtils.IntType
         };
-    }
-
-    private static bool AreTypesCompatible(IType actual, IType expected) {
-        return expected.Equals(actual);
     }
 
     private static bool IsNumericType(IType type) {
