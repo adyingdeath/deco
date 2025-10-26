@@ -18,6 +18,12 @@ public abstract class IType(string name) {
     public abstract bool IsStorableInScoreboard { get; }
 
     /// <summary>
+    /// Gets the promotion priority for this type in numeric operations.
+    /// A higher value indicates a higher priority. Non-numeric types should return 0.
+    /// </summary>
+    public abstract int PromotionPriority { get; }
+
+    /// <summary>
     /// Gets the default value for this type as a string literal.
     /// This will be used in Datapack to initialize those unassigned variables.
     /// </summary>
@@ -44,6 +50,11 @@ public class PrimitiveType(string name) : IType(name) {
 
     public override bool IsNumeric => Name is "int" or "float";
     public override bool IsStorableInScoreboard => Name is "int" or "bool";
+    public override int PromotionPriority => Name switch {
+        "int" => 10,
+        "float" => 20,
+        _ => 0,
+    };
 
     public override string GetDefaultValueAsString() {
         return Name switch {
@@ -92,6 +103,7 @@ public class FunctionType(IType returnType, List<IType> parameterTypes) : IType(
 
     public override bool IsNumeric => false;
     public override bool IsStorableInScoreboard => false;
+    public override int PromotionPriority => 0;
     public override string GetDefaultValueAsString() => ""; // Functions have no literal default value
 }
 
@@ -107,6 +119,9 @@ public class UnresolvedType(string name) : IType(name) {
 
     public override bool IsNumeric => false; // Cannot determine until resolved
     public override bool IsStorableInScoreboard => false; // Cannot determine until resolved
+
+    public override int PromotionPriority => 0;
+
     public override string GetDefaultValueAsString() => ""; // Cannot determine until resolved
 }
 

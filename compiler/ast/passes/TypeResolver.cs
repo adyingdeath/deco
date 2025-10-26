@@ -257,7 +257,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
     }
 
     // Helper methods for type calculation
-    private PrimitiveType CalculateBinaryOpType(
+    private IType CalculateBinaryOpType(
         IType left, BinaryOperator op, IType right
     ) {
         switch (op) {
@@ -268,24 +268,23 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
                 ) {
                     return TypeUtils.StringType;
                 }
-                if (IsNumericType(left) && IsNumericType(right)) {
-                    return TypeUtils.IntType;
-                }
-                _errors.Add($"Invalid operands for +: got {left} and {right}");
-                return TypeUtils.IntType;
-
+                // Fallthrough to handle numeric addition
+                goto case BinaryOperator.Subtract;
             case BinaryOperator.Subtract:
             case BinaryOperator.Multiply:
             case BinaryOperator.Divide:
-                if (!IsNumericType(left) || !IsNumericType(right)) {
-                    _errors.Add($"Arithmetic operation requires numeric operands: got {left} and {right}");
+                if (left.IsNumeric || right.IsNumeric) {
+                    // The result type is the one with the higher priority.
+                    return left.PromotionPriority > right.PromotionPriority
+                        ? left : right;
                 }
-                return TypeUtils.IntType;
+                _errors.Add($"Arithmetic operation requires numeric operands: got {left} and {right}");
+                return TypeUtils.UnknownType;
 
             case BinaryOperator.Equal:
             case BinaryOperator.NotEqual:
                 if (!(left.IsAssignableTo(right) || right.IsAssignableTo(left))
-                    && !(IsNumericType(left) && IsNumericType(right))
+                    && !(left.IsNumeric && right.IsNumeric)
                 ) {
                     _errors.Add($"Comparison requires compatible operands: got {left} and {right}");
                 }
@@ -295,7 +294,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             case BinaryOperator.LessThanOrEqual:
             case BinaryOperator.GreaterThan:
             case BinaryOperator.GreaterThanOrEqual:
-                if (!IsNumericType(left) || !IsNumericType(right)) {
+                if (!left.IsNumeric || !right.IsNumeric) {
                     _errors.Add($"Ordering comparison requires numeric operands: got {left} and {right}");
                 }
                 return TypeUtils.BoolType;
@@ -315,17 +314,10 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
     private IType CalculateUnaryOpType(UnaryOperator op, IType operand) {
         return op switch {
-            UnaryOperator.Negate => IsNumericType(operand) ? operand : TypeUtils.IntType,
-            UnaryOperator.LogicalNot => IsBoolType(operand) ? TypeUtils.BoolType : TypeUtils.BoolType,
-            _ => TypeUtils.IntType
+            UnaryOperator.Negate => operand.IsNumeric ? operand : TypeUtils.UnknownType,
+            UnaryOperator.LogicalNot => IsBoolType(operand) ? TypeUtils.BoolType : TypeUtils.UnknownType,
+            _ => TypeUtils.UnknownType
         };
-    }
-
-    private static bool IsNumericType(IType type) {
-        if (type is PrimitiveType pt) {
-            return pt.Name == "int" || pt.Name == "float";
-        }
-        return false;
     }
 
     private static bool IsBoolType(IType type) {
