@@ -85,32 +85,31 @@ public partial class OperandUtils {
         }
         return new DoubleOperand(Code);
     }
-    public static VariableOperand ResolveVariable(
-        Operand left, Operand right, string Code
-    ) {
-        return (EvaluateConstant(left), EvaluateConstant(right)) switch {
-            (ScoreboardOperand, ScoreboardOperand) => new ScoreboardOperand(Code),
-            (ScoreboardOperand, FloatOperand) => new FloatOperand(Code),
-            (ScoreboardOperand, DoubleOperand) => new DoubleOperand(Code),
-            (ScoreboardOperand, StringOperand) => new StringOperand(Code),
 
-            (FloatOperand, ScoreboardOperand) => new FloatOperand(Code),
-            (FloatOperand, FloatOperand) => new FloatOperand(Code),
-            (FloatOperand, DoubleOperand) => new DoubleOperand(Code),
-            (FloatOperand, StringOperand) => new StringOperand(Code),
+    /// <summary>
+    /// Creates a temporary variable operand based on a resolved language type (IType).
+    /// This is the single source of truth for mapping language types to storage types (Operands).
+    /// </summary>
+    /// <param name="type">The resolved IType from the AST node.</param>
+    /// <param name="code">The unique code for this temporary variable.</param>
+    /// <returns>A concrete VariableOperand (e.g., ScoreboardOperand, FloatOperand).</returns>
+    public static VariableOperand CreateTemporaryForType(IType type, string code) {
+        // The logic here is clear and direct
+        if (type.IsStorableInScoreboard) // bool and int
+        {
+            return new ScoreboardOperand(code);
+        }
 
-            (DoubleOperand, ScoreboardOperand) => new DoubleOperand(Code),
-            (DoubleOperand, FloatOperand) => new DoubleOperand(Code),
-            (DoubleOperand, DoubleOperand) => new DoubleOperand(Code),
-            (DoubleOperand, StringOperand) => new StringOperand(Code),
+        if (type.Equals(TypeUtils.FloatType)) {
+            return new FloatOperand(code);
+        }
 
-            (StringOperand, ScoreboardOperand) => new StringOperand(Code),
-            (StringOperand, FloatOperand) => new StringOperand(Code),
-            (StringOperand, DoubleOperand) => new StringOperand(Code),
-            (StringOperand, StringOperand) => new StringOperand(Code),
+        if (type.Equals(TypeUtils.StringType)) {
+            return new StringOperand(code);
+        }
 
-            _ => new StringOperand(Code),
-        };
+        // If we reach here, it's an unsupported type for a variable.
+        throw new InvalidOperationException($"Cannot create a temporary variable for the type '{type.Name}'. This might be a void, function, or unresolved type.");
     }
 
     /// <summary>

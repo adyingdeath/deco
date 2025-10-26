@@ -34,8 +34,8 @@ public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
         // so we need to determine where the variable should be stored in. Here
         // we used to use complex logics to determine the temp variable's type,
         // but I move the logics to OperandUtils now.
-        Operand temp = OperandUtils.ResolveVariable(
-            left, right, Compiler.variableCodeGen.Next()
+        Operand temp = OperandUtils.CreateTemporaryForType(
+            node.Type, Compiler.variableCodeGen.Next()
         );
 
         switch (node.Operator) {
