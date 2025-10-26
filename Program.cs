@@ -69,18 +69,20 @@ int chain(int a) {
         // Build symbol table
         var symbolTable = new Scope("global");
 
+        var datapack = new Datapack("6u753i8", "deco");
+        var context = new CompilationContext(datapack);
 
         // ~~~~~~~~~~~ Collect Symbols ~~~~~~~~~~~ //
         // Collect symbols and build nested symbol table.
         // This includes two steps currently:
         // 1. Build global symbol table;
         // 2. Build scoped symbol table;
-        GlobalSymbolTableBuilder.Action(symbolTable, ast);
-        ScopedSymbolTableBuilder.Action(symbolTable, ast);
+        GlobalSymbolTableBuilder.Action(context, symbolTable, ast);
+        ScopedSymbolTableBuilder.Action(context, symbolTable, ast);
         // Collect symbols for library functions.
-        LibraryFunctionSymbolCollector.Build(symbolTable, [new PrintFunction()]);
+        LibraryFunctionSymbolCollector.Build(context, symbolTable, [new PrintFunction()]);
         // Check identifier usage
-        IdentifierUsageChecker.Action(symbolTable, ast);
+        IdentifierUsageChecker.Action(context, symbolTable, ast);
 
 
         // ~~~~~~~~~~~~~ Handle Type ~~~~~~~~~~~~~ //
@@ -94,9 +96,8 @@ int chain(int a) {
 
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 
-        var datapack = new Datapack("6u753i8", "deco");
 
-        var irs = ast.Accept(new IRBuilder(datapack));
+        var irs = ast.Accept(new IRBuilder(context));
 
         var program = NestInstructionPass.Visit(irs);
 
@@ -107,7 +108,7 @@ int chain(int a) {
 
         File.WriteAllText("./irs.txt", irs_str);
 
-        new DatapackBuilder(datapack).VisitProgram(program);
+        new DatapackBuilder(context).VisitProgram(program);
 
         DatapackExporter.Export(datapack, "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\deco");
 

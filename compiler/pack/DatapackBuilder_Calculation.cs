@@ -30,7 +30,7 @@ public partial class DatapackBuilder {
         var commands = BuildArithmetic(inst, "+"); // dest = left + right
         if (inst.Destination is ScoreboardOperand dest) {
             // If dest > 1, set dest to 1. (Clamps the result of 1+1=2 back to 1)
-            commands.Add($"execute if score {dest.Code} {_datapack.Id} matches 2.. run scoreboard players set {dest.Code} {_datapack.Id} 1");
+            commands.Add($"execute if score {dest.Code} {_context.Datapack.Id} matches 2.. run scoreboard players set {dest.Code} {_context.Datapack.Id} 1");
         }
         return commands;
     }
@@ -46,9 +46,9 @@ public partial class DatapackBuilder {
         var commands = setupCommands;
 
         // dest = 0
-        commands.Add($"scoreboard players set {dest.Code} {_datapack.Id} 0");
+        commands.Add($"scoreboard players set {dest.Code} {_context.Datapack.Id} 0");
         // dest -= operand
-        commands.Add($"scoreboard players operation {dest.Code} {_datapack.Id} -= {sOperand.Code} {_datapack.Id}");
+        commands.Add($"scoreboard players operation {dest.Code} {_context.Datapack.Id} -= {sOperand.Code} {_context.Datapack.Id}");
 
         return commands;
     }
@@ -62,9 +62,9 @@ public partial class DatapackBuilder {
         var commands = setupCommands;
 
         // dest = 1
-        commands.Add($"scoreboard players set {dest.Code} {_datapack.Id} 1");
+        commands.Add($"scoreboard players set {dest.Code} {_context.Datapack.Id} 1");
         // dest -= operand (1-1=0, 1-0=1)
-        commands.Add($"scoreboard players operation {dest.Code} {_datapack.Id} -= {sOperand.Code} {_datapack.Id}");
+        commands.Add($"scoreboard players operation {dest.Code} {_context.Datapack.Id} -= {sOperand.Code} {_context.Datapack.Id}");
 
         return commands;
     }

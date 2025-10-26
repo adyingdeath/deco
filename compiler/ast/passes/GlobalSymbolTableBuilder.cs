@@ -9,14 +9,15 @@ namespace Deco.Compiler.Ast.Passes;
 /// function declarations.
 /// This pass populates the global symbol table with symbols.
 /// </summary>
-public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
+public class GlobalSymbolTableBuilder(CompilationContext context, Scope symbolTable) : IAstVisitor<object> {
+    private readonly CompilationContext _context = context;
     private readonly Scope _symbolTable = symbolTable;
     private readonly List<string> _errors = [];
 
     public List<string> Errors => _errors;
 
-    public static void Action(Scope symbolTable, AstNode astNode) {
-        var gstBuilder = new GlobalSymbolTableBuilder(symbolTable);
+    public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
+        var gstBuilder = new GlobalSymbolTableBuilder(context, symbolTable);
         astNode.Accept(gstBuilder);
         if (gstBuilder.Errors.Count != 0) {
             Console.WriteLine("Global symbol table errors:");
@@ -57,7 +58,7 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
         try {
             _symbolTable.AddSymbol(new FunctionSymbol(
                 node.Name.Name,
-                Compiler.functionCodeGen.Next(8),
+                _context.FunctionCodeGen.Next(8),
                 functionType,
                 [],
                 Symbol.Uninitialized,
@@ -79,7 +80,7 @@ public class GlobalSymbolTableBuilder(Scope symbolTable) : IAstVisitor<object> {
         try {
             _symbolTable.AddSymbol(new Symbol(
                 node.Name.Name,
-                Compiler.variableCodeGen.Next(),
+                _context.VariableCodeGen.Next(),
                 // This is an UnresolvedType
                 node.Name.Type,
                 SymbolKind.Variable,

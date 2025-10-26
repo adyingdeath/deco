@@ -4,9 +4,9 @@ using Deco.Compiler.Pack;
 
 namespace Deco.Compiler.IR;
 
-public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
-    private Datapack _datapack = datapack;
-    public ExpressionEvaluator evaluator = new(datapack);
+public class IRBuilder(CompilationContext context) : IAstVisitor<List<IRInstruction>> {
+    private readonly CompilationContext _context = context;
+    public ExpressionEvaluator evaluator = new(context);
     public List<IRInstruction> Instructions = [];
 
     private void BuildVariableDefinition(VariableDefinitionNode varDef, List<IRInstruction> insts) {
@@ -40,12 +40,12 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
         List<IRInstruction> _inst = [];
         _inst.Add(new LabelInstruction("global"));
         // Initialize the main scoreboard and the main storage
-        _inst.Add(new CommandInstruction($"scoreboard objectives remove {_datapack.Id}"));
-        _inst.Add(new CommandInstruction($"scoreboard objectives add {_datapack.Id} dummy"));
-        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} String set value []"));
-        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Double set value []"));
-        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Float set value []"));
-        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_datapack.Id} Int set value []"));
+        _inst.Add(new CommandInstruction($"scoreboard objectives remove {_context.Datapack.Id}"));
+        _inst.Add(new CommandInstruction($"scoreboard objectives add {_context.Datapack.Id} dummy"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_context.Datapack.Id} String set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_context.Datapack.Id} Double set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_context.Datapack.Id} Float set value []"));
+        _inst.Add(new CommandInstruction($"data modify storage minecraft:{_context.Datapack.Id} Int set value []"));
         //_inst.Add(new CommandInstruction($"data remove storage minecraft:{_datapack.Id}"));
         node.VariableDefinitions.ForEach((varDef) => {
             BuildVariableDefinition(varDef, _inst);
@@ -135,11 +135,11 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
         var conditionOperand = node.Condition.Accept(evaluator.Inst(insts));
 
         // Create labels
-        var thenLabel = new LabelInstruction("__if_then_" + Compiler.functionCodeGen.Next(8));
-        var elseLabel = new LabelInstruction("__if_else_" + Compiler.functionCodeGen.Next(8));
+        var thenLabel = new LabelInstruction("__if_then_" + _context.FunctionCodeGen.Next(8));
+        var elseLabel = new LabelInstruction("__if_else_" + _context.FunctionCodeGen.Next(8));
 
         // Link to the __if_end_
-        var endLabel = new LabelInstruction("__link_if_end_" + Compiler.functionCodeGen.Next(8), true);
+        var endLabel = new LabelInstruction("__link_if_end_" + _context.FunctionCodeGen.Next(8), true);
         var linkEnd = new LinkInstruction(endLabel);
 
         // Check if condition is true. Jump to else unless condition is true
@@ -219,8 +219,8 @@ public class IRBuilder(Datapack datapack) : IAstVisitor<List<IRInstruction>> {
         var insts = new List<IRInstruction>();
 
         // Create labels
-        var loopStartLabel = new LabelInstruction("__while_start_" + Compiler.functionCodeGen.Next(8));
-        var loopEndLabel = new LabelInstruction("__while_end_" + Compiler.functionCodeGen.Next(8));
+        var loopStartLabel = new LabelInstruction("__while_start_" + _context.FunctionCodeGen.Next(8));
+        var loopEndLabel = new LabelInstruction("__while_end_" + _context.FunctionCodeGen.Next(8));
 
         // Start label
         insts.Add(loopStartLabel);

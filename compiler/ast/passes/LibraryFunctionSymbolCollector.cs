@@ -5,13 +5,15 @@ using Deco.Compiler.Types;
 namespace Deco.Compiler.Ast.Passes;
 
 public class LibraryFunctionSymbolCollector {
-    public static void Build(Scope global, List<DecoFunction> functions) {
+    public static void Build(
+        CompilationContext context, Scope global, List<DecoFunction> functions
+    ) {
         foreach (var func in functions) {
-            HandleDecoFunction(global, func);
+            HandleDecoFunction(context, global, func);
         }
     }
 
-    public static void HandleDecoFunction(Scope global, DecoFunction function) {
+    public static void HandleDecoFunction(CompilationContext context, Scope global, DecoFunction function) {
         Scope scope = global.CreateChild($"function {function.Name}");
         var returnType = new UnresolvedType(function.ReturnType);
 
@@ -23,7 +25,7 @@ public class LibraryFunctionSymbolCollector {
             parameterTypes.Add(paramType);
             var paramSymbol = new Symbol(
                 param.Name,
-                Compiler.variableCodeGen.Next(),
+                context.VariableCodeGen.Next(),
                 paramType,
                 SymbolKind.Parameter,
                 0,
@@ -36,7 +38,7 @@ public class LibraryFunctionSymbolCollector {
         // ----- Return Value -----
         var returnSymbol = new Symbol(
             $"{function.Name}#return",
-            Compiler.variableCodeGen.Next(),
+            context.VariableCodeGen.Next(),
             returnType,
             SymbolKind.Variable,
             0,

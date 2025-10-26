@@ -1,13 +1,11 @@
 using Deco.Compiler.Types;
 using Deco.Compiler.Ast;
 using Deco.Compiler.Lib;
-using Deco.Compiler.Pack;
-using Deco.Compiler.Types;
 
 namespace Deco.Compiler.IR;
 
-public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
-    private Datapack _datapack = datapack;
+public class ExpressionEvaluator(CompilationContext context) : IAstVisitor<Operand> {
+    private readonly CompilationContext _context = context;
     private List<IRInstruction> Insts = [];
     public ExpressionEvaluator Inst(List<IRInstruction> irs) {
         Insts = irs;
@@ -35,7 +33,7 @@ public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
         // we used to use complex logics to determine the temp variable's type,
         // but I move the logics to OperandUtils now.
         Operand temp = OperandUtils.CreateTemporaryForType(
-            node.Type, Compiler.variableCodeGen.Next()
+            node.Type, _context.VariableCodeGen.Next()
         );
 
         switch (node.Operator) {
@@ -183,14 +181,14 @@ public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
             var context = new Context();
             var paramArg = libFunc.ParameterSymbol.Select((sym) => {
                 if (sym.Type.IsStorableInScoreboard) {
-                    return new Argument(ArgumentType.SCOREBOARD, _datapack.Id, sym.Code);
+                    return new Argument(ArgumentType.SCOREBOARD, _context.Datapack.Id, sym.Code);
                 } else {
-                    return new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", sym.Code);
+                    return new Argument(ArgumentType.STORAGE, $"minecraft:{_context.Datapack.Id}", sym.Code);
                 }
             }).ToList();
             var returnArg = libFunc.ReturnSymbol.Type.IsStorableInScoreboard
-                ? new Argument(ArgumentType.SCOREBOARD, _datapack.Id, libFunc.ReturnSymbol.Code)
-                : new Argument(ArgumentType.STORAGE, $"minecraft:{_datapack.Id}", libFunc.ReturnSymbol.Code);
+                ? new Argument(ArgumentType.SCOREBOARD, _context.Datapack.Id, libFunc.ReturnSymbol.Code)
+                : new Argument(ArgumentType.STORAGE, $"minecraft:{_context.Datapack.Id}", libFunc.ReturnSymbol.Code);
             libFunc.Implementation.Run(context, paramArg, returnArg);
             // Now insert generated commands to the function call's position
             context.CommandList.ForEach((cmd) => {
@@ -238,7 +236,7 @@ public class ExpressionEvaluator(Datapack datapack) : IAstVisitor<Operand> {
 
     public Operand VisitUnaryOp(UnaryOpNode node) {
         // Create temporary variable based on operand type
-        Operand temp = OperandUtils.ParseVariable(node.Operand.Type, Compiler.variableCodeGen.Next());
+        Operand temp = OperandUtils.ParseVariable(node.Operand.Type, _context.VariableCodeGen.Next());
 
         switch (node.Operator) {
             case UnaryOperator.Negate:

@@ -5,8 +5,8 @@ namespace Deco.Compiler.Pack;
 /// <summary>
 /// Builds a Datapack from a list of IR instructions.
 /// </summary>
-public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>> {
-    private readonly Datapack _datapack = datapack;
+public partial class DatapackBuilder(CompilationContext context) : IRVisitor<List<string>> {
+    private readonly CompilationContext _context = context;
 
     public override List<string> VisitProgram(ProgramInstruction inst) {
         inst.Labels.ForEach((label) => label.Accept(this));
@@ -19,12 +19,12 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             commands.AddRange(i.Accept(this));
         }
         var function = new Function(commands).SetLocation(
-            new ResourceLocation(_datapack.Namespace, inst.Label)
+            new ResourceLocation(_context.Datapack.Namespace, inst.Label)
         );
-        _datapack.Functions.Add(function);
+        _context.Datapack.Functions.Add(function);
         if (inst.Label.Equals("global")) {
             // We need to tag minecraft:load for global chunk
-            var load = _datapack.Tags.Find((tag) => (
+            var load = _context.Datapack.Tags.Find((tag) => (
                 tag.Type == TagType.Function
                 && tag.Location.Equals(new ResourceLocation("minecraft", "load"))
             ));
@@ -41,10 +41,10 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
     public override List<string> VisitJumpInstruction(JumpInstruction inst) {
         List<string> insts = [];
         var location = new ResourceLocation(
-            _datapack.Namespace, inst.Target.Label
+            _context.Datapack.Namespace, inst.Target.Label
         );
         if (inst.IsFallThrough) {
-            insts.Add($"scoreboard players set {Constants.FallThroughReturnHolder} {_datapack.Id} 0");
+            insts.Add($"scoreboard players set {Constants.FallThroughReturnHolder} {_context.Datapack.Id} 0");
         }
         if (inst is ConditionalInstruction condInst) {
             // Added a condition check
@@ -53,21 +53,21 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             if (condInst.Condition.Right is not ConstantOperand constant) return [];
             if (condInst.Condition.Left is ScoreboardOperand scoreboard) {
                 var ifOrUnless = inst is JumpIfInstruction ? "if" : "unless";
-                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}");
+                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
             }
             // It can't be storage, because the left operand is always the result
             // of evaluating some logical expressions, whose result should be
             // a bool type, which is stored in Scoreboard.
         } else if (inst is JumpIfInstruction) {
-            insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}");
+            insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
         }
         return insts;
     }
     public override List<string> VisitCallInstruction(CallInstruction inst) {
         var location = new ResourceLocation(
-            _datapack.Namespace, inst.Target.Label
+            _context.Datapack.Namespace, inst.Target.Label
         );
-        return [$"execute store result score {Constants.FallThroughReturnHolder} {_datapack.Id} run function {location}"];
+        return [$"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}"];
     }
 
     public override List<string> VisitLinkInstruction(LinkInstruction inst) {
@@ -84,33 +84,33 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             (ConstantOperand source, ScoreboardOperand dest) =>
                 // Move constant to scoreboard:
                 // /scoreboard players set <target> <objective> <value>
-                [$"scoreboard players set {dest.Code} {_datapack.Id} {source.GetValueInGame()}"],
+                [$"scoreboard players set {dest.Code} {_context.Datapack.Id} {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, ScoreboardOperand dest) =>
                 // Move scoreboard to scoreboard:
                 // /scoreboard players operation <destTarget> <destObj> = <sourceTarget> <sourceObj>
-                [$"scoreboard players operation {dest.Code} {_datapack.Id} = {source.Code} {_datapack.Id}"],
+                [$"scoreboard players operation {dest.Code} {_context.Datapack.Id} = {source.Code} {_context.Datapack.Id}"],
 
             (StorageOperand source, ScoreboardOperand dest) =>
                 // Move storage to scoreboard:
                 // /execute store result score <target> <objective> run data get storage <id> <path>
-                [$"execute store result score {dest.Code} {_datapack.Id} run data get storage {_datapack.Id} {source.Code}"],
+                [$"execute store result score {dest.Code} {_context.Datapack.Id} run data get storage {_context.Datapack.Id} {source.Code}"],
 
             // --- Destination is StorageOperand ---
             (ConstantOperand source, StorageOperand dest) =>
                 // Move constant to storage:
                 // /data modify storage <id> <path> set value <value>
-                [$"data modify storage {_datapack.Id} {dest.Code} set value {source.GetValueInGame()}"],
+                [$"data modify storage {_context.Datapack.Id} {dest.Code} set value {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, StorageOperand dest) =>
                 // Move scoreboard to storage:
                 // /execute store result storage <id> <path> float 1.0 run scoreboard players get <target> <objective>
-                [$"execute store result storage {_datapack.Id} {dest.Code} float 1.0 run scoreboard players get {source.Code} {_datapack.Id}"],
+                [$"execute store result storage {_context.Datapack.Id} {dest.Code} float 1.0 run scoreboard players get {source.Code} {_context.Datapack.Id}"],
 
             (StorageOperand source, StorageOperand dest) =>
                 // Move storage to storage:
                 // /data modify storage <destId> <destPath> set from storage <sourceId> <sourcePath>
-                [$"data modify storage {_datapack.Id} {dest.Code} set from storage {_datapack.Id} {source.Code}"],
+                [$"data modify storage {_context.Datapack.Id} {dest.Code} set from storage {_context.Datapack.Id} {source.Code}"],
 
             _ => []
         };
@@ -124,14 +124,14 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
             // ----- Constant and Scoreboard -----
             (ScoreboardOperand left, ConstantOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {left.Code} {_datapack.Id} matches {GenOperand(right)} run return {GenOperand(inst.Value)}"],
+                [$"execute if score {left.Code} {_context.Datapack.Id} matches {GenOperand(right)} run return {GenOperand(inst.Value)}"],
             (ConstantOperand left, ScoreboardOperand right) =>
                 // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {right.Code} {_datapack.Id} matches {GenOperand(left)} run return {GenOperand(inst.Value)}"],
+                [$"execute if score {right.Code} {_context.Datapack.Id} matches {GenOperand(left)} run return {GenOperand(inst.Value)}"],
             (ScoreboardOperand left, ScoreboardOperand right) =>
                 // Move scoreboard to scoreboard:
                 // /execute if score <destTarget> <destObj> = <sourceTarget> <sourceObj>
-                [$"execute if score {left.Code} {_datapack.Id} = {right.Code} {_datapack.Id} run return {GenOperand(inst.Value)}"],
+                [$"execute if score {left.Code} {_context.Datapack.Id} = {right.Code} {_context.Datapack.Id} run return {GenOperand(inst.Value)}"],
 
 
             (ScoreboardOperand left, StorageOperand right) =>
@@ -158,25 +158,25 @@ public partial class DatapackBuilder(Datapack datapack) : IRVisitor<List<string>
     public override List<string> VisitPushInstruction(PushInstruction inst) {
         if (inst.Operand is ScoreboardOperand scoreboard) {
             return [
-                $"data modify storage minecraft:{_datapack.Id} {scoreboard.StackName} prepend value 0",
-                $"execute store result storage minecraft:{_datapack.Id} {scoreboard.StackName}[0] int 1 run scoreboard players get {scoreboard.Code} {_datapack.Id}"
+                $"data modify storage minecraft:{_context.Datapack.Id} {scoreboard.StackName} prepend value 0",
+                $"execute store result storage minecraft:{_context.Datapack.Id} {scoreboard.StackName}[0] int 1 run scoreboard players get {scoreboard.Code} {_context.Datapack.Id}"
             ];
         }
-        return [$"data modify storage minecraft:{_datapack.Id} {inst.Operand.StackName} prepend from storage minecraft:{_datapack.Id} {inst.Operand.Code}"];
+        return [$"data modify storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName} prepend from storage minecraft:{_context.Datapack.Id} {inst.Operand.Code}"];
     }
 
     public override List<string> VisitPopInstruction(PopInstruction inst) {
         if (inst.Operand is ScoreboardOperand scoreboard) {
             return [
-                $"execute store result score {scoreboard.Code} {_datapack.Id} run data get storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0] 1",
-                $"data remove storage minecraft:{_datapack.Id} {scoreboard.StackName}[0]"
+                $"execute store result score {scoreboard.Code} {_context.Datapack.Id} run data get storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName}[0] 1",
+                $"data remove storage minecraft:{_context.Datapack.Id} {scoreboard.StackName}[0]"
             ];
         }
         return [
             // Pop the value to the Operant.
-            $"data modify storage minecraft:{_datapack.Id} {inst.Operand.Code} set from storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0]",
+            $"data modify storage minecraft:{_context.Datapack.Id} {inst.Operand.Code} set from storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName}[0]",
             // Remove the element we've just poped.
-            $"data remove storage minecraft:{_datapack.Id} {inst.Operand.StackName}[0]",
+            $"data remove storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName}[0]",
         ];
     }
 }

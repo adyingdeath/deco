@@ -7,14 +7,15 @@ namespace Deco.Compiler.Ast.Passes;
 /// This pass traverses the AST and verifies that every IdentifierNode
 /// references a symbol that exists in the symbol table.
 /// </summary>
-public class IdentifierUsageChecker(Scope globalSymbolTable) : IAstVisitor<object> {
+public class IdentifierUsageChecker(CompilationContext context, Scope globalSymbolTable) : IAstVisitor<object> {
+    private readonly CompilationContext _context = context;
     private readonly ScopeStack scope = new(globalSymbolTable);
     private readonly List<string> _errors = [];
 
     public List<string> Errors => _errors;
 
-    public static void Action(Scope symbolTable, AstNode astNode) {
-        var usageChecker = new IdentifierUsageChecker(symbolTable);
+    public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
+        var usageChecker = new IdentifierUsageChecker(context, symbolTable);
         astNode.Accept(usageChecker);
         if (usageChecker.Errors.Count != 0) {
             Console.WriteLine("Identifier usage errors:");

@@ -26,12 +26,12 @@ public partial class DatapackBuilder {
         if (inst.Right is ConstantOperand rightConst && op is "+" or "-") {
             string command = op == "+" ? "add" : "remove";
             string value = op == "+" ? rightConst.Value : rightConst.Value.TrimStart('-');
-            commands.Add($"scoreboard players {command} {dest.Code} {_datapack.Id} {value}");
+            commands.Add($"scoreboard players {command} {dest.Code} {_context.Datapack.Id} {value}");
         } else {
             // For other operations (*, /) or non-constant right operands,
             // we must use `scoreboard players operation`, which requires both operands to be scoreboards.
             var sRight = GetScoreboardOperand(inst.Right, commands);
-            commands.Add($"scoreboard players operation {dest.Code} {_datapack.Id} {op}= {sRight.Code} {_datapack.Id}");
+            commands.Add($"scoreboard players operation {dest.Code} {_context.Datapack.Id} {op}= {sRight.Code} {_context.Datapack.Id}");
         }
 
         return commands;
@@ -48,7 +48,7 @@ public partial class DatapackBuilder {
 
         List<string> commands = [
             // Default to false (0)
-            $"scoreboard players set {dest.Code} {_datapack.Id} 0"
+            $"scoreboard players set {dest.Code} {_context.Datapack.Id} 0"
         ];
 
         string condition;
@@ -60,16 +60,16 @@ public partial class DatapackBuilder {
         if (useMatches) {
             var sOp = left is ScoreboardOperand sLeft ? sLeft : (ScoreboardOperand)right;
             var cOp = left is ConstantOperand cLeft ? cLeft : (ConstantOperand)right;
-            condition = $"score {sOp.Code} {_datapack.Id} matches {cOp.Value}";
+            condition = $"score {sOp.Code} {_context.Datapack.Id} matches {cOp.Value}";
         } else {
             // For other comparisons (<, >, etc.), both operands must be scoreboards.
             var sLeft = GetScoreboardOperand(left, commands);
             var sRight = GetScoreboardOperand(right, commands);
-            condition = $"score {sLeft.Code} {_datapack.Id} {op} {sRight.Code} {_datapack.Id}";
+            condition = $"score {sLeft.Code} {_context.Datapack.Id} {op} {sRight.Code} {_context.Datapack.Id}";
         }
 
         // Set to true (1) if the condition is met.
-        commands.Add($"execute {executeVerb} {condition} run scoreboard players set {dest.Code} {_datapack.Id} 1");
+        commands.Add($"execute {executeVerb} {condition} run scoreboard players set {dest.Code} {_context.Datapack.Id} 1");
         return commands;
     }
 
@@ -89,7 +89,7 @@ public partial class DatapackBuilder {
             return sOp;
         }
 
-        var temp = new ScoreboardOperand(Compiler.variableCodeGen.Next());
+        var temp = new ScoreboardOperand(_context.VariableCodeGen.Next());
         commands.AddRange(VisitMoveInstruction(new MoveInstruction(op, temp)));
         return temp;
     }

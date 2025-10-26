@@ -6,13 +6,14 @@ namespace Deco.Compiler.Ast.Passes;
 ///// Pass to build symbol tables for nested functions and blocks, including local variables.
 /// This pass traverses all the block bodies and creates symbol tables for functions and blocks.
 /// </summary>
-public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<object> {
+public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSymbolTable) : IAstVisitor<object> {
+    private readonly CompilationContext _context = context;
     private readonly ScopeStack scope = new(globalSymbolTable);
     private readonly List<string> _errors = [];
     public List<string> Errors => _errors;
 
-    public static void Action(Scope symbolTable, AstNode astNode) {
-        var sstBuilder = new ScopedSymbolTableBuilder(symbolTable);
+    public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
+        var sstBuilder = new ScopedSymbolTableBuilder(context, symbolTable);
         astNode.Accept(sstBuilder);
         if (sstBuilder.Errors.Count != 0) {
             Console.WriteLine("Function scope symbol table errors:");
@@ -45,7 +46,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
 
         functionSymbol.ReturnSymbol = new Symbol(
             $"{node.Name.Name}#return",
-            Compiler.variableCodeGen.Next(),
+            _context.VariableCodeGen.Next(),
             node.ReturnType,
             SymbolKind.Variable,
             node.Line,
@@ -60,7 +61,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
             try {
                 var param = new Symbol(
                     arg.Name.Name,
-                    Compiler.variableCodeGen.Next(),
+                    _context.VariableCodeGen.Next(),
                     arg.Name.Type,
                     SymbolKind.Parameter,
                     arg.Line,
@@ -110,7 +111,7 @@ public class ScopedSymbolTableBuilder(Scope globalSymbolTable) : IAstVisitor<obj
         try {
             scope.Current().AddSymbol(new Symbol(
                 node.Name.Name,
-                Compiler.variableCodeGen.Next(),
+                _context.VariableCodeGen.Next(),
                 // This is an UnresolvedType
                 node.Name.Type,
                 SymbolKind.Variable,
