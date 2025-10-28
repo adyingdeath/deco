@@ -12,19 +12,10 @@ namespace Deco.Compiler.Ast.Passes;
 public class GlobalSymbolTableBuilder(CompilationContext context, Scope symbolTable) : IAstVisitor<object> {
     private readonly CompilationContext _context = context;
     private readonly Scope _symbolTable = symbolTable;
-    private readonly List<string> _errors = [];
-
-    public List<string> Errors => _errors;
 
     public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
         var gstBuilder = new GlobalSymbolTableBuilder(context, symbolTable);
         astNode.Accept(gstBuilder);
-        if (gstBuilder.Errors.Count != 0) {
-            Console.WriteLine("Global symbol table errors:");
-            foreach (var error in gstBuilder.Errors) {
-                Console.WriteLine($"  {error}");
-            }
-        }
     }
 
     public object VisitProgram(ProgramNode node) {
@@ -55,19 +46,15 @@ public class GlobalSymbolTableBuilder(CompilationContext context, Scope symbolTa
         // node.ReturnType is UnresolvedType from AST builder
         var functionType = new FunctionType(node.ReturnType, parameterTypes);
 
-        try {
-            _symbolTable.AddSymbol(new FunctionSymbol(
-                node.Name.Name,
-                _context.FunctionCodeGen.Next(8),
-                functionType,
-                [],
-                Symbol.Uninitialized,
-                node.Line,
-                node.Column
-            ));
-        } catch (SymbolTableException ex) {
-            _errors.Add($"Global symbol error: {ex.Message}");
-        }
+        _symbolTable.AddSymbol(new FunctionSymbol(
+            node.Name.Name,
+            _context.FunctionCodeGen.Next(8),
+            functionType,
+            [],
+            Symbol.Uninitialized,
+            node.Line,
+            node.Column
+        ));
 
         return null!;
     }
@@ -77,19 +64,15 @@ public class GlobalSymbolTableBuilder(CompilationContext context, Scope symbolTa
         into the node.Name.Type. We will directly use the type here. The type will
         be resolved later in TypeResolver. It will try to parse the type according
         to the UnresolvedType here. */
-        try {
-            _symbolTable.AddSymbol(new Symbol(
-                node.Name.Name,
-                _context.VariableCodeGen.Next(),
-                // This is an UnresolvedType
-                node.Name.Type,
-                SymbolKind.Variable,
-                node.Line,
-                node.Column
-            ));
-        } catch (SymbolTableException ex) {
-            _errors.Add($"Global symbol error: {ex.Message}");
-        }
+        _symbolTable.AddSymbol(new Symbol(
+            node.Name.Name,
+            _context.VariableCodeGen.Next(),
+            // This is an UnresolvedType
+            node.Name.Type,
+            SymbolKind.Variable,
+            node.Line,
+            node.Column
+        ));
 
         return null!;
     }

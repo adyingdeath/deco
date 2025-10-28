@@ -1,3 +1,4 @@
+using Deco.Compiler.Diagnostics;
 using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast.Passes;
@@ -9,18 +10,10 @@ namespace Deco.Compiler.Ast.Passes;
 public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSymbolTable) : IAstVisitor<object> {
     private readonly CompilationContext _context = context;
     private readonly ScopeStack scope = new(globalSymbolTable);
-    private readonly List<string> _errors = [];
-    public List<string> Errors => _errors;
 
     public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
         var sstBuilder = new ScopedSymbolTableBuilder(context, symbolTable);
         astNode.Accept(sstBuilder);
-        if (sstBuilder.Errors.Count != 0) {
-            Console.WriteLine("Function scope symbol table errors:");
-            foreach (var error in sstBuilder.Errors) {
-                Console.WriteLine($"  {error}");
-            }
-        }
     }
 
     public object VisitProgram(ProgramNode node) {
@@ -37,7 +30,9 @@ public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSy
         if (scope.Current().LookupSymbol(node.Name.Name) is not FunctionSymbol functionSymbol) {
             // This shouldn't happen because we've added it when building global
             // symbol table. This is only for keeping robustness.
-            _errors.Add($"Internal compiler error: Function '{node.Name.Name}' not found in global scope.");
+            _context.ErrorReporter.Report(new InternalFunctionNotFoundError(
+                node.Name.Name, node.Name.Line, node.Name.Column
+            ));
             return null!;
         }
 
@@ -58,20 +53,16 @@ public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSy
         foreach (var arg in node.Arguments) {
             /* Use the arg.Name.Type directly. It's supposed to be UnresolvedType.
             We will resolve it later in TypeResolver. */
-            try {
-                var param = new Symbol(
-                    arg.Name.Name,
-                    _context.VariableCodeGen.Next(),
-                    arg.Name.Type,
-                    SymbolKind.Parameter,
-                    arg.Line,
-                    arg.Column
-                );
-                functionSymbol.ParameterSymbol.Add(param);
-                node.Scope.AddSymbol(param);
-            } catch (SymbolTableException ex) {
-                _errors.Add($"Function '{node.Name}' parameter error: {ex.Message}");
-            }
+            var param = new Symbol(
+                arg.Name.Name,
+                _context.VariableCodeGen.Next(),
+                arg.Name.Type,
+                SymbolKind.Parameter,
+                arg.Line,
+                arg.Column
+            );
+            functionSymbol.ParameterSymbol.Add(param);
+            node.Scope.AddSymbol(param);
         }
 
         // Switch to function symbol table for its body
@@ -108,19 +99,15 @@ public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSy
         into the node.Name.Type. We will directly use the type here. The type will
         be resolved later in TypeResolver. It will try to parse the type according
         to the UnresolvedType here. */
-        try {
-            scope.Current().AddSymbol(new Symbol(
-                node.Name.Name,
-                _context.VariableCodeGen.Next(),
-                // This is an UnresolvedType
-                node.Name.Type,
-                SymbolKind.Variable,
-                node.Line,
-                node.Column
-            ));
-        } catch (SymbolTableException ex) {
-            _errors.Add($"Variable definition error: {ex.Message}");
-        }
+        scope.Current().AddSymbol(new Symbol(
+            node.Name.Name,
+            _context.VariableCodeGen.Next(),
+            // This is an UnresolvedType
+            node.Name.Type,
+            SymbolKind.Variable,
+            node.Line,
+            node.Column
+        ));
 
         return null!;
     }

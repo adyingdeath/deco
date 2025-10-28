@@ -66,11 +66,11 @@ int chain(int a) {
 
         new FindFatherPass().Visit(ast);
 
-        // Build symbol table
-        var symbolTable = new Scope("global");
-
         var datapack = new Datapack("6u753i8", "deco");
         var context = new CompilationContext(datapack);
+
+        // Build symbol table
+        var symbolTable = new Scope(context, "global");
 
         // ~~~~~~~~~~~ Collect Symbols ~~~~~~~~~~~ //
         // Collect symbols and build nested symbol table.

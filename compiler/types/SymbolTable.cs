@@ -1,5 +1,4 @@
-using Deco.Compiler.Types;
-using Deco.Compiler.IR;
+using Deco.Compiler.Diagnostics;
 using Deco.Compiler.Lib;
 
 namespace Deco.Compiler.Types;
@@ -62,11 +61,12 @@ public enum SymbolKind {
 /// Represents a symbol table (originally called scope).
 /// Symbol tables are nested hierarchically.
 /// </summary>
-public class Scope(string name, Scope? parent = null) {
+public class Scope(CompilationContext context, string name, Scope? parent = null) {
     public Scope? Parent { get; } = parent;
     public List<Scope> Children { get; } = [];
     public string Name { get; } = name;
     public Dictionary<string, Symbol> Symbols { get; } = [];
+    private CompilationContext _context = context;
 
     /// <summary>
     /// Adds a symbol to this symbol table.
@@ -74,10 +74,10 @@ public class Scope(string name, Scope? parent = null) {
     /// </summary>
     public void AddSymbol(Symbol symbol) {
         if (Symbols.TryGetValue(symbol.Name, out Symbol? value)) {
-            throw new SymbolTableException(
-                $"Symbol '{symbol.Name}' already declared in symbol table '{Name}' at line {value.Line}.",
-                symbol.Line, symbol.Column
-            );
+            _context.ErrorReporter.Report(new DuplicateSymbolError(
+                value, symbol, symbol.Line, symbol.Column
+            ));
+            return;
         }
         Symbols[symbol.Name] = symbol;
     }
@@ -94,7 +94,7 @@ public class Scope(string name, Scope? parent = null) {
     }
 
     public Scope CreateChild(string name) {
-        var child = new Scope(name, this);
+        var child = new Scope(_context, name, this);
         Children.Add(child);
         return child;
     }

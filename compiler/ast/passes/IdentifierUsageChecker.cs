@@ -1,3 +1,4 @@
+using Deco.Compiler.Diagnostics;
 using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast.Passes;
@@ -10,25 +11,18 @@ namespace Deco.Compiler.Ast.Passes;
 public class IdentifierUsageChecker(CompilationContext context, Scope globalSymbolTable) : IAstVisitor<object> {
     private readonly CompilationContext _context = context;
     private readonly ScopeStack scope = new(globalSymbolTable);
-    private readonly List<string> _errors = [];
-
-    public List<string> Errors => _errors;
 
     public static void Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
         var usageChecker = new IdentifierUsageChecker(context, symbolTable);
         astNode.Accept(usageChecker);
-        if (usageChecker.Errors.Count != 0) {
-            Console.WriteLine("Identifier usage errors:");
-            foreach (var error in usageChecker.Errors) {
-                Console.WriteLine($"  {error}");
-            }
-        }
     }
 
     private void CheckIdentifier(string name, int line, int column) {
         var symbol = scope.Current().LookupSymbol(name);
         if (symbol == null) {
-            _errors.Add($"Undefined identifier '{name}' at line {line}, column {column}");
+            _context.ErrorReporter.Report(new UndefinedIdentifierError(
+                name, line, column
+            ));
         }
     }
 
