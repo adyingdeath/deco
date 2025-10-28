@@ -1,4 +1,4 @@
-using Deco.Compiler.Diagnostics;
+using Deco.Compiler.Diagnostics.Errors;
 using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast.Passes;

@@ -1,6 +1,6 @@
 using Deco.Compiler.Types;
 
-namespace Deco.Compiler.Diagnostics;
+namespace Deco.Compiler.Diagnostics.Errors;
 
 public record InternalFunctionNotFoundError(
     string FunctionName,

@@ -87,7 +87,7 @@ int chain(int a) {
 
         // ~~~~~~~~~~~~~ Handle Type ~~~~~~~~~~~~~ //
         // Type check and resolve types
-        ast = (ProgramNode)TypeResolver.Action(symbolTable, ast);
+        ast = (ProgramNode)TypeResolver.Action(context, symbolTable, ast);
 
 
         // ~~~~~~~~~~~ AST Optimization ~~~~~~~~~~ //
@@ -102,6 +102,10 @@ int chain(int a) {
         var program = NestInstructionPass.Visit(irs);
 
         program = LinkMergePass.Visit(program);
+
+        if (context.ErrorReporter.HasErrors) {
+            context.ErrorReporter.PrintAll();
+        }
 
         // Generate string from nested structure
         var irs_str = GenerateNestedString(program);

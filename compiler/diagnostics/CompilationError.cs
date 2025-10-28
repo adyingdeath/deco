@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
-
 namespace Deco.Compiler.Diagnostics;
 
 public enum Severity {

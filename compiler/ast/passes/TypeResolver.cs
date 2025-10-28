@@ -1,4 +1,4 @@
-using Deco.Compiler.Types;
+using Deco.Compiler.Diagnostics.Errors;
 using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast.Passes;
@@ -8,27 +8,21 @@ namespace Deco.Compiler.Ast.Passes;
 /// and updates the Type properties of the nodes. Inherits from AstTransformVisitor
 /// to transform and return updated nodes.
 /// </summary>
-public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
+public class TypeResolver(
+    CompilationContext context, Scope globalSymbolTable
+) : AstTransformVisitor {
+    private readonly CompilationContext _context = context;
     private readonly ScopeStack _scope = new(globalSymbolTable);
     private readonly Stack<FunctionNode> _functionStack = new();
-    private readonly List<string> _errors = [];
-
-    public List<string> Errors => _errors;
 
     /// <summary>
     /// Do the type checking and resolution step.
     /// Returns the AST with resolved types.
     /// </summary>
-    public static AstNode Action(Scope symbolTable, AstNode astNode) {
+    public static AstNode Action(CompilationContext context, Scope symbolTable, AstNode astNode) {
         // Assume symbol tables are already built by Collect_Symbol passes
-        var typeResolver = new TypeResolver(symbolTable);
+        var typeResolver = new TypeResolver(context, symbolTable);
         var resolvedAst = astNode.Accept(typeResolver);
-        if (typeResolver.Errors.Count != 0) {
-            Console.WriteLine("Type check errors:");
-            foreach (var error in typeResolver.Errors) {
-                Console.WriteLine($"  {error}");
-            }
-        }
         return resolvedAst;
     }
 
@@ -87,7 +81,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             newInit = (ExpressionNode)Visit(node.InitialValue);
 
             if (!newInit.Type.IsAssignableTo(newName.Type)) {
-                _errors.Add($"Type mismatch in variable definition '{node.Name.Name}' at line {node.Line}: expected {newName.Type}, got {newInit.Type}");
+                _context.ErrorReporter.Report(new TypeMismatchError(
+                    newName.Type, newInit.Type, newInit.Line, newInit.Column
+                ));
             }
         }
 
@@ -100,34 +96,39 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newExpression = (ExpressionNode)Visit(node.Expression);
 
         if (!newExpression.Type.IsAssignableTo(newVariable.Type)) {
-            _errors.Add($"Type mismatch in assignment to '{node.Variable}' at line {node.Line}: expected {newVariable.Type}, got {newExpression.Type}");
+            _context.ErrorReporter.Report(new TypeMismatchError(
+                newVariable.Type, newExpression.Type, newExpression.Line, newExpression.Column
+            ));
         }
 
-        return new AssignmentNode(
-            newVariable, newExpression, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(newVariable, newExpression);
     }
 
     public override AstNode VisitReturn(ReturnNode node) {
         if (_functionStack.Count == 0) {
-            _errors.Add($"Return statement outside of function at line {node.Line}");
+            _context.ErrorReporter.Report(
+                new IllegalReturnStatementError(node.Line, node.Column)
+            );
             return node;
         }
 
         FunctionNode currentFunction = _functionStack.Peek();
         IType expectedReturnType = currentFunction.ReturnType;
+        if(expectedReturnType is UnresolvedType unresolved) {
+            expectedReturnType = TypeUtils.ParseType(unresolved.Name);
+        }
 
         ExpressionNode? newExpression = null;
         if (node.Expression != null) {
             newExpression = (ExpressionNode)Visit(node.Expression);
             if (!newExpression.Type.IsAssignableTo(expectedReturnType)) {
-                _errors.Add($"Return type mismatch in function '{currentFunction.Name}' at line {node.Line}: expected {expectedReturnType}, got {newExpression.Type}");
+                _context.ErrorReporter.Report(new TypeMismatchError(
+                    expectedReturnType, newExpression.Type, newExpression.Line, newExpression.Column
+                ));
             }
         }
-
-        return new ReturnNode(
-            newExpression, node.Line, node.Column
-        ).CloneContext(node);
+        
+        return node.With(newExpression);
     }
 
     public override AstNode VisitIf(IfNode node) {
@@ -141,12 +142,12 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
         // Check condition type
         if (!newCondition.Type.Equals(TypeUtils.BoolType)) {
-            _errors.Add($"If condition must be bool type at line {node.Condition.Line}: got {newCondition.Type}");
+            _context.ErrorReporter.Report(new TypeMismatchError(
+                TypeUtils.BoolType, newCondition.Type, newCondition.Line, newCondition.Column
+            ));
         }
 
-        return new IfNode(
-            newCondition, newThenBlock, newElseBlock, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(newCondition, newThenBlock, newElseBlock);
     }
 
     public override AstNode VisitWhile(WhileNode node) {
@@ -154,12 +155,12 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newBody = (BlockNode)Visit(node.Body);
 
         if (!newCondition.Type.Equals(TypeUtils.BoolType)) {
-            _errors.Add($"While condition must be bool type at line {node.Condition.Line}: got {newCondition.Type}");
+            _context.ErrorReporter.Report(new TypeMismatchError(
+                TypeUtils.BoolType, newCondition.Type, newCondition.Line, newCondition.Column
+            ));
         }
 
-        return new WhileNode(
-            newCondition, newBody, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(newCondition, newBody);
     }
 
     public override AstNode VisitFor(ForNode node) {
@@ -174,7 +175,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         if (node.Condition != null) {
             newCondition = (ExpressionNode)Visit(node.Condition);
             if (!newCondition.Type.Equals(TypeUtils.BoolType)) {
-                _errors.Add($"For loop condition must be bool type at line {node.Condition.Line}: got {newCondition.Type}");
+                _context.ErrorReporter.Report(new TypeMismatchError(
+                    TypeUtils.BoolType, newCondition.Type, newCondition.Line, newCondition.Column
+                ));
             }
         }
 
@@ -186,9 +189,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newBody = (BlockNode)Visit(node.Body);
         _scope.PopScope();
 
-        return new ForNode(
-            newInit, newCondition, newIter, newBody, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(newInit, newCondition, newIter, newBody);
     }
 
     public override AstNode VisitBinaryOp(BinaryOpNode node) {
@@ -196,7 +197,10 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newRight = (ExpressionNode)Visit(node.Right);
 
         // Calculate and set the result type
-        var resultType = CalculateBinaryOpType(newLeft.Type, node.Operator, newRight.Type);
+        var resultType = CalculateBinaryOpType(
+            newLeft.Type, node.Operator, newRight.Type,
+            node.Line, node.Column
+        );
 
         // Create new node and set its type
         return node.With(type: resultType, left: newLeft, right: newRight);
@@ -216,7 +220,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
         var newName = (IdentifierNode)Visit(node.Name);
         var newArguments = node.Arguments.Select(a => (ExpressionNode)Visit(a)).ToList();
 
-        // Resolve function type and set return type
+        // Resolve function type and set return type, defaults to void type.
         var symbol = _scope.Current().LookupSymbol(newName.Name);
         IType returnType = TypeUtils.VoidType;
 
@@ -224,16 +228,22 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             returnType = funcType.ReturnType;
             // Check argument types...
             if (newArguments.Count != funcType.ParameterTypes.Count) {
-                _errors.Add($"Function '{newName.Name}' expects {funcType.ParameterTypes.Count} arguments, got {newArguments.Count} at line {node.Line}");
+                _context.ErrorReporter.Report(new ArgumentCountMismatchError(
+                    newName.Name,
+                    funcType.ParameterTypes.Count,
+                    newArguments.Count,
+                    node.Line,
+                    node.Column
+                ));
             } else {
                 for (int i = 0; i < newArguments.Count; i++) {
                     if (!newArguments[i].Type.IsAssignableTo(funcType.ParameterTypes[i])) {
-                        _errors.Add($"Argument {i + 1} of function '{newName}' type mismatch at line {newArguments[i].Line}: expected {funcType.ParameterTypes[i]}, got {newArguments[i].Type}");
+                        _context.ErrorReporter.Report(new TypeMismatchError(
+                            funcType.ParameterTypes[i], newArguments[i].Type, newArguments[i].Line, newArguments[i].Column
+                        ));
                     }
                 }
             }
-        } else {
-            _errors.Add($"Undefined function '{newName}' at line {node.Line}");
         }
 
         // Create new node and set its type
@@ -243,7 +253,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
     public override AstNode VisitIdentifier(IdentifierNode node) {
         var symbol = _scope.Current().LookupSymbol(node.Name);
         if (symbol == null) {
-            _errors.Add($"Undefined identifier '{node.Name}' at line {node.Line}");
+            _context.ErrorReporter.Report(new UndefinedIdentifierError(
+                node.Name, node.Line, node.Column
+            ));
             return node;
         }
 
@@ -258,7 +270,7 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
 
     // Helper methods for type calculation
     private IType CalculateBinaryOpType(
-        IType left, BinaryOperator op, IType right
+        IType left, BinaryOperator op, IType right, int line, int column
     ) {
         switch (op) {
             case BinaryOperator.Add:
@@ -278,7 +290,9 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
                     return left.PromotionPriority > right.PromotionPriority
                         ? left : right;
                 }
-                _errors.Add($"Arithmetic operation requires numeric operands: got {left} and {right}");
+                _context.ErrorReporter.Report(new NonNumericOperandError(
+                    op, left, right, line, column
+                ));
                 return TypeUtils.UnknownType;
 
             case BinaryOperator.Equal:
@@ -286,7 +300,11 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
                 if (!(left.IsAssignableTo(right) || right.IsAssignableTo(left))
                     && !(left.IsNumeric && right.IsNumeric)
                 ) {
-                    _errors.Add($"Comparison requires compatible operands: got {left} and {right}");
+                    _context.ErrorReporter.Report(
+                        new IncompatibleComparisonOperandsError(
+                            op, left, right, line, column
+                        )
+                    );
                 }
                 return TypeUtils.BoolType;
 
@@ -295,20 +313,33 @@ public class TypeResolver(Scope globalSymbolTable) : AstTransformVisitor {
             case BinaryOperator.GreaterThan:
             case BinaryOperator.GreaterThanOrEqual:
                 if (!left.IsNumeric || !right.IsNumeric) {
-                    _errors.Add($"Ordering comparison requires numeric operands: got {left} and {right}");
+                    _context.ErrorReporter.Report(
+                        new IncompatibleComparisonOperandsError(
+                            op, left, right, line, column
+                        )
+                    );
                 }
                 return TypeUtils.BoolType;
 
             case BinaryOperator.LogicalAnd:
             case BinaryOperator.LogicalOr:
-                if (!IsBoolType(left) || !IsBoolType(right)) {
-                    _errors.Add($"Logical operation requires boolean operands: got {left} and {right}");
+                IType? notBoolOne = null;
+                if (!IsBoolType(left)) {
+                    notBoolOne = left;
+                } else if (!IsBoolType(right)) {
+                    notBoolOne = right;
+                }
+                if (notBoolOne != null) {
+                    _context.ErrorReporter.Report(new TypeMismatchError(
+                        TypeUtils.BoolType, notBoolOne, line, column
+                    ));
+                    return TypeUtils.UnknownType;
                 }
                 return TypeUtils.BoolType;
 
             default:
-                _errors.Add($"Unknown binary operator");
-                return TypeUtils.IntType;
+                _context.ErrorReporter.Report(new UnknownBinaryOperatorError(line, column));
+                return TypeUtils.UnknownType;
         }
     }
 
