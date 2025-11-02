@@ -33,6 +33,8 @@ public class IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode? el
             this.Line,
             this.Column
         );
-        return (IfNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

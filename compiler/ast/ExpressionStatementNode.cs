@@ -21,6 +21,8 @@ public class ExpressionStatementNode(ExpressionNode expression, int line = 0, in
             this.Line,
             this.Column
         );
-        return (ExpressionStatementNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

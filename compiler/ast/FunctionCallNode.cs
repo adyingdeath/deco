@@ -35,6 +35,8 @@ public class FunctionCallNode(
             this.Line,
             this.Column
         );
-        return (FunctionCallNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

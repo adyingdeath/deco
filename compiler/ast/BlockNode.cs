@@ -23,7 +23,9 @@ public class BlockNode(List<StatementNode>? statements = null, int line = 0, int
             this.Line,
             this.Column
         );
-        return (BlockNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }
 
@@ -37,6 +39,12 @@ public class FakeBlockNode(List<StatementNode>? statements = null, int line = 0,
         return visitor.VisitFakeBlock(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        foreach (var statement in Statements) {
+            yield return statement;
+        }
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.
@@ -47,6 +55,8 @@ public class FakeBlockNode(List<StatementNode>? statements = null, int line = 0,
             this.Line,
             this.Column
         );
-        return (FakeBlockNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

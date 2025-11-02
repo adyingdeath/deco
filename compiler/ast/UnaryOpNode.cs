@@ -37,6 +37,8 @@ public class UnaryOpNode(
             this.Line,
             this.Column
         );
-        return (UnaryOpNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

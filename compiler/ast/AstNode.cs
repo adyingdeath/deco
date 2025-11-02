@@ -24,6 +24,18 @@ public abstract class AstNode(int line = 0, int column = 0) {
         Parent = node.Parent;
         return this;
     }
+
+    /// <summary>
+    /// Sets the Parent property for all child nodes returned by GetChildren().
+    /// This method should be called after creating a new node in With methods.
+    /// </summary>
+    public void SetChildrenParent() {
+        foreach (var child in GetChildren()) {
+            child.Parent = this;
+            child.SetChildrenParent();
+        }
+    }
+
     public virtual Scope? FindScope() {
         if (Scope != null) return Scope;
         return Parent?.FindScope();

@@ -24,6 +24,8 @@ public class WhileNode(ExpressionNode condition, BlockNode body, int line = 0, i
             this.Line,
             this.Column
         );
-        return (WhileNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

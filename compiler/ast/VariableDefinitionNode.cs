@@ -29,6 +29,8 @@ public class VariableDefinitionNode(IdentifierNode name, ExpressionNode? init, i
             this.Line,
             this.Column
         );
-        return (VariableDefinitionNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

@@ -46,6 +46,8 @@ public class ForNode(
             this.Line,
             this.Column
         );
-        return (ForNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

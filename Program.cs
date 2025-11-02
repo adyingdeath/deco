@@ -63,8 +63,7 @@ int chain(int a) {
 
         var astBuilder = new AstBuilder();
         var ast = astBuilder.Visit(tree);
-
-        AstWalker.SetParents(ast);
+        ast.SetChildrenParent();
 
         var datapack = new Datapack("6u753i8", "deco");
         var context = new CompilationContext(datapack);

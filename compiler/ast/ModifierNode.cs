@@ -29,6 +29,8 @@ public class ModifierNode(IdentifierNode name, List<ExpressionNode>? parameters 
             this.Line,
             this.Column
         );
-        return (ModifierNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

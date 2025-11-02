@@ -23,6 +23,8 @@ public class ReturnNode(ExpressionNode? expression = null, int line = 0, int col
             this.Line,
             this.Column
         );
-        return (ReturnNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

@@ -36,6 +36,8 @@ public class ProgramNode(
             this.Line,
             this.Column
         );
-        return (ProgramNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

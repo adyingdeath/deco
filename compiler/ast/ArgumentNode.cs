@@ -23,6 +23,8 @@ public class ArgumentNode(
             this.Line,
             this.Column
         );
-        return (ArgumentNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

@@ -57,6 +57,8 @@ public class BinaryOpNode(
             this.Line,
             this.Column
         );
-        return (BinaryOpNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }

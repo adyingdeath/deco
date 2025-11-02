@@ -30,6 +30,8 @@ public class AssignmentNode(
             this.Line,
             this.Column
         );
-        return (AssignmentNode)newNode.CloneContext(this);
+        newNode.CloneContext(this);
+        newNode.SetChildrenParent();
+        return newNode;
     }
 }
