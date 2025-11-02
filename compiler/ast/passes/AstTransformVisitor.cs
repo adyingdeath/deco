@@ -13,26 +13,26 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
     public virtual AstNode VisitProgram(ProgramNode node) {
         var newVarDefs = node.VariableDefinitions.Select(v => (VariableDefinitionNode)Visit(v)).ToList();
         var newFunctions = node.Functions.Select(f => (FunctionNode)Visit(f)).ToList();
-        return new ProgramNode(
-            newVarDefs, newFunctions, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            variableDefinitions: newVarDefs,
+            functions: newFunctions
+        );
     }
 
     public virtual AstNode VisitFunction(FunctionNode node) {
         var newModifiers = node.Modifiers.Select(m => (ModifierNode)Visit(m)).ToList();
         var newArguments = node.Arguments.Select(a => (ArgumentNode)Visit(a)).ToList();
         var newBody = (BlockNode)Visit(node.Body);
-        return new FunctionNode(
-            newModifiers, node.ReturnType, node.Name, newArguments, newBody,
-            node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            modifiers: newModifiers,
+            arguments: newArguments,
+            body: newBody
+        );
     }
 
     public virtual AstNode VisitModifier(ModifierNode node) {
         var newParameters = node.Parameters.Select(p => (ExpressionNode)Visit(p)).ToList();
-        return new ModifierNode(
-            node.Name, newParameters, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(parameters: newParameters);
     }
 
     public virtual AstNode VisitArgument(ArgumentNode node) {
@@ -42,9 +42,7 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
 
     public virtual AstNode VisitExpressionStatement(ExpressionStatementNode node) {
         var newExpression = (ExpressionNode)Visit(node.Expression);
-        return new ExpressionStatementNode(
-            newExpression, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(expression: newExpression);
     }
 
     public virtual AstNode VisitCommand(CommandNode node) {
@@ -57,16 +55,12 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
             newInit = (ExpressionNode)Visit(node.InitialValue);
         }
         var newName = (IdentifierNode)Visit(node.Name);
-        return new VariableDefinitionNode(
-            newName, newInit, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(name: newName, initialValue: newInit);
     }
 
     public virtual AstNode VisitAssignment(AssignmentNode node) {
         var newExpression = (ExpressionNode)Visit(node.Expression);
-        return new AssignmentNode(
-            node.Variable, newExpression, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(expression: newExpression);
     }
 
     public virtual AstNode VisitReturn(ReturnNode node) {
@@ -74,9 +68,7 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
         if (node.Expression != null) {
             newExpression = (ExpressionNode)Visit(node.Expression);
         }
-        return new ReturnNode(
-            newExpression, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(expression: newExpression);
     }
 
     public virtual AstNode VisitIf(IfNode node) {
@@ -86,17 +78,17 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
         if (node.ElseBlock != null) {
             newElseBlock = (BlockNode)Visit(node.ElseBlock);
         }
-        return new IfNode(
-            newCondition, newThenBlock, newElseBlock, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            condition: newCondition,
+            thenBlock: newThenBlock,
+            elseBlock: newElseBlock
+        );
     }
 
     public virtual AstNode VisitWhile(WhileNode node) {
         var newCondition = (ExpressionNode)Visit(node.Condition);
         var newBody = (BlockNode)Visit(node.Body);
-        return new WhileNode(
-            newCondition, newBody, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(condition: newCondition, body: newBody);
     }
 
     public virtual AstNode VisitFor(ForNode node) {
@@ -113,9 +105,12 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
             null :
             (StatementNode)Visit(node.Iteration);
         var newBody = (BlockNode)Visit(node.Body);
-        return new ForNode(
-            newInit, newCondition, newIter, newBody, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            initialization: newInit,
+            condition: newCondition,
+            iteration: newIter,
+            body: newBody
+        );
     }
 
     /// <summary>
@@ -142,17 +137,13 @@ public abstract class AstTransformVisitor : IAstVisitor<AstNode> {
                 newStatements.Add(visitedStatement);
             }
         }
-        return new BlockNode(
-            newStatements, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(statements: newStatements);
     }
 
     // Treated like normal BlockNode
     public virtual AstNode VisitFakeBlock(FakeBlockNode node) {
         var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
-        return new FakeBlockNode(
-            newStatements, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(statements: newStatements);
     }
 
     public virtual AstNode VisitBinaryOp(BinaryOpNode node) {

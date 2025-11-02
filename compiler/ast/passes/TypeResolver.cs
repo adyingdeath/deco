@@ -36,9 +36,10 @@ public class TypeResolver(
         var newVarDefs = node.VariableDefinitions.Select(v => (VariableDefinitionNode)Visit(v)).ToList();
         var newFunctions = node.Functions.Select(f => (FunctionNode)Visit(f)).ToList();
 
-        return new ProgramNode(
-            newVarDefs, newFunctions, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            variableDefinitions: newVarDefs,
+            functions: newFunctions
+        );
     }
 
     public override AstNode VisitFunction(FunctionNode node) {
@@ -55,19 +56,20 @@ public class TypeResolver(
         _functionStack.Pop();
         _scope.PopScope();
 
-        return new FunctionNode(
-            newModifiers, returnType, newName, newArguments, newBody,
-            node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(
+            modifiers: newModifiers,
+            returnType: returnType,
+            name: newName,
+            arguments: newArguments,
+            body: newBody
+        );
     }
 
     public override AstNode VisitBlock(BlockNode node) {
         _scope.PushScope(node.Scope);
         var newStatements = node.Statements.Select(s => (StatementNode)Visit(s)).ToList();
         _scope.PopScope();
-        return new BlockNode(
-            newStatements, node.Line, node.Column
-        ).CloneContext(node);
+        return node.With(statements: newStatements);
     }
 
     public override AstNode VisitVariableDefinition(VariableDefinitionNode node) {
