@@ -13,6 +13,15 @@ public class ProgramNode(
         return visitor.VisitProgram(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        foreach (var variableDefinition in VariableDefinitions) {
+            yield return variableDefinition;
+        }
+        foreach (var function in Functions) {
+            yield return function;
+        }
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

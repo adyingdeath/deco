@@ -9,6 +9,10 @@ public class ArgumentNode(
         return visitor.VisitArgument(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Name;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

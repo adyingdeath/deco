@@ -8,6 +8,13 @@ public class VariableDefinitionNode(IdentifierNode name, ExpressionNode? init, i
         return visitor.VisitVariableDefinition(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Name;
+        if (InitialValue != null) {
+            yield return InitialValue;
+        }
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

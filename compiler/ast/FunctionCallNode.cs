@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Deco.Compiler.Types;
 
 namespace Deco.Compiler.Ast;
@@ -11,6 +10,13 @@ public class FunctionCallNode(
 
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.VisitFunctionCall(this);
+    }
+
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Name;
+        foreach (var argument in Arguments) {
+            yield return argument;
+        }
     }
 
     /// <summary>

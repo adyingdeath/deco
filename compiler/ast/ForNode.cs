@@ -15,6 +15,19 @@ public class ForNode(
         return visitor.VisitFor(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        if (Initialization != null) {
+            yield return Initialization;
+        }
+        if (Condition != null) {
+            yield return Condition;
+        }
+        if (Iteration != null) {
+            yield return Iteration;
+        }
+        yield return Body;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

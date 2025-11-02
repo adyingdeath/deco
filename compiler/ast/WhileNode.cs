@@ -8,6 +8,11 @@ public class WhileNode(ExpressionNode condition, BlockNode body, int line = 0, i
         return visitor.VisitWhile(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Condition;
+        yield return Body;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

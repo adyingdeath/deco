@@ -9,6 +9,14 @@ public class IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode? el
         return visitor.VisitIf(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Condition;
+        yield return ThenBlock;
+        if (ElseBlock != null) {
+            yield return ElseBlock;
+        }
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

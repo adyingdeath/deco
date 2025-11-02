@@ -11,6 +11,11 @@ public class AssignmentNode(
         return visitor.VisitAssignment(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Variable;
+        yield return Expression;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

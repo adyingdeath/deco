@@ -21,6 +21,17 @@ public class FunctionNode(
         return visitor.VisitFunction(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        foreach (var modifier in Modifiers) {
+            yield return modifier;
+        }
+        yield return Name;
+        foreach (var argument in Arguments) {
+            yield return argument;
+        }
+        yield return Body;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.

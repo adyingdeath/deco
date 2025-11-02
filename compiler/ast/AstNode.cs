@@ -14,6 +14,11 @@ public abstract class AstNode(int line = 0, int column = 0) {
     public AstNode? Parent { get; set; }
 
     public abstract T Accept<T>(IAstVisitor<T> visitor);
+
+    public virtual IEnumerable<AstNode> GetChildren() {
+        yield break;
+    }
+
     public virtual AstNode CloneContext(AstNode node) {
         Scope = node.Scope;
         Parent = node.Parent;

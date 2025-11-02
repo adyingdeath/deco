@@ -34,6 +34,11 @@ public class BinaryOpNode(
         return visitor.VisitBinaryOp(this);
     }
 
+    public override IEnumerable<AstNode> GetChildren() {
+        yield return Left;
+        yield return Right;
+    }
+
     /// <summary>
     /// Creates a new Node that is a copy of the current one,
     /// but with the specified properties replaced.
