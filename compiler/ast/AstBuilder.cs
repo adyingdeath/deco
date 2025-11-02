@@ -110,9 +110,10 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
         3. variableDefinition ';'
         4. assignment ';'
         5. return_statement
-        6. if_statement
-        7. while_statement
-        8. for_statement
+        6. block
+        7. if_statement
+        8. while_statement
+        9. for_statement
         */
 
         if (context.COMMAND() != null) {
@@ -147,6 +148,10 @@ public class AstBuilder : DecoBaseVisitor<AstNode> {
 
         if (context.return_statement() != null) {
             return VisitReturn_statement(context.return_statement());
+        }
+
+        if (context.block() != null) {
+            return VisitBlock(context.block());
         }
 
         if (context.if_statement() != null) {
