@@ -1,5 +1,3 @@
-using Deco.Compiler.Ast;
-
 namespace Deco.Compiler.Ast.Passes;
 
 /// <summary>

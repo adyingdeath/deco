@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace Deco.Compiler.Pack;
 
 /// <summary>

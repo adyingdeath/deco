@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Deco.Compiler.Types;
-using Deco.Compiler.Types;
 
 namespace Deco.Compiler.IR;
 

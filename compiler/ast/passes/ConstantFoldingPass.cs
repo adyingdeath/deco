@@ -1,5 +1,4 @@
 using Deco.Compiler.Types;
-using Deco.Compiler.Ast;
 
 namespace Deco.Compiler.Ast.Passes;
 
