@@ -152,7 +152,6 @@ public class ScopedSymbolTableBuilder(CompilationContext context, Scope globalSy
     public object VisitCommand(CommandNode node) => null!;
     public object VisitAssignment(AssignmentNode node) => null!;
     public object VisitReturn(ReturnNode node) => null!;
-    public object VisitFakeBlock(FakeBlockNode node) => null!;
     public object VisitBinaryOp(BinaryOpNode node) => null!;
     public object VisitUnaryOp(UnaryOpNode node) => null!;
     public object VisitLiteral(LiteralNode node) => null!;

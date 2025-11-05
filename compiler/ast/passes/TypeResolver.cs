@@ -406,5 +406,4 @@ public class TypeResolver(
     public override AstNode VisitExpressionStatement(ExpressionStatementNode node) =>
         new ExpressionStatementNode((ExpressionNode)Visit(node.Expression), node.Line, node.Column);
     public override AstNode VisitCommand(CommandNode node) => node;
-    public override AstNode VisitFakeBlock(FakeBlockNode node) => node;
 }

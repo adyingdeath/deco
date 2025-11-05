@@ -12,15 +12,7 @@ namespace Deco.Compiler.Ast.Passes;
 ///   }
 /// }
 /// </code>
-/// <para>However, the outer block is <see cref="Deco.Ast.FakeBlockNode"/>, which will be
-/// flattened during transformation from for-loop to while-loop. So it will end up like:</para>
-/// <code>
-/// init;
-/// while (condition) {
-///   body;
-///   iter;
-/// }
-/// </code>
+/// <para>The outer block contains the initialization statement and the while-loop.</para>
 /// </summary>
 public class ForLoopToWhilePass : AstTransformVisitor {
     public override AstNode VisitFor(ForNode node) {
@@ -46,8 +38,7 @@ public class ForLoopToWhilePass : AstTransformVisitor {
         var whileNode = new WhileNode(newCondition, whileBody, node.Line, node.Column);
         blockStatements.Add(whileNode);
 
-        // Return the transformed block. Here we use FakeBlockNode, which will be flattened during
-        // transformation from for-loop to while-loop
-        return new FakeBlockNode(blockStatements, node.Line, node.Column);
+        // Return the transformed block
+        return new BlockNode(blockStatements, node.Line, node.Column).CloneContext(node);
     }
 }

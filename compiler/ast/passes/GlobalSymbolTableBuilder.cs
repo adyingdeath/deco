@@ -86,7 +86,6 @@ public class GlobalSymbolTableBuilder(CompilationContext context, Scope symbolTa
     public object VisitWhile(WhileNode node) => null!;
     public object VisitFor(ForNode node) => null!;
     public object VisitBlock(BlockNode node) => null!;
-    public object VisitFakeBlock(FakeBlockNode node) => null!;
     public object VisitBinaryOp(BinaryOpNode node) => null!;
     public object VisitUnaryOp(UnaryOpNode node) => null!;
     public object VisitLiteral(LiteralNode node) => null!;

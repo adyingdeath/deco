@@ -46,20 +46,34 @@ public partial class DatapackBuilder(CompilationContext context) : IRVisitor<Lis
         if (inst.IsFallThrough) {
             insts.Add($"scoreboard players set {Constants.FallThroughReturnHolder} {_context.Datapack.Id} 0");
         }
-        if (inst is ConditionalInstruction condInst) {
-            // Added a condition check
-            // The right operand is always ConstantOperand in JumpIfInstruction, you
-            // can find it in IRBuilder
-            if (condInst.Condition.Right is not ConstantOperand constant) return [];
-            if (condInst.Condition.Left is ScoreboardOperand scoreboard) {
-                var ifOrUnless = inst is JumpIfInstruction ? "if" : "unless";
-                insts.Add($"execute {ifOrUnless} score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
-            }
-            // It can't be storage, because the left operand is always the result
-            // of evaluating some logical expressions, whose result should be
-            // a bool type, which is stored in Scoreboard.
-        } else if (inst is JumpIfInstruction) {
-            insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
+        switch (inst) {
+            /* The right operand is always ConstantOperand in JumpIfInstruction,
+            you can find it in IRBuilder */
+            /* It can't be storage, because the left operand is always the result
+            of evaluating some logical expressions, whose result should be a bool
+            type, which is stored in Scoreboard. */
+            case JumpIfInstruction jumpIf: {
+                    if (jumpIf.Condition.Right is not ConstantOperand constant) return [];
+                    if (jumpIf.Condition.Left is ScoreboardOperand scoreboard) {
+                        insts.Add($"execute if score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
+                    }
+                    break;
+                }
+            case JumpUnlessInstruction jumpUnless: {
+                    if (jumpUnless.Condition.Right is not ConstantOperand constant) return [];
+                    if (jumpUnless.Condition.Left is ScoreboardOperand scoreboard) {
+                        insts.Add($"execute unless score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
+                    }
+                    break;
+                }
+            default: {
+                    insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
+                    break;
+                }
+        }
+        if (inst.IsFallThrough) {
+            // /execute if score <player> <objective> matches 1 run return 1
+            insts.Add($"execute if score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} matches 1 run return 1");
         }
         return insts;
     }

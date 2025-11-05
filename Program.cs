@@ -41,17 +41,11 @@ class Program {
         string processedCode = preprocessor.Preprocess(@"
 int counter = 0;
 void main() {
-    counter = 6 + 1;
-    int result = 567;
-    result = chain(counter);
-    print(result);
-}
-int chain(int a) {
-    print(a);
-    if (a == 1) {
-        return 1;
+    for(int i = 0;i < 7;i = i + 1) {
+        counter = counter + i;
+        print(i);
     }
-    return a * chain(a - 1);
+    print(counter);
 }
         ");
 
@@ -90,8 +84,8 @@ int chain(int a) {
 
 
         // ~~~~~~~~~~~ AST Optimization ~~~~~~~~~~ //
-        ast = new ConstantFoldingPass().Visit(ast);
         ast = new ForLoopToWhilePass().Visit(ast);
+        ast = new ConstantFoldingPass().Visit(ast);
 
         // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
 

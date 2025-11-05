@@ -142,5 +142,4 @@ public class IdentifierUsageChecker(CompilationContext context, Scope globalSymb
     public object VisitArgument(ArgumentNode node) => null!;
     public object VisitCommand(CommandNode node) => null!;
     public object VisitLiteral(LiteralNode node) => null!;
-    public object VisitFakeBlock(FakeBlockNode node) => null!;
 }

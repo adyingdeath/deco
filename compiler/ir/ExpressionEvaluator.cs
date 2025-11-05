@@ -139,9 +139,7 @@ public class ExpressionEvaluator(CompilationContext context) : IAstVisitor<Opera
         throw new NotImplementedException();
     }
 
-    public Operand VisitFakeBlock(FakeBlockNode node) {
-        throw new NotImplementedException();
-    }
+
 
     public Operand VisitFor(ForNode node) {
         throw new NotImplementedException();

@@ -94,13 +94,7 @@ public class IRBuilder(CompilationContext context) : IAstVisitor<List<IRInstruct
         return insts;
     }
 
-    public List<IRInstruction> VisitFakeBlock(FakeBlockNode node) {
-        var insts = new List<IRInstruction>();
-        foreach (var statement in node.Statements) {
-            insts.AddRange(statement.Accept(this) ?? []);
-        }
-        return insts;
-    }
+
 
     public List<IRInstruction> VisitFor(ForNode node) {
         return [];
@@ -221,6 +215,8 @@ public class IRBuilder(CompilationContext context) : IAstVisitor<List<IRInstruct
         var loopStartLabel = new LabelInstruction("__while_start_" + _context.FunctionCodeGen.Next(8));
         var loopEndLabel = new LabelInstruction("__while_end_" + _context.FunctionCodeGen.Next(8));
 
+        insts.Add(new JumpInstruction(loopStartLabel));
+
         // Start label
         insts.Add(loopStartLabel);
 
@@ -232,7 +228,7 @@ public class IRBuilder(CompilationContext context) : IAstVisitor<List<IRInstruct
         var condition = new Condition(ConditionType.Equal, conditionOperand, oneOperand);
 
         // Jump to end unless condition_operand == 1 (i.e. exit loop when condition is false)
-        insts.Add(new JumpUnlessInstruction(condition, loopEndLabel));
+        insts.Add(new JumpUnlessInstruction(condition, loopEndLabel).FallThrough());
 
         // Loop body
         insts.AddRange(node.Body.Accept(this) ?? []);
