@@ -65,4 +65,5 @@ project.nuget.cache
 
 .gemini/
 temp*.md
+files.md
 .bdleignore

@@ -3,89 +3,116 @@ using Deco.Compiler.IR;
 namespace Deco.Compiler.Pack;
 
 /// <summary>
-/// Builds a Datapack from a list of IR instructions.
+/// Builds a Datapack from an IrProgram.
 /// </summary>
 public partial class DatapackBuilder(CompilationContext context) : IRVisitor<List<string>> {
     private readonly CompilationContext _context = context;
 
-    public override List<string> VisitProgram(ProgramInstruction inst) {
-        inst.Labels.ForEach((label) => label.Accept(this));
+    public override List<string> VisitProgram(IrProgram program) {
+        foreach (var func in program.Functions) {
+            List<string> commands = [];
+            foreach (var inst in func.Instructions) {
+                commands.AddRange(inst.Accept(this));
+            }
+
+            var functionResource = new Function(commands).SetLocation(
+                new ResourceLocation(_context.Datapack.Namespace, func.Name)
+            );
+            _context.Datapack.Functions.Add(functionResource);
+
+            // Handle global load tag
+            if (func.Name.Equals("global")) {
+                var load = _context.Datapack.Tags.Find((tag) => (
+                    tag.Type == TagType.Function
+                    && tag.Location.Equals(new ResourceLocation("minecraft", "load"))
+                ));
+                load?.Entries.Add(functionResource.Location.ToString());
+            }
+        }
         return [];
     }
 
-    public override List<string> VisitLabelInstruction(LabelInstruction inst) {
-        List<string> commands = [];
-        foreach (var i in inst.Instructions) {
-            commands.AddRange(i.Accept(this));
+    public override List<string> VisitCallInstruction(CallInstruction inst) {
+        var location = new ResourceLocation(_context.Datapack.Namespace, inst.TargetFunction);
+        // "run function" can store result if needed, but for void calls just run it
+        return [$"function {location}"];
+    }
+
+    public override List<string> VisitCallIfInstruction(CallIfInstruction inst) {
+        var location = new ResourceLocation(_context.Datapack.Namespace, inst.TargetFunction);
+        string verb = inst.IsUnless ? "unless" : "if";
+
+        // Optimize for Constant operands in condition
+        /* Here we only handle the case of Equal, because conditional expressions
+        like if(a < 1) have been evaluated to something like:
+        temp = a < 1
+        if(temp == 1)
+        so there is no need to handle cases other than Equal*/
+        if (inst.Condition.Right is ConstantOperand constRight) {
+            if (inst.Condition.Left is ScoreboardOperand sLeft) {
+                return [$"execute {verb} score {sLeft.Code} {_context.Datapack.Id} matches {constRight.Value} run function {location}"];
+            }
         }
-        var function = new Function(commands).SetLocation(
-            new ResourceLocation(_context.Datapack.Namespace, inst.Label)
-        );
-        _context.Datapack.Functions.Add(function);
-        if (inst.Label.Equals("global")) {
-            // We need to tag minecraft:load for global chunk
-            var load = _context.Datapack.Tags.Find((tag) => (
-                tag.Type == TagType.Function
-                && tag.Location.Equals(new ResourceLocation("minecraft", "load"))
-            ));
-            if (load == null) return [];
-            load.Entries.Add(function.Location.ToString());
+
+        // Generic fallback for variable comparisons
+        if (inst.Condition.Left is ScoreboardOperand sbLeft && inst.Condition.Right is ScoreboardOperand sbRight) {
+            string op = inst.Condition.Type switch {
+                ConditionType.Equal => "=",
+                ConditionType.Greater => ">",
+                ConditionType.GreaterEqual => ">=",
+                ConditionType.Less => "<",
+                ConditionType.LessEqual => "<=",
+                _ => "="
+            };
+            return [$"execute {verb} score {sbLeft.Code} {_context.Datapack.Id} {op} {sbRight.Code} {_context.Datapack.Id} run function {location}"];
         }
-        return [];
+
+        return [$"# Unsupported condition type for CallIf: {inst.Condition}"];
+    }
+
+    public override List<string> VisitReturnInstruction(ReturnInstruction inst) {
+        if (inst.Value == null) return ["return 1"];
+        return [$"return {GenOperand(inst.Value)}"];
+    }
+
+    public override List<string> VisitReturnIfInstruction(ReturnIfInstruction inst) {
+        string returnValue = inst.Value == null ? "1" : GenOperand(inst.Value);
+        string runReturn = $"run return {returnValue}";
+
+        // Optimize: variable vs constant (use 'matches')
+        // Example: if (a == 1) return ...
+        if (inst.Condition.Right is ConstantOperand constRight && inst.Condition.Left is ScoreboardOperand sLeft) {
+            if (inst.Condition.Type == ConditionType.Equal) {
+                return [$"execute if score {sLeft.Code} {_context.Datapack.Id} matches {constRight.Value} {runReturn}"];
+            }
+        }
+        if (inst.Condition.Left is ConstantOperand constLeft && inst.Condition.Right is ScoreboardOperand sRight) {
+            if (inst.Condition.Type == ConditionType.Equal) {
+                return [$"execute if score {sRight.Code} {_context.Datapack.Id} matches {constLeft.Value} {runReturn}"];
+            }
+        }
+
+        // Generic: variable vs variable (use =, <, >, <=, >=)
+        // Also handles variable vs constant if constant is moved to a temp variable
+        if (inst.Condition.Left is ScoreboardOperand sbLeft && inst.Condition.Right is ScoreboardOperand sbRight) {
+            string op = inst.Condition.Type switch {
+                ConditionType.Equal => "=",
+                ConditionType.Greater => ">",
+                ConditionType.GreaterEqual => ">=",
+                ConditionType.Less => "<",
+                ConditionType.LessEqual => "<=",
+                _ => "="
+            };
+
+            return [$"execute if score {sbLeft.Code} {_context.Datapack.Id} {op} {sbRight.Code} {_context.Datapack.Id} {runReturn}"];
+        }
+
+        // Unsupported cases (e.g. direct Storage comparison)
+        return [$"# ERROR: Unsupported condition operands in ReturnIf: {inst.Condition}"];
     }
 
     public override List<string> VisitCommandInstruction(CommandInstruction inst) {
         return [inst.Command];
-    }
-
-    public override List<string> VisitJumpInstruction(JumpInstruction inst) {
-        List<string> insts = [];
-        var location = new ResourceLocation(
-            _context.Datapack.Namespace, inst.Target.Label
-        );
-        if (inst.IsFallThrough) {
-            insts.Add($"scoreboard players set {Constants.FallThroughReturnHolder} {_context.Datapack.Id} 0");
-        }
-        switch (inst) {
-            /* The right operand is always ConstantOperand in JumpIfInstruction,
-            you can find it in IRBuilder */
-            /* It can't be storage, because the left operand is always the result
-            of evaluating some logical expressions, whose result should be a bool
-            type, which is stored in Scoreboard. */
-            case JumpIfInstruction jumpIf: {
-                    if (jumpIf.Condition.Right is not ConstantOperand constant) return [];
-                    if (jumpIf.Condition.Left is ScoreboardOperand scoreboard) {
-                        insts.Add($"execute if score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
-                    }
-                    break;
-                }
-            case JumpUnlessInstruction jumpUnless: {
-                    if (jumpUnless.Condition.Right is not ConstantOperand constant) return [];
-                    if (jumpUnless.Condition.Left is ScoreboardOperand scoreboard) {
-                        insts.Add($"execute unless score {scoreboard.Code} {_context.Datapack.Id} matches {constant.Value} store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
-                    }
-                    break;
-                }
-            default: {
-                    insts.Add($"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}");
-                    break;
-                }
-        }
-        if (inst.IsFallThrough) {
-            // /execute if score <player> <objective> matches 1 run return 1
-            insts.Add($"execute if score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} matches 1 run return 1");
-        }
-        return insts;
-    }
-    public override List<string> VisitCallInstruction(CallInstruction inst) {
-        var location = new ResourceLocation(
-            _context.Datapack.Namespace, inst.Target.Label
-        );
-        return [$"execute store result score {Constants.FallThroughReturnHolder} {_context.Datapack.Id} run function {location}"];
-    }
-
-    public override List<string> VisitLinkInstruction(LinkInstruction inst) {
-        return [];
     }
 
     public override List<string> VisitMoveInstruction(MoveInstruction inst) {
@@ -94,79 +121,26 @@ public partial class DatapackBuilder(CompilationContext context) : IRVisitor<Lis
             (_, ConstantOperand dest) =>
                 [$"# ERROR: Destination cannot be a ConstantOperand: {dest.Value}"],
 
-            // --- Destination is ScoreboardOperand ---
             (ConstantOperand source, ScoreboardOperand dest) =>
-                // Move constant to scoreboard:
-                // /scoreboard players set <target> <objective> <value>
                 [$"scoreboard players set {dest.Code} {_context.Datapack.Id} {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, ScoreboardOperand dest) =>
-                // Move scoreboard to scoreboard:
-                // /scoreboard players operation <destTarget> <destObj> = <sourceTarget> <sourceObj>
                 [$"scoreboard players operation {dest.Code} {_context.Datapack.Id} = {source.Code} {_context.Datapack.Id}"],
 
             (StorageOperand source, ScoreboardOperand dest) =>
-                // Move storage to scoreboard:
-                // /execute store result score <target> <objective> run data get storage <id> <path>
                 [$"execute store result score {dest.Code} {_context.Datapack.Id} run data get storage {_context.Datapack.Id} {source.Code}"],
 
-            // --- Destination is StorageOperand ---
             (ConstantOperand source, StorageOperand dest) =>
-                // Move constant to storage:
-                // /data modify storage <id> <path> set value <value>
                 [$"data modify storage {_context.Datapack.Id} {dest.Code} set value {source.GetValueInGame()}"],
 
             (ScoreboardOperand source, StorageOperand dest) =>
-                // Move scoreboard to storage:
-                // /execute store result storage <id> <path> float 1.0 run scoreboard players get <target> <objective>
                 [$"execute store result storage {_context.Datapack.Id} {dest.Code} float 1.0 run scoreboard players get {source.Code} {_context.Datapack.Id}"],
 
             (StorageOperand source, StorageOperand dest) =>
-                // Move storage to storage:
-                // /data modify storage <destId> <destPath> set from storage <sourceId> <sourcePath>
                 [$"data modify storage {_context.Datapack.Id} {dest.Code} set from storage {_context.Datapack.Id} {source.Code}"],
 
             _ => []
         };
-    }
-
-    public override List<string> VisitReturnIfInstruction(ReturnIfInstruction inst) {
-        return (inst.Condition.Left, inst.Condition.Right) switch {
-            (ConstantOperand left, ConstantOperand right) =>
-                left.Value.Equals(right.Value) ? [$"return {GenOperand(inst.Value)}"] : [],
-
-            // ----- Constant and Scoreboard -----
-            (ScoreboardOperand left, ConstantOperand right) =>
-                // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {left.Code} {_context.Datapack.Id} matches {GenOperand(right)} run return {GenOperand(inst.Value)}"],
-            (ConstantOperand left, ScoreboardOperand right) =>
-                // /execute if score <destTarget> <destObj> matches <value>
-                [$"execute if score {right.Code} {_context.Datapack.Id} matches {GenOperand(left)} run return {GenOperand(inst.Value)}"],
-            (ScoreboardOperand left, ScoreboardOperand right) =>
-                // Move scoreboard to scoreboard:
-                // /execute if score <destTarget> <destObj> = <sourceTarget> <sourceObj>
-                [$"execute if score {left.Code} {_context.Datapack.Id} = {right.Code} {_context.Datapack.Id} run return {GenOperand(inst.Value)}"],
-
-
-            (ScoreboardOperand left, StorageOperand right) =>
-                [],
-            (StorageOperand left, ScoreboardOperand right) =>
-                [],
-
-            // --- Destination is StorageOperand ---
-            (StorageOperand left, ConstantOperand right) =>
-                [],
-            (ConstantOperand left, StorageOperand right) =>
-                [],
-            (StorageOperand left, StorageOperand right) =>
-                [],
-
-            _ => []
-        };
-    }
-
-    public override List<string> VisitReturnInstruction(ReturnInstruction inst) {
-        return [$"return {GenOperand(inst.Value)}"];
     }
 
     public override List<string> VisitPushInstruction(PushInstruction inst) {
@@ -187,7 +161,7 @@ public partial class DatapackBuilder(CompilationContext context) : IRVisitor<Lis
             ];
         }
         return [
-            // Pop the value to the Operant.
+            // Pop the value to the Operand.
             $"data modify storage minecraft:{_context.Datapack.Id} {inst.Operand.Code} set from storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName}[0]",
             // Remove the element we've just poped.
             $"data remove storage minecraft:{_context.Datapack.Id} {inst.Operand.StackName}[0]",

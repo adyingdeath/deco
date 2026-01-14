@@ -194,9 +194,8 @@ public class ExpressionEvaluator(CompilationContext context) : IAstVisitor<Opera
             });
         } else {
             // Really call the function with a Call instruction
-            Insts.Add(new CallInstruction(
-                new LabelInstruction(symbol.Code)
-            ));
+            // Fixed: Directly pass the function code string instead of wrapping in LabelInstruction
+            Insts.Add(new CallInstruction(symbol.Code));
         }
 
         // Pop old value from stack

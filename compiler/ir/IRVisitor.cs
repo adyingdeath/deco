@@ -1,14 +1,14 @@
 namespace Deco.Compiler.IR;
 
 /// <summary>
-/// Visitor pattern for IR instructions. Visits labels first, then processes blocks.
-/// Each visit method returns a list of IR instructions.
+/// Visitor pattern for IR instructions.
 /// </summary>
 public abstract class IRVisitor<T> {
-    public abstract T VisitProgram(ProgramInstruction inst);
-    public abstract T VisitLabelInstruction(LabelInstruction inst);
+    // Top level structures
+    public abstract T VisitProgram(IrProgram program);
     public abstract T VisitMoveInstruction(MoveInstruction inst);
     public abstract T VisitBinaryInstruction(BinaryInstruction inst);
+    
     // --- Push and Pop ---
     public abstract T VisitPushInstruction(PushInstruction inst);
     public abstract T VisitPopInstruction(PopInstruction inst);
@@ -26,14 +26,18 @@ public abstract class IRVisitor<T> {
     public abstract T VisitGreaterThanOrEqualInstruction(GreaterThanOrEqualInstruction inst);
     public abstract T VisitLogicalAndInstruction(LogicalAndInstruction inst);
     public abstract T VisitLogicalOrInstruction(LogicalOrInstruction inst);
-    public abstract T VisitJumpInstruction(JumpInstruction inst);
+
+    // --- Control Flow ---
+    // Removed Jumps and Labels
     public abstract T VisitCallInstruction(CallInstruction inst);
-    public abstract T VisitLinkInstruction(LinkInstruction inst);
+    public abstract T VisitCallIfInstruction(CallIfInstruction inst);
     public abstract T VisitReturnInstruction(ReturnInstruction inst);
+    public abstract T VisitReturnIfInstruction(ReturnIfInstruction inst);
+    
     public abstract T VisitCommandInstruction(CommandInstruction inst);
-    public abstract T VisitUnaryInstruction(UnaryInstruction inst);
+    
     // --- Specific Unary Instruction Types ---
+    public abstract T VisitUnaryInstruction(UnaryInstruction inst);
     public abstract T VisitNegateInstruction(NegateInstruction inst);
     public abstract T VisitLogicalNotInstruction(LogicalNotInstruction inst);
-    public abstract T VisitReturnIfInstruction(ReturnIfInstruction inst);
 }

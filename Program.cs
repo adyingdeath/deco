@@ -2,7 +2,6 @@ using Antlr4.Runtime;
 using Deco.Compiler.Ast;
 using Deco.Compiler;
 using Deco.Compiler.IR;
-using Deco.Compiler.IR.Passes;
 using Deco.Compiler.Pack;
 using Deco.Compiler.Ast.Passes;
 using Deco.Compiler.Lib.Core;
@@ -35,8 +34,6 @@ class Program {
     }
 
     static void RunTest() {
-        string sourceCode = File.ReadAllText($"D:\\programming\\project\\deco\\test\\ast_builder_test\\nested_if.deco");
-
         var preprocessor = new DecoPreprocessor();
         string processedCode = preprocessor.Preprocess(@"
 int counter = 0;
@@ -65,77 +62,45 @@ void main() {
         // Build symbol table
         var symbolTable = new Scope(context, "global");
 
-        // ~~~~~~~~~~~ Collect Symbols ~~~~~~~~~~~ //
-        // Collect symbols and build nested symbol table.
-        // This includes two steps currently:
-        // 1. Build global symbol table;
-        // 2. Build scoped symbol table;
+        // --- Passes ---
         GlobalSymbolTableBuilder.Action(context, symbolTable, ast);
         ScopedSymbolTableBuilder.Action(context, symbolTable, ast);
-        // Collect symbols for library functions.
         LibraryFunctionSymbolCollector.Build(context, symbolTable, [new PrintFunction()]);
-        // Check identifier usage
         IdentifierUsageChecker.Action(context, symbolTable, ast);
-
-
-        // ~~~~~~~~~~~~~ Handle Type ~~~~~~~~~~~~~ //
-        // Type check and resolve types
         ast = (ProgramNode)TypeResolver.Action(context, symbolTable, ast);
 
-
-        // ~~~~~~~~~~~ AST Optimization ~~~~~~~~~~ //
         ast = new ForLoopToWhilePass().Visit(ast);
         ast = new ConstantFoldingPass().Visit(ast);
 
-        // var expression_linearization_ast = new ExpressionLinearizationPass().Visit(for_loop_to_while_ast);
+        // --- IR Generation ---
+        // IRBuilder now returns an IrProgram, not just instructions
+        var irBuilder = new IRBuilder(context);
+        var irProgram = irBuilder.Build((ProgramNode)ast);
 
-
-        var irs = ast.Accept(new IRBuilder(context));
-
-        var program = NestInstructionPass.Visit(irs);
-
-        program = LinkMergePass.Visit(program);
+        // NestInstructionPass and LinkMergePass are likely obsolete with this new structure
+        // as we don't have nested labels or link instructions anymore.
+        // If optimizations are needed, they would operate on IrFunction.Instructions.
 
         if (context.ErrorReporter.HasErrors) {
             context.ErrorReporter.PrintAll();
+            return;
         }
 
-        // Generate string from nested structure
-        var irs_str = GenerateNestedString(program);
-
+        // --- Output ---
+        var irs_str = GenerateIrString(irProgram);
         File.WriteAllText("./irs.txt", irs_str);
 
-        new DatapackBuilder(context).VisitProgram(program);
+        // --- Datapack Generation ---
+        // DatapackBuilder now visits IrProgram
+        new DatapackBuilder(context).VisitProgram(irProgram);
 
         DatapackExporter.Export(datapack, "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks\\deco");
-
-        return;
-
-        /* Console.WriteLine("--- Running in Test Mode ---");
-        string[] testList = [
-            "argument_passing",
-            "expression_evaluation",
-            "boolean_operation",
-            "if_statement",
-            "minecraft_condition_expression",
-            "while_loop_test",
-            "unary_minus_test",
-            "return_statement",
-
-            "deco_core_lib\\function_test",
-        ];
-        string testFileName = testList[1];
-        string inputFile = $"D:\\programming\\project\\deco\\test\\{testFileName}.deco";
-        string outputDirectory = "D:\\Program Files\\minecraft\\hmcl\\.minecraft\\versions\\1.21\\saves\\deco test\\datapacks"; */
     }
 
-    static string GenerateNestedString(ProgramInstruction program) {
-        List<string> lines = [program.ToString()];
-        foreach (var label in program.Labels) {
-            lines.Add(label.ToString());
-            foreach (var instr in label.Instructions) {
-                lines.Add("  " + instr.ToString());
-            }
+    static string GenerateIrString(IrProgram program) {
+        List<string> lines = [$"DataPack: {program.DataPackId}"];
+        foreach (var func in program.Functions) {
+            lines.Add(func.ToString());
         }
         return string.Join("\n", lines);
     }

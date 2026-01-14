@@ -11,6 +11,32 @@ public abstract class IRInstruction {
 }
 
 /// <summary>
+/// Represents a complete IR Program consisting of multiple functions.
+/// </summary>
+public class IrProgram {
+    public string DataPackId { get; set; } = "";
+    public List<IrFunction> Functions { get; set; } = [];
+}
+
+/// <summary>
+/// Represents a discrete function (corresponds to a .mcfunction file).
+/// It has a name (path) and a sequence of instructions.
+/// </summary>
+public class IrFunction(string name, List<IRInstruction> instructions) {
+    public string Name { get; } = name;
+    public List<IRInstruction> Instructions { get; } = instructions;
+
+    public override string ToString() {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Function {Name}:");
+        foreach (var inst in Instructions) {
+            sb.AppendLine($"  {inst}");
+        }
+        return sb.ToString();
+    }
+}
+
+/// <summary>
 /// IR instruction for executing a Minecraft command.
 /// </summary>
 public class CommandInstruction(string command) : IRInstruction {
@@ -19,13 +45,6 @@ public class CommandInstruction(string command) : IRInstruction {
     public override string ToString() => $"Command {Command}";
 
     public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitCommandInstruction(this);
-}
-
-public class ProgramInstruction : IRInstruction {
-    public List<LabelInstruction> Labels { get; } = [];
-    public override string ToString() => "Program:";
-
-    public override T Accept<T>(IRVisitor<T> visitor) => visitor.VisitProgram(this);
 }
 
 public class PushInstruction(VariableOperand operand) : IRInstruction {
