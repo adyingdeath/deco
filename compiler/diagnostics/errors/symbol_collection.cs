@@ -32,3 +32,13 @@ public record DuplicateSymbolError(
     public override string Message =>
         $"Symbol '{NewSymbolName.Name}' is already defined at line {ExistingSymbol.Line}.";
 }
+
+public record LibraryFunctionParameterError(
+    string FunctionName,
+    string ParameterName,
+    string LibraryName,
+    CompilationPhase Phase = CompilationPhase.SymbolCollection
+) : CompilationError(0, 0, Severity.Error, Phase) {
+    public override string Message =>
+        $"Library function '{FunctionName}' in '{LibraryName}' has parameter '{ParameterName}' missing [DecoArgument] attribute.";
+}

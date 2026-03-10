@@ -1,6 +1,7 @@
 using System.Reflection;
 using Deco.Compiler.Lib.Api;
 using Deco.Compiler.Types;
+using Deco.Compiler.Diagnostics.Errors;
 
 namespace Deco.Compiler.Lib;
 
@@ -72,11 +73,16 @@ public static class PluginLoader {
         foreach (var param in parameters.Skip(1)) {
             var argAttr = param.GetCustomAttribute<DecoArgumentAttribute>();
 
-            // If explicit attribute is missing, try to infer from C# type, or default to int/unknown.
-            // For now, we strictly require the attribute or fallback to 'int'.
-            string typeName = argAttr?.Type ?? "int";
-            var type = TypeUtils.ParseType(typeName);
+            if (argAttr == null) {
+                context.ErrorReporter.Report(new LibraryFunctionParameterError(
+                    method.Name,
+                    param.Name ?? "unknown",
+                    method.DeclaringType?.Name ?? "unknown"
+                ));
+                continue;
+            }
 
+            var type = TypeUtils.ParseType(argAttr.Type);
             paramTypes.Add(type);
             paramSymbols.Add(new Symbol(
                 param.Name ?? "arg",

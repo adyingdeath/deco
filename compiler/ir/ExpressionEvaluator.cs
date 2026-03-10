@@ -95,7 +95,7 @@ public class ExpressionEvaluator(CompilationContext context) : IAstVisitor<Opera
             }
 
             // 2. Prepare context
-            var libCtx = new LibraryContext(_context, new IRBuilder(_context), Insts);
+            var libCtx = new LibraryContext(_context, Insts);
 
             // 3. Prepare result operand (if not void)
             Operand? resultOperand = null;

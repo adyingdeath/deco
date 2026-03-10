@@ -65,22 +65,27 @@ public class LibraryFunctionSymbol(
     /// A delegate that handles the invocation of the library function during IR generation.
     /// </summary>
     public Action<LibraryContext, List<Operand>, Operand?> Generator { get; } = (ctx, args, ret) => {
-        // Prepare arguments for the C# method invocation.
-        // Signature: (LibraryContext, Operand arg1, Operand arg2, ...)
-        var invokeArgs = new object[args.Count + 1];
+        var parameters = method.GetParameters();
+        var invokeArgs = new object[parameters.Length];
+        
+        // First parameter is always LibraryContext
         invokeArgs[0] = ctx;
-        for (int i = 0; i < args.Count; i++) {
-            invokeArgs[i + 1] = args[i];
+        
+        // Remaining parameters: wrap Operands in LibraryValue with their corresponding types
+        for (int i = 1; i < parameters.Length; i++) {
+            var argIndex = i - 1;
+            var operand = args[argIndex];
+            var paramAttr = parameters[i].GetCustomAttribute<DecoArgumentAttribute>();
+            if (paramAttr == null) {
+                throw new InvalidOperationException($"Parameter '{parameters[i].Name}' of library function '{method.Name}' is missing [DecoArgument] attribute.");
+            }
+            var type = TypeUtils.ParseType(paramAttr.Type);
+            var datapackId = ctx.Compiler.Datapack.Id;
+            invokeArgs[i] = new LibraryValue(operand, type, datapackId);
         }
 
         // Invoke the method
-        var result = method.Invoke(null, invokeArgs);
-
-        // Handle return value
-        // If the C# method returns an Operand and we have a return slot (ret), move the result there.
-        if (ret != null && result is Operand resultOp) {
-            ctx.Emit(new MoveInstruction(resultOp, ret));
-        }
+        method.Invoke(null, invokeArgs);
     };
 }
 

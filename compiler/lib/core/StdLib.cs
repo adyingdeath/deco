@@ -1,4 +1,3 @@
-using Deco.Compiler.IR;
 using Deco.Compiler.Lib.Api;
 
 namespace Deco.Compiler.Lib.Core;
@@ -8,19 +7,16 @@ public class StdLib {
     [DecoFunction("print", ReturnType = "void")]
     public static void Print(
         LibraryContext ctx,
-        [DecoArgument("int")] Operand value
+        [DecoArgument("int")] LibraryValue value
     ) {
-        if (value is ConstantOperand c) {
-            // Optimization: Constant print
-            ctx.Emit(new CommandInstruction($"tellraw @a \"{c.Value}\""));
-        } else if (value is ScoreboardOperand s) {
-            // Dynamic print
-            ctx.Emit(new CommandInstruction(
-                $"tellraw @a {{\"score\":{{\"name\":\"{s.Code}\",\"objective\":\"{ctx.Compiler.Datapack.Id}\"}}}}"
-            ));
+        if (value.IsVariable) {
+            if (value.IsScoreboard) {
+                ctx.EmitCommand($"tellraw @a {{\"score\":{{\"name\":\"{value.VariableId}\",\"objective\":\"{value.Objective}\"}}}}");
+            } else {
+                ctx.EmitCommand($"tellraw @a {{\"nbt\":\"{value.VariableId}\",\"storage\":\"{value.Storage}\"}}");
+            }
         } else {
-            // Fallback for other operand types if necessary
-            ctx.Emit(new CommandInstruction($"# Print not supported for {value.GetType().Name}"));
+            ctx.EmitCommand($"tellraw @a \"{value.AsString}\"");
         }
     }
 }
