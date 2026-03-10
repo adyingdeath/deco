@@ -1,5 +1,7 @@
+using System.Reflection;
 using Deco.Compiler.Diagnostics.Errors;
-using Deco.Compiler.Lib;
+using Deco.Compiler.Lib.Api;
+using Deco.Compiler.IR;
 
 namespace Deco.Compiler.Types;
 
@@ -19,15 +21,19 @@ public class Symbol(
 
     public static readonly Symbol Uninitialized = new(
         "__uninitialized__",
-        "#", // Invalid address
-        TypeUtils.UnknownType, // Use UnknownType
-        SymbolKind.Variable, // Add a special kind if you want
+        "#",
+        TypeUtils.UnknownType,
+        SymbolKind.Variable,
         0, 0
     );
 }
 
 public class FunctionSymbol(
-    string name, string code, IType type, List<Symbol> parameterSymbol, Symbol returnSymbol,
+    string name,
+    string code,
+    IType type,
+    List<Symbol> parameterSymbol,
+    Symbol returnSymbol,
     int line = 0, int column = 0
 ) : Symbol(
     name, code, type, SymbolKind.Function,
@@ -37,20 +43,47 @@ public class FunctionSymbol(
     public Symbol ReturnSymbol { get; set; } = returnSymbol;
 }
 
+/// <summary>
+/// Represents a library function imported via reflection.
+/// These functions generate IR directly rather than having a fixed body.
+/// </summary>
 public class LibraryFunctionSymbol(
-    string name, string code, IType type, List<Symbol> parameterSymbol,
-    Symbol returnSymbol, DecoFunction implementation,
+    string name,
+    string code,
+    IType type,
+    List<Symbol> parameterSymbol,
+    Symbol returnSymbol,
+    MethodInfo method,
     int line = 0, int column = 0
-) : FunctionSymbol(
-    name, code, type, parameterSymbol, returnSymbol,
-    line, column
-) {
-    public DecoFunction Implementation { get; } = implementation;
+    ) : FunctionSymbol(name, code, type, parameterSymbol, returnSymbol, line, column) {
+    /// <summary>
+    /// The backing C# method info.
+    /// </summary>
+    public MethodInfo Method { get; } = method;
+
+    /// <summary>
+    /// A delegate that handles the invocation of the library function during IR generation.
+    /// </summary>
+    public Action<LibraryContext, List<Operand>, Operand?> Generator { get; } = (ctx, args, ret) => {
+        // Prepare arguments for the C# method invocation.
+        // Signature: (LibraryContext, Operand arg1, Operand arg2, ...)
+        var invokeArgs = new object[args.Count + 1];
+        invokeArgs[0] = ctx;
+        for (int i = 0; i < args.Count; i++) {
+            invokeArgs[i + 1] = args[i];
+        }
+
+        // Invoke the method
+        var result = method.Invoke(null, invokeArgs);
+
+        // Handle return value
+        // If the C# method returns an Operand and we have a return slot (ret), move the result there.
+        if (ret != null && result is Operand resultOp) {
+            ctx.Emit(new MoveInstruction(resultOp, ret));
+        }
+    };
 }
 
-/// <summary>
-/// Kind of symbol.
-/// </summary>
 public enum SymbolKind {
     Variable,
     Function,
@@ -66,7 +99,7 @@ public class Scope(CompilationContext context, string name, Scope? parent = null
     public List<Scope> Children { get; } = [];
     public string Name { get; } = name;
     public Dictionary<string, Symbol> Symbols { get; } = [];
-    private CompilationContext _context = context;
+    private readonly CompilationContext _context = context;
 
     /// <summary>
     /// Adds a symbol to this symbol table.
@@ -132,20 +165,6 @@ public class ScopeStack(Scope root) {
         }
         return root;
     }
-    public Scope Current() {
-        return _stack.Peek();
-    }
-    public Scope Root() {
-        return root;
-    }
-}
-
-/// <summary>
-/// Exception thrown when symbol table errors occur.
-/// </summary>
-public class SymbolTableException(
-    string message, int line = 0, int column = 0
-) : Exception(message) {
-    public int Line { get; } = line;
-    public int Column { get; } = column;
+    public Scope Current() => _stack.Peek();
+    public Scope Root() => root;
 }
